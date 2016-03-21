@@ -1,0 +1,59 @@
+\documentclass[class=letter,border=0pt]{standalone}
+\usepackage{tikz}
+\usepackage{pgfplots} 
+\usetikzlibrary{plotmarks}
+\pgfplotsset{compat=newest}
+\pgfplotsset{every axis/.append style={thick}}
+\usepgfplotslibrary{groupplots}
+\usepackage{graphicx}
+\pgfplotscreateplotcyclelist{mycolorlist}{%
+blue,mark=*,mark size=1.5pt\\%
+red,mark=square*,mark size=1.5pt\\%
+green,mark=diamond*,mark size=1.5pt\\%
+orange,mark=triangle*,mark size=1.5pt\\%
+cyan,mark=star,mark size=1.5pt\\%
+violet,mark=pentagon*,mark size=1.5pt\\%
+brown,mark=+,mark size=1.5pt\\%
+black,mark=x,mark size=1.5pt\\%
+blue,densely dashed,mark=o,mark size=1.5pt\\%
+red,densely dashed,mark=square,mark size=1.5pt\\%
+green,densely dashed,mark=diamond,mark size=1.5pt\\%
+orange,densely dashed,mark=triangle,mark size=1.5pt\\%
+cyan,densely dashed,mark=asterisk,mark size=1.5pt\\%
+violet,densely dashed,mark=10-pointed star,mark size=1.5pt\\%
+brown,densely dashed,mark=Mercedes star,mark size=1.5pt\\%
+}
+
+\begin{document}
+	\begin{tikzpicture}
+	\tikzset{>=latex}
+	\begin{axis}[
+	%font=\small,
+        xlabel={$x/L_c$},
+        ylabel={$<C_p>$},
+        xmin=-0.55, xmax=0.55,
+        %ymin=, ymax=,
+        %xmode=log,
+        %ymode=log,
+        %axis on top,
+        %width=\tikzw,
+        %height=\tikzh,
+	%x=2\textwidth,
+	%y=1\textwidth,
+	%xtick={-0.6,-0.5,...,0.6},
+	grid=both,
+        xmajorgrids,
+	minor tick num=2,
+        ymajorgrids,
+	xminorgrids,
+	yminorgrids,
+        ymajorgrids,yminorgrids,
+	y dir =reverse,
+        legend style={at={(1.00,1.00)}, anchor=north east},
+        legend entries={{M1 \& M5},{P1},{M2},{T1},{M3},{P2},{M4},{T2}},
+	cycle list name = mycolorlist,
+	mark repeat={10}]
+		\addplot table [x={x0}, y={avg}] {allCp.dat};
+	\end{axis}
+	\end{tikzpicture}
+\end{document}

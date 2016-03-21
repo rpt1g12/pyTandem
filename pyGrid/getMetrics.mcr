@@ -1,0 +1,24 @@
+#!MC 1400
+# Created by Tecplot 360 build 14.0.2.35002
+$!VarSet |MFBD| = '/home/rpt1g12'
+$!PLOTTYPE = CARTESIAN2D
+$!ALTERDATA 
+  EQUATION = '{dxdxi}=ddi({X})'
+$!ALTERDATA 
+  EQUATION = '{dxdet}=ddj({X})'
+$!ALTERDATA 
+  EQUATION = '{dydxi}=ddi({Y})'
+$!ALTERDATA 
+  EQUATION = '{dydet}=ddj({Y})'
+$!ALTERDATA 
+  EQUATION = '{J}={dxdxi}*{dydet}-{dxdet}*{dydxi}'
+$!GLOBALCONTOUR 1  VAR = 4
+$!CONTOURLEVELS RESETTONICE
+  CONTOURGROUP = 1
+  APPROXNUMVALUES = 15
+$!FIELDLAYERS SHOWCONTOUR = YES
+$!GLOBALCONTOUR 1  VAR = 8
+$!CONTOURLEVELS RESETTONICE
+  CONTOURGROUP = 1
+  APPROXNUMVALUES = 15
+$!RemoveVar |MFBD|

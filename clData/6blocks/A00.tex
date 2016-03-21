@@ -1,0 +1,66 @@
+\documentclass[class=letter,border=0pt]{standalone}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{pgfplots} 
+\usetikzlibrary{plotmarks}
+\pgfplotsset{compat=newest}
+\pgfplotsset{every axis/.append style={thick}}
+\usepgfplotslibrary{groupplots}
+\pgfplotscreateplotcyclelist{mycolorlist}{%
+blue,mark=*,mark size=1.5pt,mark repeat=5\\%
+red,mark=square*,mark size=1.5pt,mark repeat=5\\%
+green,mark=diamond*,mark size=1.5pt,mark repeat=5\\%
+orange,mark=triangle*,mark size=1.5pt,mark repeat=5\\%
+cyan,mark=star,mark size=1.5pt,mark repeat=5\\%
+violet,mark=pentagon*,mark size=1.5pt,mark repeat=5\\%
+brown,mark=+,mark size=1.5pt,mark repeat=5\\%
+black,mark=x,mark size=1.5pt,mark repeat=5\\%
+blue,densely dashed,mark=o,mark size=1.5pt,mark repeat=5\\%
+red,densely dashed,mark=square,mark size=1.5pt,mark repeat=5\\%
+green,densely dashed,mark=diamond,mark size=1.5pt,mark repeat=5\\%
+orange,densely dashed,mark=triangle,mark size=1.5pt,mark repeat=5\\%
+cyan,densely dashed,mark=asterisk,mark size=1.5pt,mark repeat=5\\%
+violet,densely dashed,mark=10-pointed star,mark size=1.5pt,mark repeat=5\\%
+brown,densely dashed,mark=Mercedes star,mark size=1.5pt,mark repeat=5\\%
+}
+
+\begin{document}
+	\begin{tikzpicture}
+	\tikzset{>=latex}
+	\begin{axis}[
+	%font=\small,
+        xlabel={$t^*$},
+        ylabel={$C_l$},
+        xmin=150, xmax=240,
+        %ymin=0.4, ymax=1.2,
+        %xmode=log,
+        %ymode=log,
+        %axis on top,
+        %width=\tikzw,
+        %height=\tikzh,
+	%x=2\textwidth,
+	%y=1\textwidth,
+	%xtick={-0.6,-0.5,...,0.6},
+	grid=both,
+        xmajorgrids,
+	minor tick num=1,
+        ymajorgrids,
+	xminorgrids,
+	yminorgrids,
+        ymajorgrids,yminorgrids,
+	%y dir =reverse,
+	legend columns=2,
+        legend style={at={(1.00,1.00)}, anchor=north east},
+        legend entries={{SLE},{WLE}},
+	cycle list name = mycolorlist,
+	mark repeat={10}]
+		\addplot[mark=none,blue] table [x={x0}, y={Cl}] {A00.dat};
+		\addplot[mark=none,red,densely dashed] table [x={x0}, y={Cl}] {A15.dat};
+		\addplot[mark=none,blue] table [x={x0}, y={Cd}] {A00.dat};
+		\addplot[mark=none,red,densely dashed] table [x={x0}, y={Cd}] {A15.dat};
+		%\addplot[mark=none,red, densely dashed] coordinates {
+		%(000,0.758)
+		%(500,0.758)};
+	\end{axis}
+	\end{tikzpicture}
+\end{document}

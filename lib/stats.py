@@ -131,22 +131,33 @@ def nextpow2(i):
     while n<i: n*=2
     return n
 
-def rsample(x,t,nsample,verbose=False):
+def rsample(x,t,nsample=0,verbose=False,rmAvg=False):
     """docstring for rsample"""
     xspln=interpolate.splrep(t,x,s=0)
+    if (nsample==0):
+        nsample=len(t)
     nsample=nextpow2(nsample)
+    if (nsample>len(t)):
+        nsample/=2
     if (verbose): print('# of samples modified to: ',nsample)
     tnew=np.linspace(t[0],t[-1],nsample)
     fsam=1/(tnew[1]-tnew[0])
     fmax=fsam/2; fmin=fsam/nsample
     if (verbose): print('fmax:',fmax,' fmin:',fmin)
     xnew=interpolate.splev(tnew,xspln,der=0)
+    if (rmAvg):
+        xnew=xnew-xnew.mean()
     return xnew,tnew,nsample,fsam
 
-def defWindows(z,nwin=2,ovlp=0.0,plot=0,zname='signal',verbose=True):
+def defWindows(zin,nwin=2,ovlp=0.0,plot=0,zname='signal',verbose=True):
     """docstring for defWindows"""
     import matplotlib.pyplot as plt
-
+    if (len(zin.shape)<2):
+        z=np.zeros((1,len(zin)))
+        z[0,:]=zin[:]
+    else:
+        z=zin
+        
     ntt=0;ntotal=z.shape[1]
     start=[];end=[]
     ofst=1.0-ovlp
@@ -204,5 +215,88 @@ def defWindows(z,nwin=2,ovlp=0.0,plot=0,zname='signal',verbose=True):
 
        plt.show()
     fmax=1/((z[0,1]-z[0,0])*2); fmin=1/(z[0,end[0]]-z[0,start[0]])
+    if(verbose):
+        for i in range(nwin):
+            print('Range',i+1,start[i],end[i])
     if(verbose): print('fmax:',fmax,' fmin:',fmin)
+    return nseg,iovlp,ntt,fmax,fmin
+    
+    
+def defWin(t,f,nwin=2,ovlp=0.0,zname='signal',verbose=True):
+    """docstring for defWindows"""
+    import matplotlib.pyplot as plt
+    
+    if(verbose):    
+        fWin=plt.figure()
+        fWin.canvas.set_window_title('Windowing')
+        axWin=fWin.add_subplot(111)
+        
+    ntt=0;ntotal=len(t)
+
+    ofst=1.0-ovlp
+    nt=ntotal;flag=0
+    nseg=round(float(nt)/((nwin-1)*ofst+1.0));print('nseg0=',nseg)
+    while(ntt!=ntotal):
+        start=[];end=[]
+        if(flag==1):
+            nseg+=1
+        if(nwin==1):
+            ofst=1.0
+        else:
+            ofst=(float(nt)/nseg-1)/(nwin-1)
+
+        nseg=round(float(nt)/((nwin-1)*ofst+1.0));
+
+        if(nwin==1):
+            ofst=1.0
+        else:
+            ofst=(float(nt)/nseg-1)/(nwin-1);
+
+        ovlp=1.0-ofst
+        iovlp=int(np.ceil(ovlp*nseg));iofst=nseg-iovlp
+
+        flag=0
+        while (ofst>1.0):
+            nseg+=1
+            ofst=(float(nt)/nseg)/(nwin-1)
+            flag=1
+
+        if(flag==1):
+            if(verbose): print('Offset was more than segment length!!')
+
+        ovlp=1.0-ofst 
+
+        if(verbose): print('Overlap modified to ',round(ovlp,3),'to fit data')
+        iovlp=int(np.ceil(ovlp*nseg));iofst=nseg-iovlp
+
+        for i in range(nwin):
+            start.append((i)*iofst)
+            end.append((i)*iofst+nseg)
+        ntt=1+end[-1]-start[0]
+        if(ntt!=ntotal):
+            flag=1
+            print(ntt,ntotal)
+
+    nseg=end[0]-start[0]+1
+    iovlp=iovlp+1
+    if(verbose):  
+       ctitle=('ntotal='+str(ntt)+' nseg='+str(nseg)+' iovlp='+str(iovlp))
+       ctitle2=('\n Final overlap of segments is '+str(round(100.0*ovlp,3))+'%')
+       axWin.set_title(ctitle+ctitle2)
+       axWin.set_ylabel(zname)
+       axWin.set_xlabel('t')
+       for i in range(nwin):
+           axWin.plot(t[start[i]:end[i]+1],f[start[i]:end[i]+1],label='w'+str(i+1))
+
+       #ax1.legend(bbox_to_anchor=(0., -0.115, 1., -.15), loc=3,
+       #           ncol=2, mode="expand", borderaxespad=0.)
+
+       axWin.figure.canvas.draw()
+    fmax=1/((t[1]-t[0])*2); fmin=1/(t[end[0]]-t[start[0]])
+    if(verbose):
+        for i in range(nwin):
+            print('Range',i,start[i],end[i],end[i]-start[i]+1)
+            
+        print('fmax:',fmax,' fmin:',fmin)
+        print('nseg='+str(nseg)+'; iovlp='+str(iovlp)+'; ntot='+str(ntt))
     return nseg,iovlp,ntt,fmax,fmin

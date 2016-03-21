@@ -1,6 +1,8 @@
 import numpy as np
 import copy as copy
 import matplotlib.pyplot as plt
+import os
+from matplotlib.lines import Line2D
 
 def naca(x,c,t0):
     """NACA 00XX series equation"""
@@ -17,9 +19,30 @@ def naca(x,c,t0):
     +0.291984971*xc**3-0.105174606*xc**4)
     return y
     
+def gridf(xo,xn,dxo,dxn,mxin):
+    x=np.zeros(mxin);xxi=x.copy()
+    mxin=mxin-1
+    dxoo=dxo;dxnn=dxn
+    if (dxo<0):
+        dxoo=2*(xn-xo)/mxin-dxn
+    if(dxn<0):
+        dxnn=2*(xn-xo)/mxin-dxo
+    aa=6.0*(xn-xo)-3*mxin*(dxoo+dxnn)
+    bb=15*(xo-xn)+mxin*(8*dxoo+7*dxnn)
+    cc=10*(xn-xo)-mxin*(6*dxoo+4*dxnn)
+    dd=mxin*dxoo; fctr=1.0/mxin
+    
+    for i in range(mxin+1):
+        xi=i*fctr
+        x[i]=aa*xi**5+bb*xi**4+cc*xi**3+dd*xi+xo
+        xxi[i]=fctr*(5*aa*xi**4+4*bb*xi**3+3*cc*xi**2+dd)
+    
+    return x,xxi
+    
 def qhermite(x,y0,yx0,y1,yx1,yxx0=0.0,yxx1=0.0):
     """Quintic Hermitiean interpolation"""
     l=len(x)-1; s=np.zeros(l+1);f=np.zeros(l+1)
+    fx=np.zeros(l+1);fxx=np.zeros(l+1)
     x0=x[0];x1=x[l]; dx=x1-x0
     dy=y1-y0
     s[:]=(x[:]-x0)/dx
@@ -34,6 +57,22 @@ def qhermite(x,y0,yx0,y1,yx1,yxx0=0.0,yxx1=0.0):
         [+00.0,-00.0,+00.0,-00.0,+00.0,+00.0],
         [+00.0,-00.0,+00.0,-00.0,+00.0,+00.0],
         [-00.0,+00.0,-00.0,+00.0,+01.0,+00.0]])
+
+        c1=np.matrix([
+        [+00.0,-00.0,+00.0,-00.0,+00.0,-01.0],
+        [+00.0,-00.0,+00.0,-00.0,+00.0,+00.0],
+        [+00.0,-00.0,+00.0,-00.0,+00.0,+00.0],
+        [+00.0,-00.0,+00.0,-00.0,+00.0,+00.0],
+        [+00.0,-00.0,+00.0,-00.0,+00.0,+00.0],
+        [-00.0,+00.0,-00.0,+00.0,+00.0,+01.0]])
+
+        c2=np.matrix([
+        [+00.0,-00.0,+00.0,-00.0,+00.0,-00.0],
+        [+00.0,-00.0,+00.0,-00.0,+00.0,+00.0],
+        [+00.0,-00.0,+00.0,-00.0,+00.0,+00.0],
+        [+00.0,-00.0,+00.0,-00.0,+00.0,+00.0],
+        [+00.0,-00.0,+00.0,-00.0,+00.0,+00.0],
+        [-00.0,+00.0,-00.0,+00.0,+00.0,+00.0]])
     else:
         c=np.matrix([
         [-06.0,+15.0,-10.0,+00.0,+00.0,+01.0],
@@ -42,6 +81,22 @@ def qhermite(x,y0,yx0,y1,yx1,yxx0=0.0,yxx1=0.0):
         [+00.5,-01.0,+00.5,+00.0,+00.0,+00.0],
         [-03.0,+07.0,-04.0,+00.0,+00.0,+00.0],
         [+06.0,-15.0,+10.0,+00.0,+00.0,+00.0]])
+        
+        c1=np.matrix([
+        [+00.0,-30.0,+60.0,-30.0,+00.0,+00.0],
+        [+00.0,-15.0,+32.0,-18.0,+00.0,+01.0],
+        [+00.0,-02.5,+06.0,-04.5,+01.0,+00.0],
+        [+00.0,+02.5,-04.0,+01.5,+00.0,+00.0],
+        [+00.0,-15.0,+28.0,-12.0,+00.0,+00.0],
+        [+00.0,+30.0,-60.0,+30.0,+00.0,+00.0]])
+        
+        c2=np.matrix([
+        [+000.0,+000.0,-120.0,+180.0,-060.0,+000.0],
+        [+000.0,+000.0,-060.0,+096.0,-036.0,+000.0],
+        [+000.0,+000.0,-010.0,+018.0,-009.0,+001.0],
+        [+000.0,+000.0,+010.0,-012.0,+003.0,+000.0],
+        [+000.0,+000.0,-060.0,+084.0,-024.0,+000.0],
+        [+000.0,+000.0,+120.0,-180.0,+060.0,+000.0]])
                                                 
     for i in range(l+1):
         t=np.matrix([
@@ -53,10 +108,13 @@ def qhermite(x,y0,yx0,y1,yx1,yxx0=0.0,yxx1=0.0):
                     [s[i]**0]
                             ])
         f[i]=(p*c*t)
-    return f
+        fx[i]=(p*c1*t)
+        fxx[i]=(p*c2*t)
+    return f,fx,fxx
     
 def qahermite(x,y0,yx0,y1,yx1,side,lnr=0):
-    """Quintic Hermitiean interpolation"""
+    """Hermitiean interpolation with one end with zero
+    curvature"""
     l=len(x)-1; s=np.zeros(l+1);f=np.zeros(l+1)
     x0=x[0];x1=x[l]; dx=x1-x0
     s[:]=(x[:]-x0)/dx
@@ -93,20 +151,9 @@ def qahermite(x,y0,yx0,y1,yx1,side,lnr=0):
         f[i]=(p*c*t)
     return f
        
-def hermite(k1,k2,k3,k4,x0,x1,x):
-    """Hermitiean interpolation"""
-    l=x1-x0
-    invl=1.0/l
-    fx=(x-x0)*invl
-    a=(2*fx**3-3*fx**2+1)
-    b=l*(fx**3-2*fx**2+fx)
-    c=(-2*fx**3+3*fx**2)
-    d=l*(fx**3-fx**2)
-    y=a*k1+b*k2+c*k3+d*k4
-    return y
-
 def dxi(x,fctr=1):
-    n=max(x.shape); l=n-1; dx=np.zeros(n)
+    """Derivative scheme 2nd Order"""
+    n=max(x.shape); dx=np.zeros(n)
     a=np.zeros(n-2);b=np.zeros(n-1);c=np.zeros(n)
     d=np.zeros(n-1);e=np.zeros(n-2);
     a[-1]=1;e[0]=-1
@@ -123,12 +170,20 @@ class corner():
                  dxdy=0.0,dydet=0.0,d2ydet2=0.0):
         self.x=x
         self.y=y
+        self.dydx=dydx
+        self.dxdxi=dxdxi
+        self.d2xdxi2=d2xdxi2
+        self.dxdy=dxdy
+        self.dydet=dydet
+        self.d2ydet2=d2ydet2
+        #self.modified=[False,False]
     def clone (self):
         obj=copy.copy(self)
         return obj
 
-class line():
+class line(Line2D):
     def __init__(self,n,c0,c1,dr,naca=0.0):
+        super(line,self).__init__(np.zeros(n),np.zeros(n))
         self.n=n
         self.c0=c0
         self.c1=c1
@@ -137,19 +192,19 @@ class line():
         if (self.naca!=0):
            self.dr=0
         if (self.dr==0):
-            self.c0.dydx=(self.c1.y-self.c0.y)/(self.c1.x-self.c0.x)
-            self.c0.dxdxi=(self.c1.x-self.c0.x)/(n-1)
-            self.c0.d2xdxi2=0.0
-            self.c1.dydx=self.c0.dydx
-            self.c1.dxdxi=self.c0.dxdxi
-            self.c1.d2xdxi2=self.c0.d2xdxi2
+                self.c0.dydx=(self.c1.y-self.c0.y)/(self.c1.x-self.c0.x)
+                self.c0.dxdxi=(self.c1.x-self.c0.x)/(n-1)
+                self.c0.d2xdxi2=0.0
+                self.c1.dydx=1*self.c0.dydx
+                self.c1.dxdxi=1*self.c0.dxdxi
+                self.c1.d2xdxi2=1*self.c0.d2xdxi2
         if (self.dr==1):
-            self.c0.dxdy=(self.c1.x-self.c0.x)/(self.c1.y-self.c0.y)
-            self.c0.dydet=(self.c1.y-self.c0.y)/(n-1)
-            self.c0.d2ydet2=0.0
-            self.c1.dxdy=self.c0.dxdy
-            self.c1.dydet=self.c0.dydet
-            self.c1.d2ydet2=self.c0.d2ydet2
+                self.c0.dxdy=(self.c1.x-self.c0.x)/(self.c1.y-self.c0.y)
+                self.c0.dydet=(self.c1.y-self.c0.y)/(n-1)
+                self.c0.d2ydet2=0.0
+                self.c1.dxdy=1*self.c0.dxdy
+                self.c1.dydet=1*self.c0.dydet
+                self.c1.d2ydet2=1*self.c0.d2ydet2
         self.getPoints()
 
     def clone (self):
@@ -159,15 +214,20 @@ class line():
     def getPoints(self,plot=False):
         if (self.dr==0):
             if (self.naca==0.0):
-               self.x=qhermite(np.arange(self.n),
-                               self.c0.x,self.c0.dxdxi,
-                               self.c1.x,self.c1.dxdxi,
-                               self.c0.d2xdxi2,self.c1.d2xdxi2)
-               self.dxdxi=dxi(self.x)
-               self.d2xdxi2=dxi(self.dxdxi)
-               self.y=qhermite(self.x,
-                               self.c0.y,self.c0.dydx,
-                               self.c1.y,self.c1.dydx)
+#                self.x,self.dxdxi,self.d2xdxi2=qhermite(np.arange(self.n),
+#                                                       self.c0.x,self.c0.dxdxi,
+#                                                       self.c1.x,self.c1.dxdxi,
+#                                                       self.c0.d2xdxi2,self.c1.d2xdxi2)
+                self.x,self.dxdxi=gridf(self.c0.x,self.c1.x,
+                                        self.c0.dxdxi,self.c1.dxdxi,
+                                        self.n)
+                self.dxdxi=dxi(self.x)
+                self.d2xdxi2=dxi(self.dxdxi)
+                self.y,tmp,tmp=qhermite(self.x,
+                                       self.c0.y,self.c0.dydx,
+                                       self.c1.y,self.c1.dydx)
+                self.dydxi=dxi(self.y)
+                self.d2ydxi2=dxi(self.dydxi)
             else:
                c=self.c1.x-self.c0.x
                self.x=np.linspace(self.c0.x,self.c1.x,self.n)
@@ -177,7 +237,7 @@ class line():
                   dx=self.c0.dxdxi
                   while (abs(err)>tol):
                      x=self.x[i]+dx
-                     y=naca(x,c,self.naca)
+                     y=naca(x-self.x[0],c,self.naca)
                      dy=y-self.y[i]
                      ds=np.sqrt(dx**2+dy**2)
                      err=ds/self.c0.dxdxi
@@ -185,33 +245,39 @@ class line():
                   self.x[i+1]=x
                   self.y[i+1]=y
                dxdxi=np.asarray(np.mat(self.x[l-5:l])*((1.0/12)*np.matrix([[3,-16,36,-48,25]]).T))[0]
-               self.x[l-1:]=qhermite(np.arange(l-1,self.n),
+               self.x[l-1:],tmp,tmp=qhermite(np.arange(l-1,self.n),
                                self.x[l-1],dxdxi,
                                self.c1.x,self.c1.dxdxi,
                                0.0,self.c1.d2xdxi2)
                self.dxdxi=dxi(self.x)
                self.d2xdxi2=dxi(self.dxdxi)
-               self.y=naca(self.x,c,self.naca)
+               self.y=naca(self.x-self.x[0],c,self.naca)
                self.c0.dydx=(self.y[1]-self.y[0])/(self.x[1]-self.x[0])
                self.c1.dydx=(self.y[-1]-self.y[-2])/(self.x[-1]-self.x[-2])
             self.dydxi=dxi(self.y)
             self.d2ydxi2=dxi(self.dydxi)
         if (self.dr==1):
-            self.y=qhermite(np.arange(self.n),
-                            self.c0.y,self.c0.dydet,
-                            self.c1.y,self.c1.dydet,
-                            self.c0.d2ydet2,self.c1.d2ydet2)
+#            self.y,self.dydet,self.d2ydet2=qhermite(np.arange(self.n),
+#                            self.c0.y,self.c0.dydet,
+#                            self.c1.y,self.c1.dydet,
+#                            self.c0.d2ydet2,self.c1.d2ydet2)
+            self.y,self.dydet=gridf(self.c0.y,self.c1.y,
+                                    self.c0.dydet,self.c1.dydet,
+                                    self.n)
             self.dydet=dxi(self.y)
             self.d2ydet2=dxi(self.dydet)
-            self.x=qhermite(self.y,
+            self.x,tmp,tmp=qhermite(self.y,
                             self.c0.x,self.c0.dxdy,
                             self.c1.x,self.c1.dxdy)
             self.dxdet=dxi(self.x)
             self.d2xdet2=dxi(self.dxdet)
         if (plot==True):
             self.plot()
+        self.set_xdata(self.x)
+        self.set_ydata(self.y)
 
-    def plot(self):
+    def linePlot(self):
+        plt.figure()
         plt.subplot(411)
         plt.plot(self.x,self.y)
         if (self.dr==0):
@@ -230,7 +296,7 @@ class line():
             plt.subplot(414)
             plt.plot(self.d2ydet2)
             plt.show()
-    def draw(self,show=False):
+    def lineDraw(self,show=False):
         plt.plot(self.x,self.y,'b')
         plt.plot(self.x,self.y,'ro')
         plt.draw()
@@ -238,36 +304,48 @@ class line():
            plt.show()
 
 class block():
-    def __init__(self,bs,bn,bw,be):
-        self.bs=bs
-        self.bn=bn
-        self.bw=bw
-        self.be=be
-        self.lxi=bs.n
-        self.let=bw.n
+    def __init__(self,lines):
+        self.bs=lines[0]
+        self.bn=lines[1]
+        self.bw=lines[2]
+        self.be=lines[3]
+        self.lxi=lines[0].n
+        self.let=lines[2].n
+        self.lze=1
+        #self.update(0)
+    
+    def updateLines(self):
+        self.bs.getPoints()
+        self.bn.getPoints()
+        self.bw.getPoints()
+        self.be.getPoints()
 
-        self.bs.dxdet=qhermite(np.arange(self.lxi),
-                               self.bw.dxdet[0],0.0,
-                               self.be.dxdet[0],0.0)
-        self.bn.dxdet=qhermite(np.arange(self.lxi),
-                               self.bw.dxdet[-1],0.0,
-                               self.be.dxdet[-1],0.0)
-        self.bs.dydet=qhermite(np.arange(self.lxi),
-                               self.bw.dydet[0],0.0,
-                               self.be.dydet[0],0.0)
-        self.bn.dydet=qhermite(np.arange(self.lxi),
-                               self.bw.dydet[-1],0.0,
-                               self.be.dydet[-1],0.0)
-        self.bw.dydxi=qhermite(np.arange(self.let),
-                               self.bs.dydxi[0],0.0,
-                               self.bn.dydxi[0],0.0)
-        self.be.dydxi=qhermite(np.arange(self.let),
-                               self.bs.dydxi[-1],0.0,
-                               self.bn.dydxi[-1],0.0)
-        self.bw.dxdxi=qhermite(np.arange(self.let),
-                               self.bs.dxdxi[0],0.0,
-                               self.bn.dxdxi[0],0.0)
-        self.be.dxdxi=qhermite(np.arange(self.let),
+    def update(self,opt=1):
+        if (opt==1):
+            self.updateLines()
+
+        self.bs.dxdet,tmp,tmp=qhermite(np.arange(self.lxi),
+                             self.bw.dxdet[0],0.0,
+                             self.be.dxdet[0],0.0)
+        self.bn.dxdet,tmp,tmp=qhermite(np.arange(self.lxi),
+                             self.bw.dxdet[-1],0.0,
+                             self.be.dxdet[-1],0.0)
+        self.bs.dydet,tmp,tmp=qhermite(np.arange(self.lxi),
+                             self.bw.dydet[0],0.0,
+                             self.be.dydet[0],0.0)
+        self.bn.dydet,tmp,tmp=qhermite(np.arange(self.lxi),
+                             self.bw.dydet[-1],0.0,
+                             self.be.dydet[-1],0.0)
+        self.bw.dydxi,tmp,tmp=qhermite(np.arange(self.let),
+                             self.bs.dydxi[0],0.0,
+                             self.bn.dydxi[0],0.0)
+        self.be.dydxi,tmp,tmp=qhermite(np.arange(self.let),
+                             self.bs.dydxi[-1],0.0,
+                             self.bn.dydxi[-1],0.0)
+        self.bw.dxdxi,tmp,tmp=qhermite(np.arange(self.let),
+                             self.bs.dxdxi[0],0.0,
+                             self.bn.dxdxi[0],0.0)
+        self.be.dxdxi,tmp,tmp=qhermite(np.arange(self.let),
                                self.bs.dxdxi[-1],0.0,
                                self.bn.dxdxi[-1],0.0)
         self.x=np.zeros((self.lxi,self.let))
@@ -353,30 +431,49 @@ class block():
 
                 self.x[i,j]=abu*Xv+abv*Xu-(abu*Mx*abvt)
                 self.y[i,j]=abu*Yv+abv*Yu-(abu*My*abvt)
+        self.z=np.zeros((self.lxi,self.let))
 
-    def draw(self,drw=1,shw=1,stl='b'):
+    def draw(self,ax=None,drw=1,shw=1,stl='b',update=False):
         """docstring for plotgrid"""
+        if (ax==None):
+            ax=plt.gca()
+        if (update):
+            self.update()
         nxi=self.lxi;net=self.let
         xis=0;xie=nxi-1;ets=0;ete=net-1
-        plt.plot(self.x[:,ets],self.y[:,ets],'ro',markersize=4)
-        plt.plot(self.x[:,ete],self.y[:,ete],'ro',markersize=4)
-        plt.plot(self.x[xis,:],self.y[xis,:],'ro',markersize=4)
-        plt.plot(self.x[xie,:],self.y[xie,:],'ro',markersize=4)
+        ax.plot(self.x[:,ets],self.y[:,ets],'ro',markersize=4)
+        ax.plot(self.x[:,ete],self.y[:,ete],'ro',markersize=4)
+        ax.plot(self.x[xis,:],self.y[xis,:],'ro',markersize=4)
+        ax.plot(self.x[xie,:],self.y[xie,:],'ro',markersize=4)
         for j in range(0,net):
-            plt.plot(self.x[:,j],self.y[:,j],stl)
+            ax.plot(self.x[:,j],self.y[:,j],stl)
         for i in range(0,nxi):
-            plt.plot(self.x[i,:],self.y[i,:],stl)
+            ax.plot(self.x[i,:],self.y[i,:],stl)
     
-        plt.axis('equal')
         if drw==1:
-           plt.draw()
+           ax.figure.canvas.draw()
+           ax.set_aspect('equal')
         if shw==1:
-           plt.show()
+           ax.figure.show()
         pass
 
     def clone (self):
         obj=copy.copy(self)
         return obj
+
+    def write(self,number=0):
+        """Write to Plot3D format"""
+        path=os.getcwd()
+        self.number=number
+        fh=open(path+'/block'+str(number)+'.xyz','wb')
+        hdr=np.int32(np.array([1,self.lxi,self.let,self.lze]))
+        fh.write(hdr)
+        fh.write(np.float32(np.transpose(self.x).copy(order='C')))
+        fh.write(np.float32(np.transpose(self.y).copy(order='C')))
+        fh.write(np.float32(np.transpose(self.z).copy(order='C')))
+        fh.close()
+        print('Block'+str(number)+' written!')
+        pass
 
 
         
