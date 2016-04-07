@@ -12,8 +12,8 @@ fFreq=plt.figure()
 fFreq.canvas.set_window_title('Frequency')
 axFreq=fFreq.add_subplot(111)
 #%%
-nxk=(9,8);nsam=1280;fsam=128
-path='/home/rpt1g12/anaconda3/pyTandem/maxProbes/4A15W11AoA20/60-140-10/maxpln'
+nxk=(9,6)
+path='/home/rpt1g12/anaconda3/pyTandem/maxProbes/3A15W11AoA20/60-140-10/maxpln'
 file=path+str(1)+'.dat'
 t=np.loadtxt(file,skiprows=1,unpack=True,usecols=range(1))
 nsam=len(t)
@@ -26,7 +26,7 @@ for k in range(nxk[1]):
 
 
 #%%
-i=0;k=7;vflag=False
+i=0;k=3;vflag=False
 q=4;nw=16;ovlp=0.5
 sgn=mval[i,:,q,k]
 sgn,tn,nsam,fsam=rsample(sgn,t)
@@ -34,7 +34,7 @@ nseg,novlp,ntt,fmax,fmin=defWin(tn,sgn,nw,ovlp,verbose=False)
 
 axTime.lines.clear()
 axFreq.lines.clear()
-for i in range(0,nxk[0],1):
+for i in range(0,nxk[0]-2,1):
     if(vflag):
         sgn=(mval[i,:,1,k]**2+mval[i,:,2,k]**2+mval[i,:,3,k]**2)**0.5
     else:
@@ -46,7 +46,7 @@ for i in range(0,nxk[0],1):
     
     plt.sca(axFreq)
     #cll();clt()
-    axFreq.semilogy(ff,psgn,label='i'+str(i))
+    axFreq.loglog(ff,psgn,label='i'+str(i))
     
 handle,labels=axFreq.get_legend_handles_labels()
 legend=axFreq.legend(handle,labels,bbox_to_anchor=(0,0),ncol=2,loc=3)    

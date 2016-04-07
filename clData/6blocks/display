@@ -36878,3 +36878,16 @@ Restart file written!
 Simulation time was   4.68 hours
  Finished.
 Application 20946029 resources: utime ~129372071s, stime ~178350s, Rss ~182304, inblocks ~13172401, outblocks ~141191747
+Sponge Pts: west=  18 north=  54 east=  54 south=  18
+BL Pts: south=  56 north= 168
+Wake Pts: west= 102 north= 138 east= 138 south=  46
+ SubSets Ready to use!
+Grid generation is complete.
+met000 funtion written!
+Grid written!
+SSGrid written!
+Vortex  1 Done
+sponge000 funtion written!
+Reading restart file..
+   n        time         Cl         Cd
+============================================

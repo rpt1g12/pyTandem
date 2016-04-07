@@ -4,33 +4,33 @@ import matplotlib.pyplot as plt
 from lib.stats import *
 from lib.myPlots import *
 #from lib.matplotlib2tikz import save as tikz_save
+
+#%%
+sim='A4A15W11AoA20'
+dataset='clData/6blocks/'+sim+'.dat';
+n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True)
 #%%
 #fOriginal=plt.figure()
 #fOriginal.canvas.set_window_title('Original')
 #axOriginal=fOriginal.add_subplot(111)
 
 fTime=plt.figure()
-fTime.canvas.set_window_title('Time')
+fTime.canvas.set_window_title('Time '+sim)
 axTime=fTime.add_subplot(111)
 
 fFreq=plt.figure()
-fFreq.canvas.set_window_title('Frequency')
+fFreq.canvas.set_window_title('Frequency '+sim)
 axFreq=fFreq.add_subplot(111)
-
-#%%
-sim='A00W11AoA20'
-dataset='clData/6blocks/'+sim+'.dat';
-n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True)
 
 
 #%%
 show=0
 plt.sca(axTime)
 axTime.lines.clear()
-cll();clt();ns=200
+cll();clt();ns=512
 clh=0.65;cdh=0.32;tmin=75.0
 n0=np.where(tin>tmin)[0][0]
-t0=tin[n0:]+30.0;cl0=clin[n0:];cd0=cdin[n0:]
+t0=tin[n0:]-tin[n0];cl0=clin[n0:];cd0=cdin[n0:]
 cln,tn,nsam,fsam=rsample(cl0,t0,verbose=True,nsample=ns)
 cdn,tn,nsam,fsam=rsample(cd0,t0,nsample=ns)
 s=np.sqrt(np.var(cln))
