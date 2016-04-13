@@ -6,9 +6,10 @@ from lib.myPlots import *
 #from lib.matplotlib2tikz import save as tikz_save
 
 #%%
-sim='A4A15W11AoA20'
+sim='3A15W11AoA20'
 dataset='clData/6blocks/'+sim+'.dat';
 n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True)
+save=False
 #%%
 #fOriginal=plt.figure()
 #fOriginal.canvas.set_window_title('Original')
@@ -28,7 +29,7 @@ show=0
 plt.sca(axTime)
 axTime.lines.clear()
 cll();clt();ns=512
-clh=0.65;cdh=0.32;tmin=75.0
+clh=0.72;cdh=0.29;tmin=tin[-1]-100.0
 n0=np.where(tin>tmin)[0][0]
 t0=tin[n0:]-tin[n0];cl0=clin[n0:];cd0=cdin[n0:]
 cln,tn,nsam,fsam=rsample(cl0,t0,verbose=True,nsample=ns)
@@ -61,7 +62,7 @@ fit(axTime)
 
 #%%
 
-nw=4;ovlp=0.5
+nw=2;ovlp=0.5
 nseg,novlp,ntt,fmax,fmin=defWin(tn,cln,nw,ovlp,verbose=False)
 ff,pcl=psdw(cln,fs=fsam,nperseg=nseg,noverlap=novlp)
 
@@ -69,15 +70,19 @@ ff,pcl=psdw(cln,fs=fsam,nperseg=nseg,noverlap=novlp)
 plt.sca(axFreq)
 axFreq.lines.clear()
 #cll();clt()
-axFreq.loglog(ff,pcl)
+sin20=np.sin(np.deg2rad(20))
+st=(sin20/0.3)*ff
+axFreq.loglog(st,pcl,label='SCl')
 axFreq.set_xlim(0,10)
 axFreq.grid(b=True, which='major', color='k', linestyle='--')
 axFreq.grid(b=True, which='minor', color='k', linestyle=':')
-axFreq.set_xlabel(r'$f^*$',fontsize=20)
+axFreq.set_xlabel(r'$St$',fontsize=20)
 axFreq.set_ylabel(r'$PSD$',fontsize=20)
 fit(axFreq)
 
 #%%
-#plt.sca(axTime)
-#path='/home/rpt1g12/anaconda3/pyTandem/clData/6blocks/'
-#savePlotFile(path=path+sim+'s.dat',vary=['Cl','Cd'])
+name=sim.split('W')[0]+'S'
+if (save==True):
+    plt.sca(axFreq)
+    path='clData/6blocks/'
+    savePlotFile(path=path+name+'.dat',vary=['SCl'],varx=['f'])

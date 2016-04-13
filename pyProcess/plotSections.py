@@ -10,7 +10,7 @@ filename='SecCfCp';ext='0.dat'
 #%%
 fig=plt.figure()
 ax=fig.add_subplot(111)
-opt=0;nsec=17;direc=2;pdir=0;save=1
+opt=6;nsec=17;direc=2;pdir=0;save=0
 if (direc!=2):
     opt=4
 if (opt==0): #all
@@ -31,6 +31,10 @@ elif (opt==4):
 elif (opt==5): #peak&trough
     secs=range(1,nsec,2)
     ncol=2;fname='p&t'
+elif (opt==6): #custom
+    secs=[7]
+    ncol=2;fname='custom'   
+
 for i in secs:
     if (direc==2):
         m=int(round(12.5*i))
@@ -50,7 +54,7 @@ for i in secs:
     else:
         cs=''
     dataset=path+filename+cs+ext
-    cf=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=[4])
+    cf=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=[1])
     if(i==secs[0]):
         cfa=cf.copy()
     else:

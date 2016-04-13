@@ -68,7 +68,7 @@ def savePlotFile(path='plt.dat',ax=None,varx=None,vary=None):
     n=len(ax.lines[j].get_xdata())
     for i in range(n):
         for j in range(m):
-            s+='%.5f \t %.5f \t' % (datx[j][i], daty[j][i])
+            s+='%e \t %e \t' % (datx[j][i], daty[j][i])
         s+=' \n'
     
     fh=open(path,'w')

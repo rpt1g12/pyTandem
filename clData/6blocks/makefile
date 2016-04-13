@@ -10,7 +10,7 @@
 # Change this line if you are using a different Fortran compiler
 COMPILER = pdflatex
 PDFCOMPILER = pdflatex
-NAME = A00
+NAME = figure
 
 all: 
 	$(COMPILER) -draftmode $(NAME).tex

@@ -23,18 +23,35 @@ cyan,densely dashed,mark=asterisk,mark size=1.5pt\\%
 violet,densely dashed,mark=10-pointed star,mark size=1.5pt\\%
 brown,densely dashed,mark=Mercedes star,mark size=1.5pt\\%
 }
+\pgfplotscreateplotcyclelist{mynomarklist}{%
+blue,mark size=1.5pt\\%
+red,mark size=1.5pt\\%
+green,mark size=1.5pt\\%
+orange,mark size=1.5pt\\%
+cyan,mark size=1.5pt\\%
+violet,mark size=1.5pt\\%
+brown,mark size=1.5pt\\%
+black,mark size=1.5pt\\%
+blue,densely dashed,mark size=1.5pt\\%
+red,densely dashed,mark size=1.5pt\\%
+green,densely dashed,mark size=1.5pt\\%
+orange,densely dashed,mark size=1.5pt\\%
+cyan,densely dashed,mark size=1.5pt\\%
+violet,densely dashed,mark size=1.5pt\\%
+brown,densely dashed,mark size=1.5pt\\%
+}
 
 \begin{document}
 	\begin{tikzpicture}
 	\tikzset{>=latex}
 	\begin{axis}[
-	%font=\small,
-        xlabel={$t^*$},
-        ylabel={$C_l$},
-       % xmin=-0.55, xmax=0.55,
-       % ymin=0, ymax=4,
-        %xmode=log,
-        %ymode=log,
+	font=\small,
+        xlabel={$f^*$},
+        ylabel={PSD},
+        xmin=0.0, xmax=1.0,
+        ymin=1e-8, ymax=2,
+        xmode=log,
+        ymode=log,
         %axis on top,
         %width=\tikzw,
         %height=\tikzh,
@@ -49,11 +66,17 @@ brown,densely dashed,mark=Mercedes star,mark size=1.5pt\\%
 	yminorgrids,
         ymajorgrids,yminorgrids,
 	%y dir =reverse,
-        %legend style={at={(1.00,1.00)}, anchor=north east},
-        %legend entries={{$y^+$},{$x^+$},{$z^+$}},
+        legend style={at={(1.00,1.00)}, anchor=north east},
+        legend entries={{SLE},{2WLE},{3WLE},{4WLE}},
+	legend columns=4,
 	cycle list name = mycolorlist,
-	mark repeat={10}]
-		\addplot[mark=none,blue] table [x={x0}, y={Cl}] {A15.dat};
+	mark repeat={1}]
+		\addplot table [x={f}, y={SCl}] {A00S.dat};
+		\addplot table [x={f}, y={SCl}] {A15S.dat};
+		\addplot table [x={f}, y={SCl}] {3A15S.dat};
+		\addplot table [x={f}, y={SCl}] {A4A15S.dat};
 	\end{axis}
 	\end{tikzpicture}
 \end{document}
+
+

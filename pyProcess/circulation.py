@@ -53,7 +53,8 @@ for nprob in range(1,11):
             vscl=(np.var(z[i,0:ntot]))
             Cpp[i-1,:]=cpp/vscl
 
-    zz=[i*(2.0/100) for i in range(101)]
+    zz=np.linspace(-0.11,0.11,101)#[i*(2.0/100) for i in range(101)]
+    zz/=0.11
     X, Y = np.meshgrid(ff, zz)
     i=7;fmax=1
     m=i
