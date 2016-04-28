@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 from lib.stats import *
 from lib.myPlots import *
 #from lib.matplotlib2tikz import save as tikz_save
-
+plt.close('all')
 #%%
-sim='3A15W11AoA20'
+sim='A4A15W11AoA20'
 dataset='clData/6blocks/'+sim+'.dat';
 n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True)
-save=False
+save=False;scale=False;sclg='spectrum'
 #%%
 #fOriginal=plt.figure()
 #fOriginal.canvas.set_window_title('Original')
@@ -64,8 +64,9 @@ fit(axTime)
 
 nw=2;ovlp=0.5
 nseg,novlp,ntt,fmax,fmin=defWin(tn,cln,nw,ovlp,verbose=False)
-ff,pcl=psdw(cln,fs=fsam,nperseg=nseg,noverlap=novlp)
-
+ff,pcl=psdw(cln,fs=fsam,nperseg=nseg,noverlap=novlp,scaling=sclg)
+if (scale):
+    pcl/=np.var(cln)
 #%%
 plt.sca(axFreq)
 axFreq.lines.clear()

@@ -5,9 +5,9 @@ from lib.stats import *
 from lib.myPlots import *
 
 #%%
-save=True; scale=False; step=True
-nxk=(9,4)
-sim='A00W11AoA20'
+save=False; scale=False; step=True;sclg='spectrum'
+nxk=(9,8)
+sim='A4A15W11AoA20'
 path='maxProbes/'+sim+'/60-140-10/maxpln'
 file=path+str(1)+'.dat'
 t=np.loadtxt(file,skiprows=1,unpack=True,usecols=range(1))
@@ -28,7 +28,7 @@ fFreq=plt.figure()
 fFreq.canvas.set_window_title('Frequency '+sim)
 axFreq=fFreq.add_subplot(111)
 #%%
-i=0;k=3;vflag=False
+i=0;k=7;vflag=False
 q=4;nw=16;ovlp=0.5
 sgn=mval[i,:,q,k]
 sgn,tn,nsam,fsam=rsample(sgn,t)
@@ -42,7 +42,7 @@ for i in range(0,nxk[0]-2,1):
     else:
         sgn=mval[i,:,q,k]
     sgn,tn,nsam,fsam=rsample(sgn,t,verbose=True,rmAvg=True)
-    ff,psgn=psdw(sgn,fs=fsam,nperseg=nseg,noverlap=novlp)
+    ff,psgn=psdw(sgn,fs=fsam,nperseg=nseg,noverlap=novlp,scaling=sclg)
     axTime.plot(tn,sgn+i*0.4)
     fit(axTime)
     
