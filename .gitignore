@@ -3,3 +3,11 @@ tecplotData/*
 lines/*
 *.pdf
 *.png
+*.aux
+*.log
+*.swn
+grids/*
+*.swo
+*.swp
+lib/__pycache__/*
+*checkpoint.ipynb
