@@ -9,5 +9,6 @@ lines/*
 grids/*
 *.swo
 *.swp
+*.f90
 lib/__pycache__/*
 *checkpoint.ipynb
