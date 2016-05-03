@@ -5,7 +5,7 @@ from lib.stats import *
 from lib.myPlots import *
 from lib.myIO import *
 #%%
-save=True; scale=False; step=True;mod='full';rmMean=False
+save=False; scale=False; step=True;mod='full';rmMean=False
 plt.close('all')
 for case in [0,1,2]:
     if (case==0): sim='A4A15W11AoA20'
@@ -57,7 +57,8 @@ for case in [0,1,2]:
     ax.set_ylim(-1,1)
     if ((muu.min()<0) or (mvv.min()<0) or (mww.min()<0)):
         lvl=np.linspace(-1,1,41)
-        cm='bwr'
+        #cm='bwr'
+        cm='gray_r'
     else:
         lvl=np.linspace(0,1,41)
         cm='inferno'
@@ -78,9 +79,9 @@ for case in [0,1,2]:
     wrtContour(path+'mww.dat',X,Y,mww,['x','z','Rww'])
     
 #%%
-#plt.close('all')
-#ax4.set_visible(False)
-#cbar=fig4.colorbar(img,orientation='horizontal')
-#cbar.ax.yaxis.set_visible(False)
-#cbar.ax.xaxis.set_visible(False)
-#fig4.savefig(path+cm+'.pdf')
+plt.close('all')
+ax4.set_visible(False)
+cbar=fig4.colorbar(img,orientation='horizontal')
+cbar.ax.yaxis.set_visible(False)
+cbar.ax.xaxis.set_visible(False)
+fig4.savefig(path+cm+'.pdf')
