@@ -1,0 +1,5 @@
+.spyder*
+tecplotData/*
+lines/*
+*.pdf
+*.png
