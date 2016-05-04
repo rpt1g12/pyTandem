@@ -12,3 +12,6 @@ grids/*
 *.f90
 lib/__pycache__/*
 *checkpoint.ipynb
+*.xyz
+*.f
+*.q

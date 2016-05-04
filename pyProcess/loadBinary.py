@@ -44,22 +44,22 @@ def rdVar(f,lh,nvar,lxi,let,lze):
     x=np.reshape(x,(lxi,let,lze),'F')
     return x
 
-def wrP3dGrid(name,lxi,let,lze,xyz):
+def wrP3dGrid(path,cblock,lxi,let,lze,xyz):
     """Write to Plot3D format"""
-    path=os.getcwd()
-    fh=open(path+'/'+name+'.xyz','wb')
+    
+    fh=open(path+cblock+'.xyz','wb')
     hdr=np.int32(np.array([1,lxi,let,lze]))
     fh.write(hdr)
     for i in range(3):
         fh.write(np.float32(np.transpose(xyz[:,:,:,i]).copy(order='C')))
     fh.close()
-    print(name+' written!')
+    print(cblock+' written!')
     pass
 
-def wrP3dFunction(name,lxi,let,lze,f,r):
+def wrP3dFunction(path,name,lxi,let,lze,f,r):
     """Write to Plot3D format"""
-    path=os.getcwd()
-    fh=open(path+'/'+name+'.f','wb')
+    
+    fh=open(path+name+'.f','wb')
     nf=len(r)
     hdr=np.int32(np.array([1,lxi,let,lze,nf]))
     fh.write(hdr)
@@ -69,13 +69,12 @@ def wrP3dFunction(name,lxi,let,lze,f,r):
     print(name+' written!')
     pass
 
-def wrP3dS(cblock,size,flowc,f,r):
+def wrP3dS(path,cblock,size,flowc,f,r):
     """Write to Plot3D format"""
-    path=os.getcwd()
+    
     ctime='{:08.4f}'.format(flowc[3])
     fh=open(path+'/solT'+ctime+'b'+cblock+'.q','wb')
-    nf=len(r)
-    hdr=np.int32(np.array([1,size[0],size[1],size[2],nf]))
+    hdr=np.int32(np.array([1,size[0],size[1],size[2]]))
     fh.write(hdr)
     fhdr=np.float32(np.array(flowc))
     fh.write(fhdr)
@@ -86,9 +85,14 @@ def wrP3dS(cblock,size,flowc,f,r):
     pass
 
 #%%
-for m in range(20):
+for m in [11]:
+    
     cblock='{:03d}'.format(m)
     path='tecplotData/'
+    directory=path+'b'+cblock+'/'   
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    
     cname='output'+cblock+'.plt'
     f=open(path+cname,'rb')
     vbs=False
@@ -138,18 +142,18 @@ for m in range(20):
         var[:,:,:,i]=rdVar(f,lhdr,i,imax,jmax,kmax)
     
     #%%
-    wrP3dGrid('gridb'+cblock,imax,jmax,kmax,var)
-    wrP3dFunction('tfunctionb'+cblock,imax,jmax,kmax,var,range(3,12))
+    wrP3dGrid(directory,'gridb'+cblock,imax,jmax,kmax,var)
+    wrP3dFunction(directory,'tfunctionb'+cblock,imax,jmax,kmax,var,range(3,12))
     #%%
     nsol0=cvar.index('r000')
     nsol=int((len(cvar)-nsol0)/5);print(str(nsol)+' Snapshots found')
     sizes=[imax,jmax,kmax]
     
     for i in range(nsol):
-        flowc=[0.4,5,120000,i]
+        flowc=[0.4,5.0,120000.0,i*1.0]
         r0=nsol0+i*5;
         rn=r0+5
         r=range(r0,rn)
-        wrP3dS(cblock,sizes,flowc,var,r)
+        wrP3dS(directory,cblock,sizes,flowc,var,r)
     
     f.close()
