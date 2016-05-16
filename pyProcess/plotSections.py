@@ -10,7 +10,7 @@ filename='SecCfCp';ext='0.dat'
 #%%
 fig=plt.figure()
 ax=fig.add_subplot(111)
-opt=6;nsec=17;direc=2;pdir=0;save=0
+opt=2;nsec=17;direc=2;pdir=0;save=0
 if (direc!=2):
     opt=4
 if (opt==0): #all
