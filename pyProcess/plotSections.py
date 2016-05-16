@@ -3,14 +3,15 @@ import matplotlib.pyplot as plt
 from lib.myPlots import *
 
 #%%
-path='sections/6blocks/4A15W11AoA20/cfTwCp/'
+path='sections/naca0012/cfTwCp/'
 filename='SecCfCp';ext='0.dat'
 #tikzpath='/home/rpt1g12/Dropbox/phd/figures/wleResults/'
-
+px,py=np.loadtxt('cfData/Jones2008.dat',skiprows=1,unpack=True)
+px-=0.5
 #%%
 fig=plt.figure()
 ax=fig.add_subplot(111)
-opt=6;nsec=17;direc=2;pdir=0;save=0
+opt=0;nsec=6;direc=2;pdir=0;save=0
 if (direc!=2):
     opt=4
 if (opt==0): #all
@@ -54,15 +55,16 @@ for i in secs:
     else:
         cs=''
     dataset=path+filename+cs+ext
-    cf=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=[1])
+    cf=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=[0])
     if(i==secs[0]):
         cfa=cf.copy()
     else:
         cfa+=cf
     x=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=[6,7,8])
-    ax.plot(x[pdir,:],cf,label=cs)
+    #ax.plot(x[pdir,:],cf,label=cs)
 cfa/=len(secs)
 ax.plot(x[pdir,:],cfa,label='avg')
+ax.plot(px,py,label='Jones')
 ax.set_xlabel(r'$x/L_c$')
 ax.set_ylabel(r'$<C_p>$')
 handle,labels=ax.get_legend_handles_labels()

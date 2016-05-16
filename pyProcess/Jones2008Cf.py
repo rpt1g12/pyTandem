@@ -71,9 +71,9 @@ plt.rc('font', family='serif')
 plt.subplot(111)
 plt.plot(p1.x[0:151],u,'b-s',label='Forced',linewidth=3.0,markevery=5)
 plt.plot(p2.x[0:151],v,'r-d',label='Inflow',linewidth=3.0,markevery=5)
-#plt.plot(p3.x[0:201],w,'g-^',label='G2',linewidth=3.0,markevery=5)
-#plt.plot(p4.x[0:201],w2,'r-s',label='G3',linewidth=3.0,markevery=5)
-#plt.plot(p5.x[0:301],w3,'c-d',label='G4',linewidth=3.0,markevery=5)
+plt.plot(p3.x[0:201],w,'g-^',label='G2',linewidth=3.0,markevery=5)
+plt.plot(p4.x[0:201],w2,'r-s',label='G3',linewidth=3.0,markevery=5)
+plt.plot(p5.x[0:301],w3,'c-d',label='G4',linewidth=3.0,markevery=5)
 plt.plot(px,py,'ko',label='3DU',markersize=5.0)
 plt.legend(bbox_to_anchor=(0., 1.02, 1., .102),
            loc=3,ncol=3,
