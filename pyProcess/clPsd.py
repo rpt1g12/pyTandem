@@ -6,7 +6,7 @@ from lib.myPlots import *
 #from lib.matplotlib2tikz import save as tikz_save
 plt.close('all')
 #%%
-sim='A4A15W11AoA20'
+sim='A00W11AoA20'
 dataset='clData/6blocks/'+sim+'.dat';
 n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True)
 save=False;scale=False;sclg='spectrum'
