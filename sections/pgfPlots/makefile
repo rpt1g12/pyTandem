@@ -10,7 +10,7 @@
 # Change this line if you are using a different Fortran compiler
 COMPILER = pdflatex
 PDFCOMPILER = pdflatex
-NAME = tCf
+NAME = pgfPlots
 
 all: 
 	$(COMPILER) -draftmode $(NAME).tex

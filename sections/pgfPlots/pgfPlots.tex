@@ -1,0 +1,43 @@
+\documentclass[class=letter,border=0pt]{standalone}
+\usepackage{preamble}
+\begin{document}
+	\begin{tikzpicture}
+	\tikzset{>=latex}
+	\begin{axis}[
+	%font=\small,
+        xlabel={$x/L_c$},
+        ylabel={$<C_p>$},
+        xmin=-0.55, xmax=0.55,
+        %ymin=3e-2, ymax=,
+        %xmode=log,
+        %ymode=log,
+	%y dir=reverse,
+        %axis on top,
+        %width=\tikzw,
+        %height=\tikzh,
+	%x=2\textwidth,
+	%y=1\textwidth,
+	%xtick={-0.6,-0.5,...,0.6},
+	grid=both,
+        xmajorgrids,
+	minor tick num=2,
+        ymajorgrids,
+	xminorgrids,
+	yminorgrids,
+        ymajorgrids,yminorgrids,
+        legend style={at={(1.00,1.00)}, anchor=north east},
+        legend entries={{G1T1},{G1T2},{G1T3},{G1T4},
+			{G2T1},{G2T2},{G2T3},{G2T4}},
+	cycle list name = mynomarklist,
+	mark repeat={10}]
+		%\addplot table [x={x3}, y={T1}] {allCpG1.dat};
+		\addplot table [x={x7}, y={T2}] {allCfG1.dat};
+		%\addplot table [x={x3}, y={T3}] {allCpG1.dat};
+		\addplot table [x={x7}, y={T4}] {allCfG1.dat};
+		%\addplot table [x={x3}, y={T1}] {allCpG2.dat};
+		\addplot table [x={x7}, y={T2}] {allCfG2.dat};
+		%\addplot table [x={x3}, y={T3}] {allCpG2.dat};
+		\addplot table [x={x7}, y={T4}] {allCfG2.dat};
+	\end{axis}
+	\end{tikzpicture}
+\end{document}

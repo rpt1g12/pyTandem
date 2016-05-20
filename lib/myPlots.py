@@ -1,6 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+def getFig(title=None):
+    fig=plt.figure()
+    if (title!=None):
+        fig.canvas.set_window_title(title)
+    ax=fig.add_subplot(111)
+    return fig,ax
+    
 def cll(ax=None):
     if (ax==None):
         ax=plt.gca()
@@ -15,7 +22,12 @@ def clt(ax=None):
     for i in range(n):
         ax.texts.pop(0)
         
-
+def axShow (axes=None):
+    if (axes==None):
+        axes=plt.gca()
+    axes.figure.canvas.draw()
+    axes.figure.show()
+    
 def fit (axes=None):
     if (axes==None):
         axes=plt.gca()

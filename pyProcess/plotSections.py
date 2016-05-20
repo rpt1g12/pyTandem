@@ -1,17 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from lib.myPlots import *
+from lib.stats import *
+from scipy.signal import butter, filtfilt
 
 #%%
-path='sections/naca0012/cfTwCp/'
+path='sections/6blocks/4A15W11AoA20/cfTwCp/'
 filename='SecCfCp';ext='0.dat'
 #tikzpath='/home/rpt1g12/Dropbox/phd/figures/wleResults/'
 px,py=np.loadtxt('cfData/Jones2008.dat',skiprows=1,unpack=True)
 px-=0.5
 #%%
 fig=plt.figure()
+fig.canvas.set_window_title(path)
 ax=fig.add_subplot(111)
-opt=0;nsec=6;direc=2;pdir=0;save=0
+opt=0;nsec=17;direc=2;pdir=0;save=1;filt=0;nsam=100
 if (direc!=2):
     opt=4
 if (opt==0): #all
@@ -56,15 +59,22 @@ for i in secs:
         cs=''
     dataset=path+filename+cs+ext
     cf=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=[0])
-    if(i==secs[0]):
-        cfa=cf.copy()
-    else:
-        cfa+=cf
+
     x=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=[6,7,8])
-    #ax.plot(x[pdir,:],cf,label=cs)
+    if (filt!=0):
+        f,xn,nsam,fsam=rsample(cf,x[0,:],nsample=100)
+        b,a=butter(4,filt,analog=False)
+        f=filtfilt(b,a,f)
+    else:
+        f=cf.copy();xn=x[pdir,:].copy()
+    ax.plot(xn,f,label=cs)
+    if(i==secs[0]):
+        cfa=f.copy()
+    else:
+        cfa+=f
 cfa/=len(secs)
-ax.plot(x[pdir,:],cfa,label='avg')
-ax.plot(px,py,label='Jones')
+#ax.plot(xn,cfa,label='avg',linewidth=2)
+#ax.plot(px,py,label='Jones')
 ax.set_xlabel(r'$x/L_c$')
 ax.set_ylabel(r'$<C_p>$')
 handle,labels=ax.get_legend_handles_labels()
