@@ -1,9 +1,12 @@
-\documentclass[class=letter,border=0pt]{standalone}
+%\documentclass[class=letter,border=0pt]{standalone}
+\documentclass[a4paper]{article}
 \usepackage{preamble}
 \begin{document}
 	\begin{tikzpicture}
 	\tikzset{>=latex}
-	\begin{axis}[
+	\begin{axis}[name=ax0,
+	at={(0,0)},
+	anchor=south east,
 	%font=\small,
         xlabel={$x/L_c$},
         ylabel={$<C_p>$},
@@ -11,9 +14,9 @@
         %ymin=3e-2, ymax=,
         %xmode=log,
         %ymode=log,
-	%y dir=reverse,
+	y dir=reverse,
         %axis on top,
-        %width=\tikzw,
+        width=\textwidth,
         %height=\tikzh,
 	%x=2\textwidth,
 	%y=1\textwidth,
@@ -28,15 +31,53 @@
         legend style={at={(1.00,1.00)}, anchor=north east},
         legend entries={{G1T1},{G1T2},{G1T3},{G1T4},
 			{G2T1},{G2T2},{G2T3},{G2T4}},
-	cycle list name = mynomarklist,
+	cycle list name = mycolorlist,
 	mark repeat={10}]
-		%\addplot table [x={x3}, y={T1}] {allCpG1.dat};
+		\addplot table [x={x3}, y={T1}] {allCpG1.dat};
+		\addplot table [x={x7}, y={T2}] {allCpG1.dat};
+		\addplot table [x={x3}, y={T3}] {allCpG1.dat};
+		\addplot table [x={x7}, y={T4}] {allCpG1.dat};
+		\addplot table [x={x3}, y={T1}] {allCpG2.dat};
+		\addplot table [x={x7}, y={T2}] {allCpG2.dat};
+		\addplot table [x={x3}, y={T3}] {allCpG2.dat};
+		\addplot table [x={x7}, y={T4}] {allCpG2.dat};
+	\end{axis}
+	\begin{axis}[name=ax1,
+	at={($(ax0.south)+(0.0\textwidth,-0.15\textwidth)$)},
+	anchor=north,
+	%font=\small,
+        xlabel={$x/L_c$},
+        ylabel={$<C_f>$},
+        xmin=-0.55, xmax=0.55,
+        %ymin=3e-2, ymax=,
+        %xmode=log,
+        %ymode=log,
+	%y dir=reverse,
+        %axis on top,
+        width=\textwidth,
+        %height=\tikzh,
+	%x=2\textwidth,
+	%y=1\textwidth,
+	%xtick={-0.6,-0.5,...,0.6},
+	grid=both,
+        xmajorgrids,
+	minor tick num=2,
+        ymajorgrids,
+	xminorgrids,
+	yminorgrids,
+        ymajorgrids,yminorgrids,
+        legend style={at={(1.00,1.00)}, anchor=north east},
+        legend entries={{G1T1},{G1T2},{G1T3},{G1T4},
+			{G2T1},{G2T2},{G2T3},{G2T4}},
+	cycle list name = mycolorlist,
+	mark repeat={10}]
+		\addplot table [x={x3}, y={T1}] {allCfG1.dat};
 		\addplot table [x={x7}, y={T2}] {allCfG1.dat};
-		%\addplot table [x={x3}, y={T3}] {allCpG1.dat};
+		\addplot table [x={x3}, y={T3}] {allCfG1.dat};
 		\addplot table [x={x7}, y={T4}] {allCfG1.dat};
-		%\addplot table [x={x3}, y={T1}] {allCpG2.dat};
+		\addplot table [x={x3}, y={T1}] {allCfG2.dat};
 		\addplot table [x={x7}, y={T2}] {allCfG2.dat};
-		%\addplot table [x={x3}, y={T3}] {allCpG2.dat};
+		\addplot table [x={x3}, y={T3}] {allCfG2.dat};
 		\addplot table [x={x7}, y={T4}] {allCfG2.dat};
 	\end{axis}
 	\end{tikzpicture}

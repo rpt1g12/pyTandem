@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 from lib.stats import *
 from lib.myPlots import *
 #from lib.matplotlib2tikz import save as tikz_save
-plt.close('all')
+#plt.close('all')
 #%%
 sim='A00W11AoA20'
 dataset='clData/6blocks/'+sim+'.dat';
 n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True)
-save=False;scale=False;sclg='spectrum'
+save=True;scale=False;sclg='spectrum'
 #%%
 #fOriginal=plt.figure()
 #fOriginal.canvas.set_window_title('Original')
@@ -62,9 +62,11 @@ fit(axTime)
 
 #%%
 
-nw=2;ovlp=0.5
-nseg,novlp,ntt,fmax,fmin=defWin(tn,cln,nw,ovlp,verbose=False)
-ff,pcl=psdw(cln,fs=fsam,nperseg=nseg,noverlap=novlp,scaling=sclg)
+nw=2;ovlp=0.5;sgnl=cdn
+
+nseg,novlp,ntt,fmax,fmin=defWin(tn,sgnl,nw,ovlp,verbose=False)
+#sgnl=myFilter(sgnl,0.25/(fmax))
+ff,pcl=psdw(sgnl,fs=fsam,nperseg=nseg,noverlap=novlp,scaling=sclg)
 if (scale):
     pcl/=np.var(cln)
 #%%
@@ -82,8 +84,8 @@ axFreq.set_ylabel(r'$PSD$',fontsize=20)
 fit(axFreq)
 
 #%%
-name=sim.split('W')[0]+'S'
+name=sim.split('W')[0]+'SCd'
 if (save==True):
     plt.sca(axFreq)
-    path='clData/6blocks/'
-    savePlotFile(path=path+name+'.dat',vary=['SCl'],varx=['f'])
+    path='pgfPlots/'
+    savePlotFile(path=path+name+'.dat',vary=['SCd'],varx=['f'])
