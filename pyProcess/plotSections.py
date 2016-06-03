@@ -5,8 +5,8 @@ from lib.stats import *
 from scipy.signal import butter, filtfilt
 
 #%%
-path='sections/6blocks/A00W11AoA20/cfTwCp/'
-filename='cfSec';ext='0.dat'
+path='sections/6blocks/4A15W11AoA20/f08/'
+filename='SecCfCp';ext='0.dat'
 #tikzpath='/home/rpt1g12/Dropbox/phd/figures/wleResults/'
 px,py=np.loadtxt('cfData/Jones2008.dat',skiprows=1,unpack=True)
 px-=0.5
@@ -14,7 +14,7 @@ px-=0.5
 fig=plt.figure()
 fig.canvas.set_window_title(path)
 ax=fig.add_subplot(111)
-opt=0;nsec=9;direc=2;pdir=0;
+opt=0;nsec=17;direc=2;pdir=0;
 save=1;filt=0;nsam=100
 if (direc!=2):
     opt=4
