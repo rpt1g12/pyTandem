@@ -1,12 +1,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-def getFig(title=None):
+def getFig(title=None,layout=111):
     fig=plt.figure()
     if (title!=None):
         fig.canvas.set_window_title(title)
-    ax=fig.add_subplot(111)
+    ax=fig.add_subplot(layout)
     return fig,ax
+
+def addAx(fig=None,layout=111):
+    if(fig==None):
+        fig=plt.gcf()
+    ax=fig.add_subplot(layout)
+    return ax
     
 def cll(ax=None):
     if (ax==None):
@@ -28,7 +34,7 @@ def axShow (axes=None):
     axes.figure.canvas.draw()
     axes.figure.show()
     
-def fit (axes=None):
+def fit (axes=None,spg=(0.0,0.2)):
     if (axes==None):
         axes=plt.gca()
     i=0
@@ -46,10 +52,10 @@ def fit (axes=None):
         ylim[0]=min(ylim[0],min(y))
         xlim[1]=max(xlim[1],max(x))
         ylim[1]=max(ylim[1],max(y))
-    xXtra[0]=-0.1*(xlim[1]-xlim[0])
-    xXtra[1]=+0.1*(xlim[1]-xlim[0])
-    yXtra[0]=-0.1*(ylim[1]-ylim[0])
-    yXtra[1]=+0.1*(ylim[1]-ylim[0])
+    xXtra[0]=-spg[0]*(xlim[1]-xlim[0])
+    xXtra[1]=+spg[0]*(xlim[1]-xlim[0])
+    yXtra[0]=-spg[1]*(ylim[1]-ylim[0])
+    yXtra[1]=+spg[1]*(ylim[1]-ylim[0])
     print(xlim,ylim)
     axes.set_xlim(xlim+xXtra)
     axes.set_ylim(ylim+yXtra)
