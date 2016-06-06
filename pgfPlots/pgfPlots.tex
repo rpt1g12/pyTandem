@@ -15,13 +15,13 @@ plot coordinates {
 	\tikzset{>=latex}
 	\begin{axis}[
 	%font=\small,
-        %xlabel={$t$},
-	xticklabels={,,},
-        ylabel={$C_{Dv}$},
-        xmin=0, xmax=60,
-        ymin=0.2e-2, ymax=1.2e-2,
-        %xmode=log,
-        %ymode=log,
+        xlabel={$St$},
+	%xticklabels={,,},
+        ylabel={$S_{C_{Df}C_{Df}}$},
+        xmin=0.05, xmax=1,
+        %ymin=0.2e-2, ymax=1.2e-2,
+        xmode=log,
+        ymode=log,
 	%y dir=reverse,
         %axis on top,
         %width=\tikzw,
@@ -36,46 +36,12 @@ plot coordinates {
 	xminorgrids,
 	yminorgrids,
         ymajorgrids,yminorgrids,
-        %legend style={at={(1.00,1.00)}, anchor=north east},
-        %legend entries={{SLE},{4WLE}},
+        legend style={at={(1.00,1.00)}, anchor=north east},
+        legend entries={{SLE},{4WLE}},
 	cycle list name = mynomarklist,
 	mark repeat={10}]
-		\addplot table [x={x0}, y={cdv}] {A00pvCd.dat};
-		\addplot table [x={x0}, y={cdv}] {4A15pvCd.dat};
-	\end{axis}
-	\begin{axis}[
-	%font=\small,
-        xlabel={$t^*-t_0$},
-        ylabel={$C_{Dp}$},
-        xmin=0, xmax=60,
-        ymin=0.00, ymax=0.5,
-	%yticklabels={,,},
-        %xmode=log,
-        %ymode=log,
-	%y dir=reverse,
-        %axis on top,
-        %width=\tikzw,
-        %height=\tikzh,
-	%x=2\textwidth,
-	%y=1\textwidth,
-	%ytick={0.1,0.2,...,0.6},
-	grid=both,
-        xmajorgrids,
-	minor y tick num=1,
-        ymajorgrids,
-	xminorgrids,
-	yminorgrids,
-        ymajorgrids,yminorgrids,
-	ylabel near ticks, yticklabel pos=right,
-        legend style={at={(1.00,0.00)}, anchor=south east,font=\small},
-        legend entries={{SLE$_v$},{4WLE$_v$},{SLE$_p$},{4WLE$_p$}},
-	legend columns=4,
-	cycle list name = mynomarklist,
-	mark repeat={10}]
-		\addplot coordinates {(0,0)};
-		\addplot coordinates {(0,0)};
-		\addplot table [x={x0}, y={cdp}] {A00pvCd.dat};
-		\addplot table [x={x0}, y={cdp}] {4A15pvCd.dat};
+		\addplot table [x={f}, y={SCd}]  {A00pClCdPSD.dat};
+		\addplot table [x={f}, y={SCd}] {4A15pClCdPSD.dat};
 	\end{axis}
 	\end{tikzpicture}
 \end{document}
