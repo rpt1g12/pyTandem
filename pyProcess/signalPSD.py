@@ -9,7 +9,7 @@ dataset='clData/6blocks/pvClCd/'+sim+'.dat';
 n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True)
 save=True;scale=False;sclg='spectrum'
 
-tmin=0.0;ns=0
+tmin=0.0;ns=512
 n0=np.where(tin>tmin)[0][0]
 t0=tin[n0:]-tin[n0];cl0=clin[n0:];cd0=cdin[n0:]
 

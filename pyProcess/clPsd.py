@@ -6,10 +6,19 @@ from lib.myPlots import *
 #from lib.matplotlib2tikz import save as tikz_save
 #plt.close('all')
 #%%
-sim='A00W11AoA20'
+osim=4
+if(osim==0):
+    sim='A00'
+elif(osim==2):
+    sim='A15'
+elif(osim==3):
+    sim='3A15'
+elif(osim==4):
+    sim='A4A15'
+sim+='W11AoA20'
 dataset='clData/6blocks/'+sim+'.dat';
 n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True)
-save=True;scale=False;sclg='spectrum'
+save=False;scale=False;sclg='spectrum'
 #%%
 #fOriginal=plt.figure()
 #fOriginal.canvas.set_window_title('Original')
@@ -29,7 +38,7 @@ show=0
 plt.sca(axTime)
 axTime.lines.clear()
 cll();clt();ns=512
-clh=0.72;cdh=0.29;tmin=tin[-1]-100.0
+clh=0.72;cdh=0.29;tmin=tin[-1]-60.0
 n0=np.where(tin>tmin)[0][0]
 t0=tin[n0:]-tin[n0];cl0=clin[n0:];cd0=cdin[n0:]
 cln,tn,nsam,fsam=rsample(cl0,t0,verbose=True,nsample=ns)
@@ -76,13 +85,13 @@ axFreq.lines.clear()
 sin20=np.sin(np.deg2rad(20))
 st=(sin20/0.3)*ff
 axFreq.loglog(st,pcl,label='SCl')
-axFreq.set_xlim(0,10)
+
 axFreq.grid(b=True, which='major', color='k', linestyle='--')
 axFreq.grid(b=True, which='minor', color='k', linestyle=':')
 axFreq.set_xlabel(r'$St$',fontsize=20)
 axFreq.set_ylabel(r'$PSD$',fontsize=20)
 fit(axFreq)
-
+axFreq.set_xlim(0,2)
 #%%
 name=sim.split('W')[0]+'SCd'
 if (save==True):
