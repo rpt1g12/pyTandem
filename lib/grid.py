@@ -112,45 +112,7 @@ def qhermite(x,y0,yx0,y1,yx1,yxx0=0.0,yxx1=0.0):
         fxx[i]=(p*c2*t)
     return f,fx,fxx
     
-def qahermite(x,y0,yx0,y1,yx1,side,lnr=0):
-    """Hermitiean interpolation with one end with zero
-    curvature"""
-    l=len(x)-1; s=np.zeros(l+1);f=np.zeros(l+1)
-    x0=x[0];x1=x[l]; dx=x1-x0
-    s[:]=(x[:]-x0)/dx
-    p0=y0;p1=yx0*dx
-    p3=y1;p2=yx1*dx;
-    p=np.matrix([[p0,p1,p2,p3]])
-    if (lnr==1):
-        c=np.matrix([
-        [-00.0,+00.0,-00.0,-01.0,+01.0],
-        [-00.0,+00.0,-00.0,+00.0,+00.0],
-        [-00.0,+00.0,-00.0,+00.0,+00.0],
-        [+00.0,-00.0,+00.0,+01.0,+00.0]])
-    else:
-        if (side==1):
-            c=np.matrix([
-            [-03.0,+08.0,-06.0,+00.0,+01.0],
-            [-01.0,+03.0,-03.0,+01.0,+00.0],
-            [-02.0,+05.0,-03.0,+00.0,+00.0],
-            [+03.0,-08.0,+06.0,+00.0,+00.0]])
-        else:
-            c=np.matrix([
-            [+03.0,-04.0,-00.0,-00.0,+01.0],
-            [+02.0,-03.0,+00.0,+01.0,+00.0],
-            [+01.0,-01.0,+00.0,+00.0,+00.0],
-            [-03.0,+04.0,+00.0,+00.0,+00.0]])
-    for i in range(l+1):
-        t=np.matrix([                                                                                                                                                       
-                    [s[i]**4],
-                    [s[i]**3],
-                    [s[i]**2],
-                    [s[i]**1],
-                    [s[i]**0]
-                            ])
-        f[i]=(p*c*t)
-    return f
-       
+      
 def dxi(x,fctr=1):
     """Derivative scheme 2nd Order"""
     n=max(x.shape); dx=np.zeros(n)

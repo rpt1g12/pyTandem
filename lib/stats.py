@@ -54,14 +54,14 @@ def nextpow2(i):
     while n<i: n*=2
     return n
 
-def rsample(x,t,nsample=0,verbose=False,rmAvg=False):
+def rsample(x,t,nsample=0,verbose=False,rmAvg=False,force=False):
     """docstring for rsample"""
     xspln=interpolate.splrep(t,x,s=0)
     if (nsample==0):
         nsample=len(t)
     else:
         nsample=nextpow2(nsample)
-        if (nsample>len(t)):
+        if (nsample>len(t) and force==False):
             nsample/=2
             if (verbose): print('# of samples modified to: ',nsample)
     tnew=np.linspace(t[0],t[-1],nsample)

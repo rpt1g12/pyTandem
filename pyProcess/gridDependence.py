@@ -5,43 +5,25 @@ from lib.stats import *
 from scipy.signal import butter, filtfilt
 
 #%%
-sims=('G2','G3','G4','4A15W11AoA20')
-nsecs=(201,201,161,201)
+save=1
+sims=('G1','G2','G3','G4')
+nsecs=(201,201,201,161)
 #sims=('G3','G2')
 fig,ax=getFig('Grid')
+fig2,ax2=getFig('Diff')
 for ll in range(len(sims)):
     sim=sims[ll]
-    path='sections/6blocks/'+sim+'/f08/'
+    path='sections/6blocks/gridDependence/'+sim+'/f08/'
     filename='SecCfCp';ext='0.dat'
     
     #%% 
     opt=0;
     nsec=nsecs[ll];
-    direc=2;pdir=0;
-    save=1;filt=0;nsam=100
-    if (direc!=2):
-        opt=4
-    if (opt==0): #all
-        secs=range(nsec)
-        ncol=2;fname='all'
-    elif (opt==1): #medium
-        secs=range(0,nsec,2)
-        ncol=2;fname='m'
-    elif (opt==2): #peak
-        secs=range(1,nsec,4)
-        ncol=1;fname='p'
-    elif (opt==3):  #though  
-        secs=range(3,nsec,4)
-        ncol=1;fname='t'
-    elif (opt==4):    
-        secs=[0]
-        ncol=1; fname='sec'+str(direc)
-    elif (opt==5): #peak&trough
-        secs=range(1,nsec,2)
-        ncol=2;fname='p&t'
-    elif (opt==6): #custom
-        secs=[7]
-        ncol=2;fname='custom'   
+    direc=2;
+    nsam=512
+    secs=range(nsec)
+    ncol=2;fname='all'
+  
     
     for i in secs:
         if (direc==2):
@@ -62,25 +44,49 @@ for ll in range(len(sims)):
         else:
             cs=''
         dataset=path+filename+cs+ext
-        cf=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=[0])
+        cf=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=[4])
     
         x=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=[6,7,8])
-        if (filt!=0):
-            f,xn,nsam,fsam=rsample(cf,x[0,:],nsample=100)
-            b,a=butter(4,filt,analog=False)
-            f=filtfilt(b,a,f)
-        else:
-            f=cf.copy();xn=x[pdir,:].copy()
-        #ax.plot(xn,f,label=cs)
+       
+        f=cf.copy();xn=x[0,:].copy()
         if(i==secs[0]):
             cfa=f.copy()
         else:
             cfa+=f
     cfa/=len(secs)
-    ax.plot(xn,cfa,label=sim+'avg',linewidth=2)
-    ax.set_xlabel(r'$x/L_c$')
-    ax.set_ylabel(r'$<C_p>$')
-    handle,labels=ax.get_legend_handles_labels()
-    legend=ax.legend(handle,labels,bbox_to_anchor=(1,1),ncol=ncol)
-    ax.grid(True)
-    ax.figure.show()
+    ax.plot(xn,cfa,label=sim,linewidth=2)
+    if(ll==0):
+        dif=np.zeros((len(sims),nsam))
+        dif[0],xdif=rsample(cfa,xn,nsam,force=True)[0:2]
+        ax2.plot(xdif,dif[ll]-dif[0],label=sim,linewidth=2)
+    else:
+        dif[ll]=rsample(cfa,xn,nsam,force=True)[0]
+        dif[ll]=(dif[ll]-dif[0])/dif[0]
+        ax2.plot(xdif,dif[ll],label=sim,linewidth=2)
+    
+#%%
+ax.set_xlabel(r'$x/L_c$',fontsize=20)
+ax.set_ylabel(r'$<C_f>$',fontsize=20)
+ax2.set_xlabel(r'$x/L_c$',fontsize=20)
+ax2.set_ylabel(r'$\frac{<C_{f}>_{Gi}-<C_{f}>_{G1}}{<C_{f}>_{G1}}$',fontsize=20)
+        
+handle,labels=ax.get_legend_handles_labels()
+legend=ax.legend(handle,labels,bbox_to_anchor=(1,1),ncol=ncol)
+ax.grid(True)
+#ax.invert_yaxis()
+ax.set_ylim(-0.005,0.005)
+axShow(ax)
+
+handle2,labels2=ax2.get_legend_handles_labels()
+legend2=ax2.legend(handle2,labels2,bbox_to_anchor=(1,1),ncol=ncol)
+ax2.grid(True)
+ax2.set_ylim(-1,1)
+
+axShow(ax2)
+
+#%%
+path='pgfPlots/'
+fname='gridCp'
+plt.sca(ax)
+if(save==1): 
+    savePlotFile(path=path+fname+'.dat',vary=labels)

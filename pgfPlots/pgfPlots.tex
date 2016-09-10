@@ -13,35 +13,32 @@ plot coordinates {
 }
 	\begin{tikzpicture}
 	\tikzset{>=latex}
-	\begin{axis}[
+	\begin{axis}[name=ax0,
+	anchor=south east,
+	%at={$(ax0.south east)+(0.02\textwidth,0\textwidth)$},
 	%font=\small,
-        xlabel={$St$},
+        xlabel={$x$},
 	%xticklabels={,,},
-        ylabel={$S_{C_{Df}C_{Df}}$},
-        xmin=0.05, xmax=1,
-        %ymin=0.2e-2, ymax=1.2e-2,
+        ylabel={$<C_f>$},
+        %xmin=0.05, xmax=1,
+        %ymin=-0.005, ymax=0.005,
         xmode=log,
         ymode=log,
 	%y dir=reverse,
         %axis on top,
         %width=\tikzw,
         %height=\tikzh,
-	%x=2\textwidth,
-	%y=1\textwidth,
 	%xtick={-0.6,-0.5,...,0.6},
-	grid=both,
         xmajorgrids,
 	minor tick num=1,
         ymajorgrids,
 	xminorgrids,
 	yminorgrids,
-        ymajorgrids,yminorgrids,
         legend style={at={(1.00,1.00)}, anchor=north east},
-        legend entries={{SLE},{4WLE}},
+        legend entries={{G1}},
 	cycle list name = mynomarklist,
-	mark repeat={10}]
-		\addplot table [x={f}, y={SCd}]  {A00pClCdPSD.dat};
-		\addplot table [x={f}, y={SCd}] {4A15pClCdPSD.dat};
+	mark repeat={1}]
+		\addplot table [x={x0}, y={SCd}] {A00pClCdPSD.dat};
 	\end{axis}
 	\end{tikzpicture}
 \end{document}

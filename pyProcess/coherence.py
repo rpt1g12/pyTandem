@@ -10,8 +10,9 @@ sin20=np.sin(np.deg2rad(20))
 plt.close('all')
 opt=0
 px=np.linspace(-0.5,0.48,31)
-path="signalData/6blocks/A00W11AoA20/"
-lze=101;lz=0.22;lwle=0.11
+#path="signalData/6blocks/4A15W11AoA20/";lze=201;lz=0.44;lwle=0.11
+path="signalData/6blocks/A00W11AoA20/";lze=101;lz=0.22;lwle=0.11
+
 CX=np.zeros((lze,31))
 for m in range(31):
 
@@ -31,7 +32,7 @@ for m in range(31):
       
     nw=2;ovlp=0.50;sgnl=x[000,:]
     
-    nseg,novlp,ntt,fmax,fmin=defWin(t,sgnl,nw,ovlp,verbose=True)
+    nseg,novlp,ntt,fmax,fmin=defWin(t,sgnl,nw,ovlp,verbose=False)
     
     
     #%%
@@ -61,12 +62,12 @@ img=ax.contourf(X,Y,CX,levels=lvl,cmap=cm)
 fig.savefig(path+fig.canvas.get_window_title()+'.png')
 ax.axes.get_yaxis().set_visible(False)
 ax.axes.get_xaxis().set_visible(False)
-fig.savefig(path+fig.canvas.get_window_title()+'.pdf')
+#fig.savefig(path+fig.canvas.get_window_title()+'.pdf')
 #%%
 
-plt.close('all')
-ax.set_visible(False)
-cbar=fig.colorbar(img,orientation='horizontal')
-cbar.ax.yaxis.set_visible(False)
-cbar.ax.xaxis.set_visible(False)
-fig.savefig(path+cm+'.pdf')
+#plt.close('all')
+#ax.set_visible(False)
+#cbar=fig.colorbar(img,orientation='horizontal')
+#cbar.ax.yaxis.set_visible(False)
+#cbar.ax.xaxis.set_visible(False)
+#fig.savefig(path+cm+'.pdf')
