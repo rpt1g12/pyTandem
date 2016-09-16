@@ -15,7 +15,7 @@ importlib.reload(p3d)
 
 #%%
 #fl=p3d.flow("/home/rpt1g12/Desktop/post/A4A15W11AoA20/f64/","grid.xyz","solTA.qa")
-fl=p3d.flow("/home/rperezt/Desktop/post/A4A15W11AoA20/vsmallDomain/f64/","grid.xyz","solTA.qa")
+fl=p3d.flow("/home/rperezt/Desktop/post/8A00W11AoA10/vsmallDomain/","grid.xyz","solT348.0002.q")
 
 fl.rdHdr()
 fl.rdGrid()
@@ -24,18 +24,19 @@ fl.rdSol(vnames=['r','u','v','w','p'])
 
 fl.blk[4].data
 #%%
-xlim=range(0,321);ylim=range(1);zlim=range(1)
-
-surf=fl.blk[4].getSubset(ylim=ylim)
+surf=fl.blk[4].getSubset(ylim=[0])
 x=surf.var['x'].getValues()
-print(x[0,0,0])
+
 z=surf.var['z'].getValues()
-print(z[0,0,0])
-p=surf.var['p'].getValues()
-print(p[0,0,0])
 
+p=surf.var['r'].getValues()
 
-plt.contourf(x[:,0,:],z[:,0,:],p[:,0,:])
-plt.axis('equal')
-#print(x.getValues().shape)
+pavg=surf.var['p'].avgDir()[:,0]
+xavg=surf.var['x'].avgDir()[:,0]
+
+plt.plot(xavg,pavg)
+
+#plt.contourf(x[:,0,:],z[:,0,:],p[:,0,:])
+#plt.axis('equal')
+#print(x.shape)
 

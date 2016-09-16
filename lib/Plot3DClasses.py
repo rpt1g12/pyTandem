@@ -36,6 +36,29 @@ class var():
         self.val=np.fromfile(fh,dtype=k8,count=ltomb)
         self.val=np.reshape(self.val,(lxi,let,lze),order='F')
     
+    def avgDir(self,direction=2):
+        size=self.size        
+        if direction==0:
+            lsize=size[1:]
+            aarr=np.zeros(lsize)
+            arr=self.getValues()
+            for i in range(size[0]):
+                aarr+=arr[i,:,:]
+        if direction==1:
+            lsize=(size[0],size[2])
+            aarr=np.zeros(lsize)
+            arr=self.getValues()
+            for j in range(size[1]):
+                aarr+=arr[:,j,:]
+        if direction==2:
+            lsize=size[0:2]
+            aarr=np.zeros(lsize)
+            arr=self.getValues()
+            for k in range(size[2]):
+                aarr+=arr[:,:,k]
+        aarr/=size[direction]
+        return aarr.copy()
+    
     def getValues(self):
         return self.val.copy()
     def getSize(self):
@@ -99,6 +122,8 @@ class blk():
             myvar=var(size,vid,vname,val)
             
             self.data[vid]=myvar
+    
+    
     
     def clone (self):
         obj=copy.copy(self)
