@@ -5,7 +5,8 @@ Created on Thu Sep 15 11:24:30 2016
 @author: rpt1g12
 """
 from lib.myPlot3dOperator import *
-
+import numpy as np
+import copy as copy
 
 # Classes
 class var():
@@ -16,7 +17,7 @@ class var():
         if len(val)==0:
             self.val=np.zeros(size)
         else:
-            self.val=val
+            self.val=val.copy()
         
     def rdVar(self,fh,lh,nvar,nb,lblk,Type='grid'):
         lxi=self.size[0];let=self.size[1];lze=self.size[2]
@@ -62,7 +63,7 @@ class blk():
         lsize=(len(xlim),len(ylim),len(zlim))
         sarr=np.zeros(lsize)
         sblk=blk(self.id,lsize)
-        
+        print('subset sizes:'+str(lsize))
         for n in range(ndata):
             arr=self.data[n].getValues()
             ii=-1;
@@ -72,14 +73,12 @@ class blk():
                     jj+=1;kk=-1
                     for k in zlim:
                         kk+=1
-                        sarr[ii,jj,kk]=arr[i,j,k]
+                        sarr[ii,jj,kk]=arr[i,j,k]                     
             name=self.data[n].getName()
-            vid=self.data[n].id
-            print(arr)
             sblk.setData(name,sarr,size=lsize)
             sblk.var[name]=sblk.data[n]
         
-        return sblk
+        return sblk.clone()
         
     def setData(self,vname=None,val=[],vid=None,size=None):
         if vid==None:
@@ -95,11 +94,15 @@ class blk():
         
         if vid==-1 or len(self.data)<vid+1:
             self.data.append(var(size,len(self.data),vname,val))
-            print(len(self.data),val)
+            #print(len(self.data),val)
         else:
             myvar=var(size,vid,vname,val)
             
             self.data[vid]=myvar
+    
+    def clone (self):
+        obj=copy.copy(self)
+        return obj 
         
 class flow():
         def __init__(self,path,gfile,sfile):
