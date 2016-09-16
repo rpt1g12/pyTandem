@@ -1,13 +1,11 @@
 #%%
-from lib.grid import *
+from lib.myGrid import *
 from lib.myPlots import *
 
-fig2=plt.figure()
-ax2=fig2.add_subplot(111)
+fig2,ax2=getFig('Fig2')
 ax2.set_aspect('equal')
 
-fig=plt.figure()
-ax=fig.add_subplot(111)
+fig,ax=getFig('Fig1')
 ax.set_aspect('equal')
 
 mbk=3
@@ -35,7 +33,7 @@ def replot(axes=None,doFit=False):
 bkx=0;bky=0;bkn=(bky*bkx)+bkx
 
 corners[bkn].append(corner(-7.0,-7.0))
-corners[bkn].append(corner(-3.0,-7.0))
+corners[bkn].append(corner(-3.5,-7.0))
 corners[bkn].append(corner(-7.0,0.0))
 corners[bkn].append(corner(-0.5,0.0))
 
@@ -127,26 +125,25 @@ blocks[2].be.c0.dydet=max(blocks[2].be.dydet)
 blocks[2].bs.c1.dxdxi=max(blocks[2].bs.dxdxi)
 blocks[2].bn.c1.dxdxi=max(blocks[2].bn.dxdxi)
 #%%
+cll(ax2)
 for b in blocks:
-    b.update()
-    b.draw(ax2)
-fit(ax2)
+    b.draw(ax2,update=True)
 replot(ax,True)
 
 #%%    
-fh=open('Mblk.xyz','wb')
-hdr=[len(blocks)]
-for b in blocks:
-    hdr.append(b.lxi)
-    hdr.append(b.let)
-    hdr.append(b.lze)
-hdr=np.int32(np.array(hdr))
-fh.write(hdr)
-for b in blocks:
-    fh.write(np.float32(np.transpose(b.x).copy(order='C')))
-    fh.write(np.float32(np.transpose(b.y).copy(order='C')))
-    fh.write(np.float32(np.transpose(b.z).copy(order='C')))
-fh.close()
+#fh=open('Mblk.xyz','wb')
+#hdr=[len(blocks)]
+#for b in blocks:
+#    hdr.append(b.lxi)
+#    hdr.append(b.let)
+#    hdr.append(b.lze)
+#hdr=np.int32(np.array(hdr))
+#fh.write(hdr)
+#for b in blocks:
+#    fh.write(np.float32(np.transpose(b.x).copy(order='C')))
+#    fh.write(np.float32(np.transpose(b.y).copy(order='C')))
+#    fh.write(np.float32(np.transpose(b.z).copy(order='C')))
+#fh.close()
 
 #%%
 #i=-1

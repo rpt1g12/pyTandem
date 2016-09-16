@@ -5,13 +5,15 @@ from lib.stats import *
 from lib.myPlots import *
 
 #%%
-save=False; scale=False; step=True;sclg='spectrum'
+plt.close('all')
+save=True; scale=False; step=False;sclg='density'
 nxk=(9,8)
 sim='A4A15W11AoA20'
 path='maxProbes/'+sim+'/60-140-10/maxpln'
 file=path+str(1)+'.dat'
 t=np.loadtxt(file,skiprows=1,unpack=True,usecols=range(1))
 nsam=len(t)
+t*=0.3
 mval=np.zeros((nxk[0],nsam,5,nxk[1]))
 
 for k in range(nxk[1]):
@@ -55,8 +57,9 @@ for i in range(0,nxk[0]-2,1):
             psgn/=var
     
     sin20=np.sin(np.deg2rad(20))
-    st=(sin20/0.3)*ff
-    axFreq.loglog(st,psgn,label='i'+str(i))
+    #st=(sin20/0.3)*ff
+    st=sin20*ff
+    axFreq.loglog(st,psgn,label='i'+str(i),linewidth=2)
     
 handle,labels=axFreq.get_legend_handles_labels()
 legend=axFreq.legend(handle,labels,bbox_to_anchor=(0,0),ncol=2,loc=3)    
@@ -72,5 +75,5 @@ axFreq.figure.canvas.draw()
 name=sim.split('W')[0]+'pS'+'k'+str(k)
 if (save==True):
     plt.sca(axFreq)
-    path='maxProbes/'
+    path='pgfPlots/'
     savePlotFile(path=path+name+'.dat',vary=labels,varx=['St'+str(i) for i in range(len(labels))])

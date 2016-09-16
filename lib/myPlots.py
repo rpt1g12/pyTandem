@@ -5,6 +5,7 @@ def getFig(title=None,layout=111):
     fig=plt.figure()
     if (title!=None):
         fig.canvas.set_window_title(title)
+        fig.set_tight_layout('tight')
     ax=fig.add_subplot(layout)
     return fig,ax
 
@@ -66,7 +67,7 @@ def fit (axes=None,spg=(0.0,0.2)):
 def savePlotFile(path='plt.dat',ax=None,varx=None,vary=None):
     if (ax==None):
         ax=plt.gca()
-    n=len(ax.lines[0].get_xdata())
+    #n=len(ax.lines[0].get_xdata())
     if (varx==None):
         m=len(ax.lines);
         varx=['x'+str(j) for j in range(m)]
@@ -79,14 +80,20 @@ def savePlotFile(path='plt.dat',ax=None,varx=None,vary=None):
         
     daty=[col.get_ydata() for col in ax.lines]
     datx=[col.get_xdata() for col in ax.lines]
-    s=''    
+    s='' 
+    nn=[]
     for j in range(m):
-        s+=varx[j]+'\t'+vary[j]+'\t' 
+        s+=varx[j]+'\t'+vary[j]+'\t'
+        nn.append(len(ax.lines[j].get_xdata()))
     s+='\n'
-    n=len(ax.lines[j].get_xdata())
+    n=max(nn)
     for i in range(n):
         for j in range(m):
-            s+='%e \t %e \t' % (datx[j][i], daty[j][i])
+            if (i<len(ax.lines[j].get_xdata())):
+                s+='%e \t %e \t' % (datx[j][i], daty[j][i])
+            else:
+                space='nan'+' '*9
+                s+=(space+' \t'+space+' \t')
         s+=' \n'
     
     fh=open(path,'w')

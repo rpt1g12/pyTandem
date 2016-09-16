@@ -15,7 +15,7 @@ fig=plt.figure()
 fig.canvas.set_window_title(path)
 ax=fig.add_subplot(111)
 opt=0;nsec=17;direc=2;pdir=0;
-save=1;filt=0;nsam=100
+save=0;filt=0;nsam=100
 if (direc!=2):
     opt=4
 if (opt==0): #all

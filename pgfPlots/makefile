@@ -13,6 +13,6 @@ PDFCOMPILER = pdflatex
 NAME = pgfPlots
 
 all: 
-	$(COMPILER) -draftmode $(NAME).tex
-	$(COMPILER) -draftmode $(NAME).tex >/dev/null
-	$(PDFCOMPILER) $(NAME).tex >/dev/null
+	$(COMPILER) -draftmode -enable-write18 $(NAME).tex
+	$(COMPILER) -draftmode -enable-write18 $(NAME).tex >/dev/null
+	$(PDFCOMPILER) -enable-write18 $(NAME).tex >/dev/null
