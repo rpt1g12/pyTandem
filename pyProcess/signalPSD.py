@@ -7,29 +7,52 @@ from lib.myPlots import *
 plt.close('all')
 fig,ax=getFig('Grid',111)
 fig2,ax2=getFig('Signals',111)
-for ll in range(1,5):
-    sim='G'+str(ll)
-    #sim='A00pClCd'
-    dataset='clData/6blocks/gridDependence/'+sim+'.dat';
+for ll in range(1):
+    #sim='G'+str(ll)
+    sim='4A00pClCd';prdl=1
+    #sim='4A15pClCd';prdl=0
+    dataset='clData/6blocks/pvClCd/'+sim+'.dat';
     n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True)
-    tin*=0.3
-    save=False;scale=False;sclg='density'
+#    sim='8A00vClCd';prdl=1
+#    dataset='clData/6blocks/pvClCd/'+sim+'.dat';
+#    n,tin,clin2,cdin2=np.loadtxt(dataset,skiprows=1,unpack=True)
+#    clin+=clin2;cdin+=cdin2
+    if (sim=='8A00pClCd' or sim=='8A00vClCd'):  
+        clin/=2;cdin/=2 # This is because the coefficients were computed with
+                        # half the span in the 8WLE case
+                        # i.e. Lz=0.44 instead of Lz=0.88
+
+    save=True;
     
-    tmin=0.0;ns=1024
+#    tmin=0.0;ns=1024
+#    n0=np.where(tin>tmin)[0][0]
+#    t0=tin[n0:]-tin[n0];cl0=clin[n0:];cd0=cdin[n0:]
+    
+    ns=1024
+    tmin=tin[-1]-(25/0.3)
     n0=np.where(tin>tmin)[0][0]
-    t0=tin[n0:]-tin[n0];cl0=clin[n0:];cd0=cdin[n0:]
+    t0=tin[n0:]*0.3#-tin[n0];
+    if prdl==1:
+        fctr=np.sqrt(1-0.3**2)
+    else:
+        fctr=1
+    cl0=clin[n0:]*fctr;
+    cd0=cdin[n0:]*fctr
     
     cln,tn,nsam,fsam=rsample(cl0,t0,verbose=True,nsample=ns)
     cdn,tn,nsam,fsam=rsample(cd0,t0,nsample=ns)
     
     #%%
-    nw=2;ovlp=0.0;sgnl=cln
+    scale=False;sclg='density'
+    nw=4;ovlp=0.5;
+    sgnl=cdn
     
     nseg,novlp,ntt,fmax,fmin=defWin(tn,sgnl,nw,ovlp,verbose=False)
     #sgnl=myFilter(sgnl,0.25/(fmax))
     ff,Sxx=psdw(sgnl,fs=fsam,nperseg=nseg,noverlap=novlp,scaling=sclg)
     if (scale):
         Sxx/=np.var(Sxx)
+    
     sin20=np.sin(np.deg2rad(20))
     st=(sin20)*ff
     #st=(sin20/0.3)*ff
@@ -55,8 +78,9 @@ for ll in range(1,5):
     print('Mean='+'{:6.2e}'.format(sgnl.mean()))
     print('sigma='+'{:6.2e}'.format(np.sqrt(np.var(sgnl))))
 #%%
-name=sim+'PSD'
+#name=sim+'PSD'
+name='4SLE_pClCdPSD'
 if (save==True):
     plt.sca(ax)
     path='pgfPlots/'
-    savePlotFile(path=path+name+'.dat',vary=['SCd'],varx=['f'])
+    savePlotFile(path=path+name+'.dat',vary=['SCd'])

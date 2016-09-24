@@ -8,31 +8,53 @@ pi=np.pi
 #from lib.matplotlib2tikz import save as tikz_save
 plt.close('all')
 #%%
-folder='6blocks/'
-osim=2;aoa=20;iaoah=20
+folder='6blocks/';sclcd='SCl'
+osim=8;aoa=20;iaoah=20;freq=0.19
 if(osim==0):
     sim='A00'
+    odata=0
+    prdl=1
 elif(osim==80):
     sim='8A00'
+    odata=1
+    prdl=1
 elif(osim==40):
     sim='4A00'
+    odata=1
+    prdl=1
 elif(osim==2):
     sim='A15'
+    odata=0
+    prdl=0
 elif(osim==3):
     sim='3A15'
+    odata=0
+    prdl=0
 elif(osim==4):
     sim='A4A15'
+    odata=0
+    prdl=0
 elif(osim==41):
     sim='4A15'
+    odata=0
+    prdl=0
+elif(osim==8):
+    sim='8A15'
+    odata=1
+    prdl=0
+    
 sim+='W11AoA'+str(aoa)
+
 dataset='/home/rpt1g12/anaconda3/pyTandem/clData/'+folder+sim+'.dat';
-#n,tin,clin,cdin,taoa,tmach=np.loadtxt(dataset,skiprows=1,unpack=True)
-n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True);taoa=np.array([20.0 for i in range(len(n))]);tmach=np.array([0.3 for i in range(len(n))]);
+if(odata==1):    
+    n,tin,clin,cdin,taoa,tmach=np.loadtxt(dataset,skiprows=1,unpack=True)
+elif(odata==0):
+    n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True);taoa=np.array([20.0 for i in range(len(n))]);tmach=np.array([0.3 for i in range(len(n))]);
 tdum,clha,cdha=np.loadtxt('/home/rpt1g12/anaconda3/pyTandem/clData/HansenClCd.dat',skiprows=1,unpack=True)
 idum=np.where(tdum==iaoah)[0][0]
 clh=clha[idum];cdh=cdha[idum]
 #clh=0.54;cdh=0.31
-tin*=1
+
 
 #%%
 #fOriginal=plt.figure()
@@ -51,11 +73,15 @@ cll();clt();ns=1024
 
 
 #tmin=95.0/0.3
-tmin=tin[-1]-(25/0.3)
+tmin=tin[-1]-(25/0.3)       #in jfm paper its -(25/0.3)
 n0=np.where(tin>tmin)[0][0]
 t0=tin[n0:]*0.3#-tin[n0];
-cl0=clin[n0:]#*np.sqrt(1-0.3**2);
-cd0=cdin[n0:]#*np.sqrt(1-0.3**2)
+if prdl==1:
+    fctr=np.sqrt(1-0.3**2)
+else:
+    fctr=1
+cl0=clin[n0:]*fctr;
+cd0=cdin[n0:]*fctr
 taoa0=taoa[n0:]
 cln,tn,nsam,fsam=rsample(cl0,t0,verbose=True,nsample=ns)
 cdn,tn,nsam,fsam=rsample(cd0,t0,nsample=ns)
@@ -111,11 +137,16 @@ if (showAoA):
 
 
 #%%
-fFreq=plt.figure()
-fFreq.canvas.set_window_title('Frequency '+sim)
-axFreq=fFreq.add_subplot(111)
-save=False;scale=False;sclg='density'
-nw=4;ovlp=0.5;sgnl=cln
+
+scale=False;sclg='density'
+nw=4;ovlp=0.5;
+
+if sclcd=='SCl':
+    sgnl=cln
+else:
+    sgnl=cdn
+
+fFreq,axFreq=getFig('Frequency '+sim)
 
 nseg,novlp,ntt,fmax,fmin=defWin(tn,sgnl,nw,ovlp,verbose=False)
 #sgnl=myFilter(sgnl,0.25/(fmax))
@@ -129,20 +160,26 @@ axFreq.lines.clear()
 sin20=np.sin(np.deg2rad(20))
 #st=(sin20/0.3)*ff
 st=(sin20)*ff
-axFreq.loglog(st,pcl,label='SCl')
+stdif=abs(st-freq)
+sts=np.argmin(stdif)
+axFreq.loglog(st,pcl,label=sclcd)
 
 axFreq.grid(b=True, which='major', color='k', linestyle='--')
 axFreq.grid(b=True, which='minor', color='k', linestyle=':')
 axFreq.set_xlabel(r'$St$',fontsize=20)
-axFreq.set_ylabel(r'$PSD$',fontsize=20)
+axFreq.set_ylabel(r'$'+sclcd+'$',fontsize=20)
+axFreq.axvline(x=st[sts],color='black',linewidth=2,linestyle='--')
+sfreq=r'$f^*=$'+'{:4.2f}'.format(st[sts])+'->{:8.3e}'.format(pcl[sts])
+axFreq.text(0.25,-0.15,sfreq,ha='center',va='bottom',transform=axTime.transAxes,fontsize=16)
 fit(axFreq)
 axFreq.set_xlim(0,1)
 #%%
-name=sim.split('W')[0]+'SCl'
+save=False;
+name=sim.split('W')[0]+sclcd
 if (save==True):
     plt.sca(axFreq)
     path='pgfPlots/'
-    savePlotFile(path=path+name+'.dat',vary=['SCd'],varx=['f'])
+    savePlotFile(path=path+name+'.dat',vary=[sclcd],varx=['f'])
 
 #%%
 #fig,ax=getFig('vsAoA')

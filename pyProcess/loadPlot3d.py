@@ -14,29 +14,47 @@ import importlib
 importlib.reload(p3d)
 
 #%%
-#fl=p3d.flow("/home/rpt1g12/Desktop/post/A4A15W11AoA20/f64/","grid.xyz","solTA.qa")
-fl=p3d.flow("/home/rperezt/Desktop/post/8A00W11AoA10/vsmallDomain/","grid.xyz","solT348.0002.q")
+#fl=p3d.flow("/home/rpt1g12/Desktop/post/8A00W11AoA20/surface/","grid.xyz","solTavgCf+tw+Cp0641.q")
+#fl=p3d.flow("/home/rperezt/Desktop/post/8A00W11AoA10/vsmallDomain/","grid.xyz","solT348.0002.q")
+fl=p3d.flow("/home/rpt1g12/Desktop/post/A4A15W11AoA20/f64/","grid.xyz","solTCf+tw+Cp.qa")
 
 fl.rdHdr()
 fl.rdGrid()
-fl.rdSol(vnames=['r','u','v','w','p'])
+fl.rdSol(vnames=['Cf','twx','twy','twz','Cp'])
 
-
-fl.blk[4].data
 #%%
-surf=fl.blk[4].getSubset(ylim=[0])
-x=surf.var['x'].getValues()
+zlim=range(37,200,50)
+varname='Cf';bk=fl.blk[4]
+surf=bk.getSubset(ylim=[0])
+x=bk.var['x'].getValues()
 
-z=surf.var['z'].getValues()
+z=bk.var['z'].getValues()
 
-p=surf.var['r'].getValues()
+Cp=bk.var[varname].getValues()
 
-pavg=surf.var['p'].avgDir()[:,0]
+Cpavg=surf.var[varname].avgDir()[:,0]
 xavg=surf.var['x'].avgDir()[:,0]
 
-plt.plot(xavg,pavg)
 
-#plt.contourf(x[:,0,:],z[:,0,:],p[:,0,:])
+fig,ax=getFig(varname)
+
+ii=0
+for i in zlim:
+    ii+=1
+    ax.plot(x[:,0,i],Cp[:,0,i],label='T{:d}'.format(ii))
+
+ax.plot(xavg,Cpavg,label='avg')
+
+handle,labels=ax.get_legend_handles_labels()
+legend=ax.legend(handle,labels,bbox_to_anchor=(1,1),ncol=3)
+#plt.contourf(x[:,0,:],z[:,0,:],Cp[:,0,:])
 #plt.axis('equal')
-#print(x.shape)
+
+#%%
+save=True
+name='4WLE_'+varname
+if (save==True):
+    plt.sca(ax)
+    path='pgfPlots/'
+    savePlotFile(path=path+name+'.dat',vary=labels)
 

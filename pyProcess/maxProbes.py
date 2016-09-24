@@ -5,11 +5,11 @@ from lib.stats import *
 from lib.myPlots import *
 
 #%%
-plt.close('all')
+#plt.close('all')
 save=True; scale=False; step=False;sclg='density'
-nxk=(9,8)
-sim='A4A15W11AoA20'
-path='maxProbes/'+sim+'/60-140-10/maxpln'
+nxk=(9,4)
+sim='4A00W11AoA20'
+path='maxProbes/'+sim+'/20-140-15/maxpln'
 file=path+str(1)+'.dat'
 t=np.loadtxt(file,skiprows=1,unpack=True,usecols=range(1))
 nsam=len(t)
@@ -30,7 +30,7 @@ fFreq=plt.figure()
 fFreq.canvas.set_window_title('Frequency '+sim)
 axFreq=fFreq.add_subplot(111)
 #%%
-i=0;k=7;vflag=False
+i=0;k=0;vflag=False
 q=4;nw=16;ovlp=0.5
 sgn=mval[i,:,q,k]
 sgn,tn,nsam,fsam=rsample(sgn,t)
@@ -38,7 +38,7 @@ nseg,novlp,ntt,fmax,fmin=defWin(tn,sgn,nw,ovlp,verbose=False)
 
 axTime.lines.clear()
 axFreq.lines.clear()
-for i in range(0,nxk[0]-2,1):
+for i in range(0,nxk[0]-0,1):
     if(vflag):
         sgn=(mval[i,:,1,k]**2+mval[i,:,2,k]**2+mval[i,:,3,k]**2)**0.5
     else:

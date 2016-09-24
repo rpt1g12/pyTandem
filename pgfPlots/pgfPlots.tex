@@ -15,30 +15,27 @@ plot coordinates {
 	\tikzset{>=latex}
 	\begin{axis}[name=ax0,
 	anchor=south east,
-	%at={$(ax0.south east)+(0.02\textwidth,0\textwidth)$},
-	%font=\small,
+	font=\small,
         xlabel={$x$},
 	%xticklabels={,,},
+	%xtick={-0.6,-0.5,...,0.6},
         ylabel={$<C_f>$},
         %xmin=0.05, xmax=1,
         %ymin=-0.005, ymax=0.005,
-        xmode=log,
-        ymode=log,
+        %xmode=log,
+        %ymode=log,
 	%y dir=reverse,
         %axis on top,
-        %width=\tikzw,
-        %height=\tikzh,
-	%xtick={-0.6,-0.5,...,0.6},
         xmajorgrids,
 	minor tick num=1,
         ymajorgrids,
 	xminorgrids,
 	yminorgrids,
         legend style={at={(1.00,1.00)}, anchor=north east},
-        legend entries={{G1}},
+        legend entries={{SLE-4}},
 	cycle list name = mynomarklist,
 	mark repeat={1}]
-		\addplot table [x={x0}, y={SCd}] {A00pClCdPSD.dat};
+		\addplot table [x={x}, y={Cf}] {8SLE_Cf.dat};
 	\end{axis}
 	\end{tikzpicture}
 \end{document}
