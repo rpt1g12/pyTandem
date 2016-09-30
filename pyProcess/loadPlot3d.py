@@ -15,16 +15,16 @@ importlib.reload(p3d)
 
 #%%
 #fl=p3d.flow("/home/rpt1g12/Desktop/post/8A00W11AoA20/surface/","grid.xyz","solTavgCf+tw+Cp0641.q")
-#fl=p3d.flow("/home/rperezt/Desktop/post/8A00W11AoA10/vsmallDomain/","grid.xyz","solT348.0002.q")
-fl=p3d.flow("/home/rpt1g12/Desktop/post/A4A15W11AoA20/f64/","grid.xyz","solTCf+tw+Cp.qa")
+fl=p3d.flow("/home/rperezt/Desktop/post/8A15W11AoA20/surface/","grid.xyz","solTavgCf+tw+Cp0480.q")
+#fl=p3d.flow("/home/rpt1g12/Desktop/post/A4A15W11AoA20/f64/","grid.xyz","solTCf+tw+Cp.qa")
 
 fl.rdHdr()
 fl.rdGrid()
 fl.rdSol(vnames=['Cf','twx','twy','twz','Cp'])
 
 #%%
-zlim=range(37,200,50)
-varname='Cf';bk=fl.blk[4]
+zlim=range(19,200,25)
+varname='Cp';bk=fl.blk[0]
 surf=bk.getSubset(ylim=[0])
 x=bk.var['x'].getValues()
 
@@ -52,7 +52,7 @@ legend=ax.legend(handle,labels,bbox_to_anchor=(1,1),ncol=3)
 
 #%%
 save=True
-name='4WLE_'+varname
+name='8WLE_'+varname
 if (save==True):
     plt.sca(ax)
     path='pgfPlots/'
