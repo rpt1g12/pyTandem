@@ -4,18 +4,17 @@ from scipy.signal import welch as psdw
 import matplotlib.pyplot as plt
 from lib.stats import *
 from lib.myPlots import *
-plt.close('all')
 
-sim='8A00';name=sim+'pvClCdPSD'
+sim='A00';name=sim+'vClCdPSD'
 dataset='clData/6blocks/pvClCd/'
 n,tin,clpin,cdpin=np.loadtxt(dataset+sim+'pClCd.dat',skiprows=1,unpack=True)
 n,tin,clvin,cdvin=np.loadtxt(dataset+sim+'vClCd.dat',skiprows=1,unpack=True)
 
 tin*=0.3
-save=False;scale=False;sclg='density'
+save=True;scale=False;sclg='density'
     
-tmin=tmin=tin[-1]-(25.0*0.3);
-ns=1024
+tmin=tmin=tin[-1]-(60.0*0.3);
+ns=512
 n0=np.where(tin>tmin)[0][0]
 t0=tin[n0:]-tin[n0];clp0=clpin[n0:];cdp0=cdpin[n0:]
 clv0=clvin[n0:];cdv0=cdvin[n0:]
@@ -26,9 +25,7 @@ clvn,tn,nsam,fsam=rsample(clv0,t0,nsample=ns)
 cdvn,tn,nsam,fsam=rsample(cdv0,t0,nsample=ns)
     
 #%%
-nw=4;ovlp=0.5;
-
-sgnl=cdpn
+nw=2;ovlp=0.5;sgnl=cdvn
     
 nseg,novlp,ntt,fmax,fmin=defWin(tn,sgnl,nw,ovlp,verbose=False)
 
