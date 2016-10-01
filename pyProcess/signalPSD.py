@@ -9,25 +9,15 @@ fig,ax=getFig('Grid',111)
 fig2,ax2=getFig('Signals',111)
 for ll in range(1):
     #sim='G'+str(ll)
-    sim='4A00pClCd';prdl=1
-    #sim='4A15pClCd';prdl=0
+    #sim='8A00pClCd';prdl=1
+    sim='8A15pClCd';prdl=0
     dataset='clData/6blocks/pvClCd/'+sim+'.dat';
     n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True)
-#    sim='8A00vClCd';prdl=1
-#    dataset='clData/6blocks/pvClCd/'+sim+'.dat';
-#    n,tin,clin2,cdin2=np.loadtxt(dataset,skiprows=1,unpack=True)
-#    clin+=clin2;cdin+=cdin2
-    if (sim=='8A00pClCd' or sim=='8A00vClCd'):  
-        clin/=2;cdin/=2 # This is because the coefficients were computed with
-                        # half the span in the 8WLE case
-                        # i.e. Lz=0.44 instead of Lz=0.88
+
 
     save=True;
     
-#    tmin=0.0;ns=1024
-#    n0=np.where(tin>tmin)[0][0]
-#    t0=tin[n0:]-tin[n0];cl0=clin[n0:];cd0=cdin[n0:]
-    
+   
     ns=1024
     tmin=tin[-1]-(25/0.3)
     n0=np.where(tin>tmin)[0][0]
@@ -79,7 +69,7 @@ for ll in range(1):
     print('sigma='+'{:6.2e}'.format(np.sqrt(np.var(sgnl))))
 #%%
 #name=sim+'PSD'
-name='4SLE_pClCdPSD'
+name='8WLE_pClCdPSD'
 if (save==True):
     plt.sca(ax)
     path='pgfPlots/'

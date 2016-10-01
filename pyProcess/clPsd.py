@@ -8,7 +8,7 @@ pi=np.pi
 #from lib.matplotlib2tikz import save as tikz_save
 plt.close('all')
 #%%
-folder='6blocks/';sclcd='SCl'
+folder='6blocks/';sclcd='SCd';save=True; username='rperezt'
 osim=8;aoa=20;iaoah=20;freq=0.19
 if(osim==0):
     sim='A00'
@@ -45,12 +45,12 @@ elif(osim==8):
     
 sim+='W11AoA'+str(aoa)
 
-dataset='/home/rpt1g12/anaconda3/pyTandem/clData/'+folder+sim+'.dat';
+dataset='/home/'+username+'/anaconda3/pyTandem/clData/'+folder+sim+'.dat';
 if(odata==1):    
     n,tin,clin,cdin,taoa,tmach=np.loadtxt(dataset,skiprows=1,unpack=True)
 elif(odata==0):
     n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True);taoa=np.array([20.0 for i in range(len(n))]);tmach=np.array([0.3 for i in range(len(n))]);
-tdum,clha,cdha=np.loadtxt('/home/rpt1g12/anaconda3/pyTandem/clData/HansenClCd.dat',skiprows=1,unpack=True)
+tdum,clha,cdha=np.loadtxt('/home/'+username+'/anaconda3/pyTandem/clData/HansenClCd.dat',skiprows=1,unpack=True)
 idum=np.where(tdum==iaoah)[0][0]
 clh=clha[idum];cdh=cdha[idum]
 #clh=0.54;cdh=0.31
@@ -174,7 +174,6 @@ axFreq.text(0.25,-0.15,sfreq,ha='center',va='bottom',transform=axTime.transAxes,
 fit(axFreq)
 axFreq.set_xlim(0,1)
 #%%
-save=False;
 name=sim.split('W')[0]+sclcd
 if (save==True):
     plt.sca(axFreq)
