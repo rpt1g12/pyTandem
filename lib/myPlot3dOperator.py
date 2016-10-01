@@ -82,11 +82,11 @@ def wrP3dFunction(path,name,size,f,r):
     print(name+' written!')
     pass
 
-def wrP3dS(path,cblock,size,flowc,f,r):
+def wrP3dS(path,size,flowc,f,r,cname='copy'):
     """Write to Plot3D format"""
     
     ctime='{:08.4f}'.format(flowc[3])
-    fh=open(path+'/solT'+ctime+'b'+cblock+'.q','wb')
+    fh=open(path+'/solT'+ctime+'_'+cname+'.q','wb')
     hdr=np.int32(np.array([1,size[0],size[1],size[2]]))
     fh.write(hdr)
     fhdr=np.float32(np.array(flowc))

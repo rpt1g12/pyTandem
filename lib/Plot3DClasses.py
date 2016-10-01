@@ -14,6 +14,7 @@ class var():
         self.id=vid
         self.name=name
         self.size=size
+        #self.flowc=np.zeros(4)
         if len(val)==0:
             self.val=np.zeros(size)
         else:
@@ -30,11 +31,75 @@ class var():
             tvar=5
             fl_hdr=4*lk8
         
-        lh+=fl_hdr*(nb+1)+sum(lblk[:nb])*lk8*tvar+nvar*lblk[nb]*lk8
+        lh+=fl_hdr*(nb)+sum(lblk[:nb])*lk8*tvar
+        if Type=='sol':
+            fh.seek(lh)
+            flowc=np.fromfile(fh,dtype=k8,count=4)
+            self.flowc=flowc.copy()
+            
+            
+        lh+=fl_hdr+nvar*lblk[nb]*lk8
         #if Type=='sol': print('var',nb,nvar,lh)
         fh.seek(lh)
         self.val=np.fromfile(fh,dtype=k8,count=ltomb)
         self.val=np.reshape(self.val,(lxi,let,lze),order='F')
+    
+    def clone(self):
+        obj=copy.copy(self)
+        return obj
+        
+    def wrVar(self,fh,lh,nvar,nb,lblk,Type='grid'):
+        k8=np.float32; lk8=np.dtype(k8).itemsize
+        if Type=='grid':
+            tvar=3
+            fl_hdr=0*lk8
+        if Type=='sol':
+            tvar=5
+            fl_hdr=4*lk8
+        
+        lh+=fl_hdr*(nb)+sum(lblk[:nb])*lk8*tvar
+        if Type=='sol':
+            fh.seek(lh)
+            flowc=self.flowc.copy()
+            fhdr=np.float32(np.array(flowc))
+            fh.write(fhdr)
+        
+        lh+=fl_hdr+nvar*lblk[nb]*lk8
+        #if Type=='sol': print('var',nb,nvar,lh)
+        fh.seek(lh)
+        v=(np.float32(np.transpose(self.getValues()).copy(order='C')))
+        fh.write(v)
+    
+    def derVar(self,direction):
+        direction
+        dvar=np.zeros(self.size)
+        n=self.size[direction]
+        dx=np.zeros(n)
+        a=np.zeros(n-2);b=np.zeros(n-1);c=np.zeros(n)
+        d=np.zeros(n-1);e=np.zeros(n-2);
+        a[-1]=1;e[0]=-1
+        b[0:-1]=-1;b[-1]=-4;d[1:]=1;d[0]=4;
+        c[0]=-3;c[-1]=3
+        m=np.mat(np.diag(a,-2)+np.diag(b,-1)+np.diag(c,0)+np.diag(d,1)+np.diag(e,2))
+        if (direction==0):
+            for k in range(self.size[2]):
+                for j in range(self.size[1]):
+                    dx=m*np.mat(self.val[:,j,k]).T
+                    dvar[:,j,k]=np.asarray(dx.T)[0]
+        if (direction==1):
+            for i in range(self.size[0]):
+                for k in range(self.size[2]):
+                    dx=m*np.mat(self.val[i,:,k]).T
+                    dvar[i,:,k]=np.asarray(dx.T)[0]
+        if (direction==2):
+            for j in range(self.size[1]):
+                for i in range(self.size[0]):
+                    dx=m*np.mat(self.val[i,j,:]).T
+                    dvar[i,j,:]=np.asarray(dx.T)[0]
+        return dvar.copy()
+            
+            
+
     
     def avgDir(self,direction=2):
         size=self.size        
@@ -69,14 +134,21 @@ class var():
 class blk():
     def __init__(self,blk_id,size=(1,1,1)):
         self.id=blk_id
-        self.gsize=size
+        self.size=size
         self.glen=size[0]*size[1]*size[2]
         self.var={}
         self.data=[]
+        self.metFlag=False
+        
+#    def getMetrics(self):
+#        flag=(not self.metFlag)
+#        if flag:
+#            self.mets[]
+            
         
     def getSubset(self,xlim=None,ylim=None,zlim=None):
         ndata=len(self.data)
-        size=self.gsize
+        size=self.size
         if xlim==None:
             xlim=range(0,size[0])
         if ylim==None:
@@ -110,7 +182,7 @@ class blk():
             vname='v{:d}'.format(len(self.data))
         if len(val)==0:
             if size==None:
-                size=self.gsize
+                size=self.size
                 val=np.zeros(size)
         else:
             size=val.shape
@@ -122,9 +194,7 @@ class blk():
             myvar=var(size,vid,vname,val)
             
             self.data[vid]=myvar
-    
-    
-    
+      
     def clone (self):
         obj=copy.copy(self)
         return obj 
@@ -144,10 +214,10 @@ class flow():
             #Read Grid sizes for each block
             for nb in range(self.nbk):
                 self.blk.append(blk(blk_id=nb))
-                self.blk[nb].gsize=rdType(fh,'i',3)
+                self.blk[nb].size=rdType(fh,'i',3)
                 #Compute total size of arrays
                 for n in range(3):
-                    self.blk[nb].glen*=self.blk[nb].gsize[n]
+                    self.blk[nb].glen*=self.blk[nb].size[n]
             #Store header length
             self.lhdr=fh.tell()
             
@@ -162,7 +232,7 @@ class flow():
             names=['x','y','z']
             lblk=self.lblk
             for nb in range(nbk):
-                size=self.blk[nb].gsize 
+                size=self.blk[nb].size 
                 lh=self.lhdr
                 for nvar in range(3):
                     vname=names[nvar]
@@ -182,13 +252,33 @@ class flow():
                 names=vnames
             lblk=self.lblk
             for nb in range(nbk):
-                size=self.blk[nb].gsize 
+                size=self.blk[nb].size 
                 lh=self.lhdr
                 for nvar in range(5):
                     vname=names[nvar]
                     self.blk[nb].data.append(var(size,nvar,name=vname))
                     self.blk[nb].data[-1].rdVar(fh,lh,nvar,nb,lblk,Type='sol')
                     self.blk[nb].var[vname]=self.blk[nb].data[-1]
+                    
+            fh.close()
+
+        def wrSol(self,sfile=None):
+            if sfile==None:
+                sfile=self.sfile
+            fh=open(self.path+sfile,'wb')
+            nbk=self.nbk
+            lblk=self.lblk
+            ghdr=[nbk]
+            for nb in range(nbk): 
+                lh=self.lhdr
+                ghdr.append(self.blk[nb].size[0])
+                ghdr.append(self.blk[nb].size[1])
+                ghdr.append(self.blk[nb].size[2])
+                for nvar in range(5):
+                    self.blk[nb].data[nvar+3].wrVar(fh,lh,nvar,nb,lblk,Type='sol')
+            fh.seek(0)
+            fhdr=np.int32(np.array(ghdr))
+            fh.write(fhdr)
             fh.close()
         
             
