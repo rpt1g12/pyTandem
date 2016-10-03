@@ -140,12 +140,52 @@ class blk():
         self.data=[]
         self.metFlag=False
         
-#    def getMetrics(self):
-#        flag=(not self.metFlag)
-#        if flag:
-#            self.mets[]
+    def getMetrics(self):
+        flag=(not self.metFlag)
+        if flag:
+            self.mets=[]
+            self.imets=[]
+            x=self.var['x'].clone()
+            y=self.var['y'].clone()
+            z=self.var['z'].clone()
+            self.imets.append(var(self.size,vid=0,name='dxdxi',val=x.derVar(0)))
+            self.imets.append(var(self.size,vid=1,name='dxdet',val=x.derVar(1)))
+            self.imets.append(var(self.size,vid=2,name='dxdze',val=x.derVar(2)))  
+            self.imets.append(var(self.size,vid=3,name='dydxi',val=y.derVar(0)))
+            self.imets.append(var(self.size,vid=4,name='dydet',val=y.derVar(1)))
+            self.imets.append(var(self.size,vid=5,name='dydze',val=y.derVar(2)))
+            self.imets.append(var(self.size,vid=6,name='dzdxi',val=z.derVar(0)))
+            self.imets.append(var(self.size,vid=7,name='dzdet',val=z.derVar(1)))
+            self.imets.append(var(self.size,vid=8,name='dzdze',val=z.derVar(2)))
+            rdum=self.imets[4].getValues()*self.imets[8].getValues()
+            rdum-=self.imets[7].getValues()*self.imets[5].getValues()            
+            self.mets.append(var(self.size,vid=0,name='dxidx',val=rdum))
+            rdum=self.imets[7].getValues()*self.imets[2].getValues()
+            rdum-=self.imets[1].getValues()*self.imets[8].getValues()            
+            self.mets.append(var(self.size,vid=1,name='dxidy',val=rdum))
+            rdum=self.imets[1].getValues()*self.imets[5].getValues()
+            rdum-=self.imets[4].getValues()*self.imets[2].getValues()            
+            self.mets.append(var(self.size,vid=2,name='dxidz',val=rdum))
+            rdum=self.imets[5].getValues()*self.imets[6].getValues()
+            rdum-=self.imets[8].getValues()*self.imets[3].getValues()            
+            self.mets.append(var(self.size,vid=3,name='detdx',val=rdum))
+            rdum=self.imets[8].getValues()*self.imets[0].getValues()
+            rdum-=self.imets[2].getValues()*self.imets[6].getValues()            
+            self.mets.append(var(self.size,vid=4,name='detdy',val=rdum))
+            rdum=self.imets[2].getValues()*self.imets[3].getValues()
+            rdum-=self.imets[5].getValues()*self.imets[0].getValues()            
+            self.mets.append(var(self.size,vid=5,name='detdz',val=rdum))
+            rdum=self.imets[3].getValues()*self.imets[7].getValues()
+            rdum-=self.imets[6].getValues()*self.imets[4].getValues()            
+            self.mets.append(var(self.size,vid=6,name='dzedx',val=rdum))
+            rdum=self.imets[6].getValues()*self.imets[1].getValues()
+            rdum-=self.imets[0].getValues()*self.imets[7].getValues()            
+            self.mets.append(var(self.size,vid=7,name='dzedy',val=rdum))
+            rdum=self.imets[0].getValues()*self.imets[4].getValues()
+            rdum-=self.imets[3].getValues()*self.imets[1].getValues()            
+            self.mets.append(var(self.size,vid=8,name='dzedz',val=rdum))
             
-        
+            
     def getSubset(self,xlim=None,ylim=None,zlim=None):
         ndata=len(self.data)
         size=self.size

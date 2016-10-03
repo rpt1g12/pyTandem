@@ -15,7 +15,7 @@ import importlib
 importlib.reload(p3d)
 
 #%%
-user='rpt1g12'
+user='rperezt'
 path='/home/'+user+'/Desktop/post/8A15W11AoA20/vsmallDomain/'
 fl=p3d.flow(path,"grid.xyz","solTA.qa")
 
