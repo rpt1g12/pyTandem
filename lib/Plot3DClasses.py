@@ -157,33 +157,68 @@ class blk():
             self.imets.append(var(self.size,vid=6,name='dzdxi',val=z.derVar(0)))
             self.imets.append(var(self.size,vid=7,name='dzdet',val=z.derVar(1)))
             self.imets.append(var(self.size,vid=8,name='dzdze',val=z.derVar(2)))
+            
             rdum=self.imets[4].getValues()*self.imets[8].getValues()
-            rdum-=self.imets[7].getValues()*self.imets[5].getValues()            
+            rdum-=self.imets[5].getValues()*self.imets[7].getValues()
             self.mets.append(var(self.size,vid=0,name='dxidx',val=rdum))
-            rdum=self.imets[7].getValues()*self.imets[2].getValues()
-            rdum-=self.imets[1].getValues()*self.imets[8].getValues()            
+            rdum*=self.imets[0].getValues()
+            self.J=var(self.size,vid=0,name='J',val=rdum)
+            
+            
+            rdum=self.imets[2].getValues()*self.imets[7].getValues()
+            rdum-=self.imets[1].getValues()*self.imets[8].getValues()
+            self.J.val[:,:,:]+=rdum.copy()*self.imets[3].getValues()           
             self.mets.append(var(self.size,vid=1,name='dxidy',val=rdum))
+            
             rdum=self.imets[1].getValues()*self.imets[5].getValues()
-            rdum-=self.imets[4].getValues()*self.imets[2].getValues()            
+            rdum-=self.imets[2].getValues()*self.imets[4].getValues()
+            self.J.val[:,:,:]+=rdum.copy()*self.imets[6].getValues()            
             self.mets.append(var(self.size,vid=2,name='dxidz',val=rdum))
+            
             rdum=self.imets[5].getValues()*self.imets[6].getValues()
-            rdum-=self.imets[8].getValues()*self.imets[3].getValues()            
+            rdum-=self.imets[3].getValues()*self.imets[8].getValues()
+            self.J.val[:,:,:]+=rdum.copy()*self.imets[1].getValues()          
             self.mets.append(var(self.size,vid=3,name='detdx',val=rdum))
-            rdum=self.imets[8].getValues()*self.imets[0].getValues()
-            rdum-=self.imets[2].getValues()*self.imets[6].getValues()            
+            
+            rdum=self.imets[0].getValues()*self.imets[8].getValues()
+            rdum-=self.imets[2].getValues()*self.imets[6].getValues()
+            self.J.val[:,:,:]+=rdum.copy()*self.imets[4].getValues()            
             self.mets.append(var(self.size,vid=4,name='detdy',val=rdum))
+            
             rdum=self.imets[2].getValues()*self.imets[3].getValues()
-            rdum-=self.imets[5].getValues()*self.imets[0].getValues()            
+            rdum-=self.imets[0].getValues()*self.imets[5].getValues()
+            self.J.val[:,:,:]+=rdum.copy()*self.imets[7].getValues()            
             self.mets.append(var(self.size,vid=5,name='detdz',val=rdum))
+            
             rdum=self.imets[3].getValues()*self.imets[7].getValues()
-            rdum-=self.imets[6].getValues()*self.imets[4].getValues()            
+            rdum-=self.imets[4].getValues()*self.imets[6].getValues() 
+            self.J.val[:,:,:]+=rdum.copy()*self.imets[2].getValues()
             self.mets.append(var(self.size,vid=6,name='dzedx',val=rdum))
-            rdum=self.imets[6].getValues()*self.imets[1].getValues()
-            rdum-=self.imets[0].getValues()*self.imets[7].getValues()            
+            
+            rdum=self.imets[1].getValues()*self.imets[6].getValues()
+            rdum-=self.imets[0].getValues()*self.imets[7].getValues()
+            self.J.val[:,:,:]+=rdum.copy()*self.imets[5].getValues()           
             self.mets.append(var(self.size,vid=7,name='dzedy',val=rdum))
+            
             rdum=self.imets[0].getValues()*self.imets[4].getValues()
-            rdum-=self.imets[3].getValues()*self.imets[1].getValues()            
+            rdum-=self.imets[1].getValues()*self.imets[3].getValues()
+            self.J.val[:,:,:]+=rdum.copy()*self.imets[8].getValues()            
             self.mets.append(var(self.size,vid=8,name='dzedz',val=rdum))
+            
+            self.J.val[:,:,:]=3/(self.J.getValues())
+            rdum=1/self.J.getValues()
+            self.V=var(self.size,vid=0,name='V',val=rdum)
+            
+            for n in range(9):
+                self.mets[n].val[:,:,:]*=self.J.val[:,:,:]
+            
+            self.metFlag=True
+            
+    def derive(self,varName1,varName2):
+        if varName2 =='x'
+            
+        else:
+            print('Needs to be derived with respect to: x, y or z')
             
             
     def getSubset(self,xlim=None,ylim=None,zlim=None):
