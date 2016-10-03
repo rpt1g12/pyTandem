@@ -215,10 +215,28 @@ class blk():
             self.metFlag=True
             
     def derive(self,varName1,varName2):
-        if varName2 =='x'
-            
+        if varName1 in self.var:
+            var0=self.var[varName1]
+            dvdxi=var0.derVar(0)
+            dvdet=var0.derVar(1)
+            dvdze=var0.derVar(2)         
+            if varName2 =='x':           
+                dv=(dvdxi*self.mets[0].getValues()+
+                   dvdet*self.mets[3].getValues()+
+                   dvdze*self.mets[6].getValues())
+            if varName2 =='x':           
+                dv=(dvdxi*self.mets[1].getValues()+
+                   dvdet*self.mets[4].getValues()+
+                   dvdze*self.mets[7].getValues())
+            if varName2 =='z':           
+                dv=(dvdxi*self.mets[2].getValues()+
+                   dvdet*self.mets[5].getValues()+
+                   dvdze*self.mets[8].getValues())
+            else:
+                print('Needs to be derived with respect to: x, y or z')
         else:
-            print('Needs to be derived with respect to: x, y or z')
+            print('{} is not a valid variable!'.format(varName1))
+        self.setData(vname='d{}d{}'.format(varName1,varName2),val=dv)
             
             
     def getSubset(self,xlim=None,ylim=None,zlim=None):

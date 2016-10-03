@@ -15,7 +15,7 @@ import importlib
 importlib.reload(p3d)
 
 #%%
-user='rpt1g12'
+user='rperezt'
 path='/home/'+user+'/Desktop/post/8A15W11AoA20/vsmallDomain/'
 fl=p3d.flow(path,"grid.xyz","solTA.qa")
 
@@ -77,10 +77,10 @@ zz=bk.var['z'].clone()
 dydx=yy.derVar(0)
 bk.getMetrics()
 #%%
-dxidx=bk.mets[4].getValues()
+dxidx=bk.mets[4]
 
-figd,axd=getFig('Derivative')
-axd.contourf(xx.val[:,:,0],yy.val[:,:,0],dxidx[:,:,0])
+figd,axd=getFig(dxidx.getName)
+axd.contourf(xx.val[:,:,0],yy.val[:,:,0],dxidx.val[:,:,0])
 #%%
 save=False
 name='4WLE_'+varname
