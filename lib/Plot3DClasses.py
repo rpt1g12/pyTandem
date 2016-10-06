@@ -8,6 +8,7 @@ from lib.myPlot3dOperator import *
 import numpy as np
 import copy as copy
 from scipy.interpolate import griddata  
+float32=np.float32
 
 # Classes
 class var():
@@ -16,7 +17,7 @@ class var():
         self.name=name
         self.size=size
         if len(val)==0:
-            self.val=np.zeros(size)
+            self.val=np.zeros(size,dtype=float32)
         else:
             self.val=val.copy()
            
@@ -72,11 +73,11 @@ class var():
     
     def derVar(self,direction):
         direction
-        dvar=np.zeros(self.size)
+        dvar=np.zeros(self.size,dtype=float32)
         n=self.size[direction]
-        dx=np.zeros(n)
-        a=np.zeros(n-2);b=np.zeros(n-1);c=np.zeros(n)
-        d=np.zeros(n-1);e=np.zeros(n-2);
+        dx=np.zeros(n,dtype=float32)
+        a=np.zeros(n-2,dtype=float32);b=np.zeros(n-1,dtype=float32);c=np.zeros(n,dtype=float32)
+        d=np.zeros(n-1,dtype=float32);e=np.zeros(n-2,dtype=float32);
         a[-1]=1;e[0]=-1
         b[0:-1]=-1;b[-1]=-4;d[1:]=1;d[0]=4;
         c[0]=-3;c[-1]=3
@@ -97,27 +98,24 @@ class var():
                     dx=m*np.mat(self.val[i,j,:]).T
                     dvar[i,j,:]=np.asarray(dx.T)[0]
         return dvar.copy()
-            
-            
-
     
     def avgDir(self,direction=2):
         size=self.size        
         if direction==0:
             lsize=size[1:]
-            aarr=np.zeros(lsize)
+            aarr=np.zeros(lsize,dtype=float32)
             arr=self.getValues()
             for i in range(size[0]):
                 aarr+=arr[i,:,:]
         if direction==1:
             lsize=(size[0],size[2])
-            aarr=np.zeros(lsize)
+            aarr=np.zeros(lsize,dtype=float32)
             arr=self.getValues()
             for j in range(size[1]):
                 aarr+=arr[:,j,:]
         if direction==2:
             lsize=size[0:2]
-            aarr=np.zeros(lsize)
+            aarr=np.zeros(lsize,dtype=float32)
             arr=self.getValues()
             for k in range(size[2]):
                 aarr+=arr[:,:,k]
@@ -253,6 +251,7 @@ class blk():
         points=np.array(np.transpose([x,y,z]))
         ipoints=np.array(np.transpose([np.reshape(xi,xi.size),np.reshape(yi,yi.size),np.reshape(zi,zi.size)]))
         isize=list(xi.shape)
+        print('Interpolating...')
         ival=griddata(points,values,ipoints,method=method)
         iblock=blk(self.id,size=isize)
         iblock.setData(vname='x',val=xi)
@@ -261,28 +260,32 @@ class blk():
         iblock.setData(vname,val=np.reshape(ival,isize))
         return iblock.clone()
 
-    def interpolate2dk(self,vname,xi,yi,ki,method='cubic'):
+    def interpolate2dk(self,vname,xi,yi,ki,method='cubic',mode='block'):
         """Interpolate data form variable (vname) into points (ipts)
            at ki span-plane.
            Available methods: 'cubic' (default) ,'linear', 'nearest'
            Returns a block object"""
         size=self.size[0]*self.size[1]
-        x=self.var['x'].val[:,:,ki];x=np.reshape(x,size)
-        y=self.var['y'].val[:,:,ki];y=np.reshape(y,size)
-        z=self.var['z'].val[:,:,ki];z=np.reshape(z,size)
+        x=self.var['x'].val[:,:,ki];x=np.reshape(x,x.size)
+        y=self.var['y'].val[:,:,ki];y=np.reshape(y,y.size)
+        z=self.var['z'].val[:,:,ki];z=np.reshape(z,z.size)
         points=np.array(np.transpose([x,y]))
         values=self.var[vname].val[:,:,ki];values=np.reshape(values,size)
         ipoints=np.array(np.transpose([np.reshape(xi,xi.size),np.reshape(yi,yi.size)]))
         isize=[xi.shape[0],xi.shape[1],1]
         print('Interpolating...')
         ival=griddata(points,values,ipoints,method=method)
-        iblock=blk(self.id,size=isize)
-        iblock.setData(vname='x',val=xi)
-        iblock.setData(vname='y',val=yi)
-        zi=xi.copy();zi[:,:]=z[0]
-        iblock.setData(vname='z',val=zi)
-        iblock.setData(vname,val=np.reshape(ival,isize))
-        return iblock.clone()
+        if  mode=='block':
+            iblock=blk(self.id,size=isize)
+            iblock.setData(vname='x',val=xi)
+            iblock.setData(vname='y',val=yi)
+            zi=xi.copy();zi[:,:]=z[0]
+            iblock.setData(vname='z',val=zi)
+            iblock.setData(vname,val=np.reshape(ival,isize))
+        elif mode=='values':
+            iblock=np.reshape(ival,isize)
+        
+        return iblock
 
     def getSubset(self,xlim=None,ylim=None,zlim=None):
         ndata=len(self.data)
@@ -294,7 +297,7 @@ class blk():
         if zlim==None:
             zlim=range(0,size[2])
         lsize=(len(xlim),len(ylim),len(zlim))
-        sarr=np.zeros(lsize)
+        sarr=np.zeros(lsize,dtype=float32)
         sblk=blk(self.id,lsize)
         print('subset sizes:'+str(lsize))
         for n in range(ndata):
@@ -318,7 +321,7 @@ class blk():
             vname='v{:d}'.format(len(self.data))
         if len(val)==0:
             size=self.size
-            val=np.zeros(size)
+            val=np.zeros(size,dtype=float32)
         else:
             size=val.shape
            
@@ -374,6 +377,7 @@ class flow():
                 nbk*3*int4 #Number of points in each direction for each block block.size(0:2)
              """
             fh=open(self.path+self.gfile,'rb')
+            print('Reading header...')
             #Read number of blocks
             self.nbk=rdType(fh,'i')
             #Read Grid sizes for each block
@@ -400,6 +404,7 @@ class flow():
             names=['x','y','z']
             #Number of points per block
             lblk=self.lblk
+            print('Reading grid: {}'.format(self.gfile))
             #Loop trough the blocks
             for nb in range(nbk):
                 #Number of points in each direction
@@ -423,6 +428,7 @@ class flow():
             else:
                 names=vnames
             lblk=self.lblk
+            print('Reading solution: {}'.format(self.sfile))
             for nb in range(nbk):
                 size=self.blk[nb].size 
                 lh=self.lhdr
@@ -442,6 +448,7 @@ class flow():
             nbk=self.nbk
             lblk=self.lblk
             ghdr=[nbk]
+            print('Writing solution: {}'.format(sfile))
             for nb in range(nbk): 
                 lh=self.lhdr
                 ghdr.append(self.blk[nb].size[0])
@@ -459,6 +466,7 @@ class flow():
                Returns a flow object"""
             # Clone the current flow object
             sflow=self.clone()
+            print('Shifting data by {:d}'.format(k))
             for nb in range(sflow.nbk):
                 for n in sflow.vnames:
                     vr2=sflow.blk[nb].var[n].getValues()
@@ -476,19 +484,15 @@ class flow():
             i1=[];i0=[];j0=[];j1=[]
             for i in range(bkx):
                 i0.append(lxi)
-                blxi=self.blk[i].size[0]
-                lxi+=(blxi-1)
+                lxi+=self.blk[i].size[0]
                 i1.append(lxi)
             for j in range(0,self.nbk,bkx):
                 j0.append(let)
-                blet=self.blk[j].size[1]
-                let+=(blet-1)
+                let+=self.blk[j].size[1]
                 j1.append(let)
-            lxi+=1;let+=1
-            i1[-1]+=1;j1[-1]+=1
             print(i0,i1,lxi)
             print(j0,j1,let)
-            v=np.zeros((lxi,let,lze))
+            v=np.zeros((lxi,let,lze),dtype=float32)
             size=[lxi,let,lze]
             mfl=flow(self.path,'merged_{}'.format(self.gfile),'merged_{}'.format(self.sfile))
             mfl.nbk=1
@@ -496,25 +500,22 @@ class flow():
             mfl.lblk.append(lxi*let*lze)
             mfl.vnames=self.vnames.copy()
             mfl.blk.append(blk(blk_id=0))
-            krange=range(0,lze)
-            mfl.vnames.append('x')
-            mfl.vnames.append('y')
-            mfl.vnames.append('z')
-            for j in range(bky):
-                jrange=range(j0[j],j1[j])
-                for i in range(bkx):
-                    nb=j*(bkx-1)+i
-                    nvar=0
-                    irange=range(i0[i],i1[i])
-                    for vname in mfl.vnames:
-                        vv=self.blk[nb].var[vname].getValues()[:-1,:-1,:]
-                        print(vname,nb)
-                        print(vv.shape)
-                        print(v[i0[i]:i1[i],j0[j]:j1[j],:].shape)
-                        #v[irange,jrange,krange]=vv.copy()
-                        #mfl.blk[0].data.append(var(size,nvar,name=vname,val=v.copy()))
-                        #mfl.blk[nb].var[vname]=mfl.blk[0].data[-1]
-                        #nvar+=1
+            mfl.blk[0].size=size
+            mfl.blk[0].glen=lxi*let*lze
+            mfl.vnames.insert(0,'z')
+            mfl.vnames.insert(0,'y')
+            mfl.vnames.insert(0,'x')
+            print('Merging Blocks...')
+            for vname in mfl.vnames:
+                nvar=0
+                for j in range(bky):
+                    for i in range(bkx):
+                        nb=j*(bkx)+i
+                        vv=self.blk[nb].var[vname].getValues()
+                        v[i0[i]:i1[i],j0[j]:j1[j],:]=vv.copy()
+                mfl.blk[0].data.append(var(size,nvar,name=vname,val=v.copy()))
+                mfl.blk[0].var[vname]=mfl.blk[0].data[-1]
+                nvar+=1
             return mfl.clone()
 
         def clone(self):
