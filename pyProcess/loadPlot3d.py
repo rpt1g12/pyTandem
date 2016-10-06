@@ -17,6 +17,18 @@ import importlib
 importlib.reload(p3d)
 
 #%%
+def getCirc(x0,y0,r,theta0,theta1,thetas):
+    theta=np.linspace(theta0,theta1,thetas)
+    fctr=np.pi/180;theta*=fctr
+    ntheta=theta.size
+    x=np.zeros((theta.size,1,1))
+    y=np.zeros((theta.size,1,1))
+    for n in range(ntheta):
+        x[n,0,0]=(r*np.cos(theta[n]))+x0
+        y[n,0,0]=(r*np.sin(theta[n]))+y0
+    return x,y
+    
+#%%
 user='rpt1g12'
 path='/home/'+user+'/Desktop/post/8A15W11AoA20/vsmallDomain/'
 fl=p3d.flow(path,"grid.xyz","solTA.qa")
@@ -74,10 +86,19 @@ bk=fl.blk[block]
 #figd,axd=getFig(dname)
 #axd.contourf(bk.var['x'].val[:,0,:],bk.var['z'].val[:,0,:],bk.var[dname].val[:,0,:])
 #%%
-x,y,z=np.mgrid[-0.5:0.5:100j,0.1:0.1:1j,-0.4:0.4:50j]
-print('Interpolating...')
-iblock=bk.interpolate('p',x,y,z,method='nearest')
-plt.contourf(iblock.var['x'].val[:,0,:],iblock.var['z'].val[:,0,:],iblock.var['p'].val[:,0,:])
+#xlim=(-0.5,0.5);ylim=(0,1);kplane=125
+#x,y,z=np.mgrid[xlim[0]:xlim[1]:100j,ylim[0]:ylim[1]:100j,0:0:1j]
+#lvl=np.linspace(0.5,1,51)
+#print('Interpolating...')
+#iblock=bk.interpolate2dk('p',x,y,kplane,method='cubic')
+#ifig,iax=getFig('Interpolated')
+#iax.contourf(iblock.var['x'].val[:,:,0],iblock.var['y'].val[:,:,0],iblock.var['p'].val[:,:,0],levels=lvl)
+#sfig,sax=getFig('Original')
+#sax.contourf(bk.var['x'].val[:,:,kplane],bk.var['y'].val[:,:,kplane],bk.var['p'].val[:,:,kplane],levels=lvl)
+#sax.set_xlim(xlim[0],xlim[1])
+#sax.set_ylim(ylim[0],ylim[1])
+#%%
+mfl=fl.mergeBlocks(3,2)
 #%%
 save=False
 name='4WLE_'+varname

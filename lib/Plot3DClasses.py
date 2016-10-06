@@ -7,6 +7,7 @@ Created on Thu Sep 15 11:24:30 2016
 from lib.myPlot3dOperator import *
 import numpy as np
 import copy as copy
+from scipy.interpolate import griddata  
 
 # Classes
 class var():
@@ -14,12 +15,11 @@ class var():
         self.id=vid
         self.name=name
         self.size=size
-        #self.flowc=np.zeros(4)
         if len(val)==0:
             self.val=np.zeros(size)
         else:
             self.val=val.copy()
-        
+           
     def rdVar(self,fh,lh,nvar,nb,lblk,Type='grid'):
         lxi=self.size[0];let=self.size[1];lze=self.size[2]
         ltomb=(lxi)*(let)*(lze)
@@ -124,8 +124,12 @@ class var():
         aarr/=size[direction]
         return aarr.copy()
     
-    def getValues(self):
-        return self.val.copy()
+    def getValues(self,oned=False):
+        if oned:
+           values=np.reshape(self.val.copy(),self.val.size) 
+        else:
+           values=self.val.copy()
+        return values
     def getSize(self):
         return self.size.copy()
     def getName(self):
@@ -224,21 +228,62 @@ class blk():
                 dv=(dvdxi*self.mets[0].getValues()+
                    dvdet*self.mets[3].getValues()+
                    dvdze*self.mets[6].getValues())
-            if varName2 =='x':           
+            elif varName2 =='y':           
                 dv=(dvdxi*self.mets[1].getValues()+
                    dvdet*self.mets[4].getValues()+
                    dvdze*self.mets[7].getValues())
-            if varName2 =='z':           
+            elif varName2 =='z':           
                 dv=(dvdxi*self.mets[2].getValues()+
                    dvdet*self.mets[5].getValues()+
                    dvdze*self.mets[8].getValues())
             else:
                 print('Needs to be derived with respect to: x, y or z')
+            self.setData(vname='d{}d{}'.format(varName1,varName2),val=dv)
         else:
             print('{} is not a valid variable!'.format(varName1))
-        self.setData(vname='d{}d{}'.format(varName1,varName2),val=dv)
-            
-            
+
+    def interpolate(self,vname,xi,yi,zi,method='nearest'):
+        """Interpolate data form variable (vname) into points (ipts)
+           Available methods: 'nearest' (default) or 'linear'
+           Returns a block object"""
+        x=self.var['x'].getValues(oned=True)
+        y=self.var['y'].getValues(oned=True)
+        z=self.var['z'].getValues(oned=True)
+        values=self.var[vname].getValues(oned=True)
+        points=np.array(np.transpose([x,y,z]))
+        ipoints=np.array(np.transpose([np.reshape(xi,xi.size),np.reshape(yi,yi.size),np.reshape(zi,zi.size)]))
+        isize=list(xi.shape)
+        ival=griddata(points,values,ipoints,method=method)
+        iblock=blk(self.id,size=isize)
+        iblock.setData(vname='x',val=xi)
+        iblock.setData(vname='y',val=yi)
+        iblock.setData(vname='z',val=zi)
+        iblock.setData(vname,val=np.reshape(ival,isize))
+        return iblock.clone()
+
+    def interpolate2dk(self,vname,xi,yi,ki,method='cubic'):
+        """Interpolate data form variable (vname) into points (ipts)
+           at ki span-plane.
+           Available methods: 'cubic' (default) ,'linear', 'nearest'
+           Returns a block object"""
+        size=self.size[0]*self.size[1]
+        x=self.var['x'].val[:,:,ki];x=np.reshape(x,size)
+        y=self.var['y'].val[:,:,ki];y=np.reshape(y,size)
+        z=self.var['z'].val[:,:,ki];z=np.reshape(z,size)
+        points=np.array(np.transpose([x,y]))
+        values=self.var[vname].val[:,:,ki];values=np.reshape(values,size)
+        ipoints=np.array(np.transpose([np.reshape(xi,xi.size),np.reshape(yi,yi.size)]))
+        isize=[xi.shape[0],xi.shape[1],1]
+        print('Interpolating...')
+        ival=griddata(points,values,ipoints,method=method)
+        iblock=blk(self.id,size=isize)
+        iblock.setData(vname='x',val=xi)
+        iblock.setData(vname='y',val=yi)
+        zi=xi.copy();zi[:,:]=z[0]
+        iblock.setData(vname='z',val=zi)
+        iblock.setData(vname,val=np.reshape(ival,isize))
+        return iblock.clone()
+
     def getSubset(self,xlim=None,ylim=None,zlim=None):
         ndata=len(self.data)
         size=self.size
@@ -263,44 +308,71 @@ class blk():
                         kk+=1
                         sarr[ii,jj,kk]=arr[i,j,k]                     
             name=self.data[n].getName()
-            sblk.setData(name,sarr,size=lsize)
+            sblk.setData(name,sarr)
             sblk.var[name]=sblk.data[n]
         
         return sblk.clone()
         
-    def setData(self,vname=None,val=[],vid=None,size=None):
-        if vid==None:
-            vid=-1
+    def setData(self,vname=None,val=[],vid=None):
         if vname==None:
             vname='v{:d}'.format(len(self.data))
         if len(val)==0:
-            if size==None:
-                size=self.size
-                val=np.zeros(size)
+            size=self.size
+            val=np.zeros(size)
         else:
             size=val.shape
-        
-        if vid==-1 or len(self.data)<vid+1:
-            self.data.append(var(size,len(self.data),vname,val))
-            #print(len(self.data),val)
+           
+        if (vname in self.var):
+            print('Changing {} values'.format(vname))
+            self.var[vname].val[:,:,:]=val.copy()
         else:
-            myvar=var(size,vid,vname,val)
+            print('Adding {} to variable list'.format(vname))
+            self.data.append(var(size,len(self.data),vname,val))
+            self.var[vname]=self.data[-1]
             
-            self.data[vid]=myvar
       
     def clone (self):
         obj=copy.copy(self)
         return obj 
         
 class flow():
+        """This class provides a flow object. 
+        A flow object contains blocks from a multiblock structured grid.
+        Data is read/writen from/to files stored in Plot3D format
+        Parameters:
+         * path: (char)file path where the grid and solution files are stored
+         * gfile: (char) filename for the grid file
+         * sfile: (char) filename for the solution file
+         * nbk: (int) number of blocks
+         * blk: list(block) containing the block objects
+         * lblk: list(int) containing the number of points in each block
+         * lhdr: (int) length of the header in files counted in bytes
+         """
         def __init__(self,path,gfile,sfile):
+            #Path where grid and solution files are stored
             self.path=path
+            #Grid file name
             self.gfile=gfile
+            #Solution file name
             self.sfile=sfile
+            #Number of blocks
             self.nbk=1
+            #Blocks list
             self.blk=[]
+            #Total number of points per block list
             self.lblk=[]
         def rdHdr(self):
+            """Reads header from the grid file and sets up basic class parameters such as:
+             * nbk
+             * lhdr
+
+             It also initialises the blk list containing block objects
+
+             The header is in the following format:
+
+                int4 #Number of blocks (nbk)
+                nbk*3*int4 #Number of points in each direction for each block block.size(0:2)
+             """
             fh=open(self.path+self.gfile,'rb')
             #Read number of blocks
             self.nbk=rdType(fh,'i')
@@ -320,12 +392,19 @@ class flow():
             fh.close()
 
         def rdGrid(self):
+            #Open file for reading in binary
             fh=open(self.path+self.gfile,'rb')
+            #Number of blocks
             nbk=self.nbk
+            #Variable names
             names=['x','y','z']
+            #Number of points per block
             lblk=self.lblk
+            #Loop trough the blocks
             for nb in range(nbk):
+                #Number of points in each direction
                 size=self.blk[nb].size 
+                #Find out length of header
                 lh=self.lhdr
                 for nvar in range(3):
                     vname=names[nvar]
@@ -353,6 +432,7 @@ class flow():
                     self.blk[nb].data[-1].rdVar(fh,lh,nvar,nb,lblk,Type='sol')
                     self.blk[nb].var[vname]=self.blk[nb].data[-1]
                     
+            self.vnames=names
             fh.close()
 
         def wrSol(self,sfile=None):
@@ -373,6 +453,74 @@ class flow():
             fhdr=np.int32(np.array(ghdr))
             fh.write(fhdr)
             fh.close()
+
+        def shiftK(self,k):
+            """Shifts the flow object in the ze direction so the kth point is set to be 0 in the returning flow object
+               Returns a flow object"""
+            # Clone the current flow object
+            sflow=self.clone()
+            for nb in range(sflow.nbk):
+                for n in sflow.vnames:
+                    vr2=sflow.blk[nb].var[n].getValues()
+                    lze=sflow.blk[nb].size[2]
+                    for sk in range(lze):
+                        kk=sk+(k-lze)
+                        sflow.blk[nb].var[n].val[:,:,sk]=vr2[:,:,kk].copy()
+                        
+            return sflow
+        
+        def mergeBlocks(self,bkx,bky):
+            """Merges all blocks into a single one
+               Returns a flow object"""
+            lxi=0;let=0;lze=self.blk[0].size[2]
+            i1=[];i0=[];j0=[];j1=[]
+            for i in range(bkx):
+                i0.append(lxi)
+                blxi=self.blk[i].size[0]
+                lxi+=(blxi-1)
+                i1.append(lxi)
+            for j in range(0,self.nbk,bkx):
+                j0.append(let)
+                blet=self.blk[j].size[1]
+                let+=(blet-1)
+                j1.append(let)
+            lxi+=1;let+=1
+            i1[-1]+=1;j1[-1]+=1
+            print(i0,i1,lxi)
+            print(j0,j1,let)
+            v=np.zeros((lxi,let,lze))
+            size=[lxi,let,lze]
+            mfl=flow(self.path,'merged_{}'.format(self.gfile),'merged_{}'.format(self.sfile))
+            mfl.nbk=1
+            mfl.lhdr=16
+            mfl.lblk.append(lxi*let*lze)
+            mfl.vnames=self.vnames.copy()
+            mfl.blk.append(blk(blk_id=0))
+            krange=range(0,lze)
+            mfl.vnames.append('x')
+            mfl.vnames.append('y')
+            mfl.vnames.append('z')
+            for j in range(bky):
+                jrange=range(j0[j],j1[j])
+                for i in range(bkx):
+                    nb=j*(bkx-1)+i
+                    nvar=0
+                    irange=range(i0[i],i1[i])
+                    for vname in mfl.vnames:
+                        vv=self.blk[nb].var[vname].getValues()[:-1,:-1,:]
+                        print(vname,nb)
+                        print(vv.shape)
+                        print(v[i0[i]:i1[i],j0[j]:j1[j],:].shape)
+                        #v[irange,jrange,krange]=vv.copy()
+                        #mfl.blk[0].data.append(var(size,nvar,name=vname,val=v.copy()))
+                        #mfl.blk[nb].var[vname]=mfl.blk[0].data[-1]
+                        #nvar+=1
+            return mfl.clone()
+
+        def clone(self):
+            """Returns a clone of the flow object"""
+            obj=copy.copy(self)
+            return obj
         
             
         
