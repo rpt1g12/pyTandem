@@ -8,11 +8,25 @@ from lib.myPlot3dOperator import *
 import numpy as np
 import copy as copy
 from scipy.interpolate import griddata  
+#Define a float32
 float32=np.float32
 
 # Classes
 class var():
+    """Defines a variable class.
+
+    Args:
+        size (list[3*int]): contains grid sizes in each direction
+        vid (int): variable id
+        name (char): variable name
+        val (np.ndarray(size*float32)): contains variable values
+    """
     def __init__(self,size,vid,name='var',val=[]):
+        """Class constructor
+        
+            If val=[], val is set to zeros
+
+        """
         self.id=vid
         self.name=name
         self.size=size
@@ -22,6 +36,18 @@ class var():
             self.val=val.copy()
            
     def rdVar(self,fh,lh,nvar,nb,lblk,Type='grid'):
+        """Reads variable values from file to self.val
+        
+        Args:
+            fh (file): file to read from
+            lh (int): length of header in bytes
+            nvar (int): variable number within the file
+            nb (int): block where value is to be read from
+            lblk (list[nbk*int]): Total number of points per each block within the file
+            Type (char): can be either 'grid'(default) or 'sol'. Depending on that the
+                is treated as a Plot3D grid or solution file
+
+        """
         lxi=self.size[0];let=self.size[1];lze=self.size[2]
         ltomb=(lxi)*(let)*(lze)
         k8=np.float32; lk8=np.dtype(k8).itemsize
@@ -40,16 +66,33 @@ class var():
             
             
         lh+=fl_hdr+nvar*lblk[nb]*lk8
-        #if Type=='sol': print('var',nb,nvar,lh)
         fh.seek(lh)
         self.val=np.fromfile(fh,dtype=k8,count=ltomb)
         self.val=np.reshape(self.val,(lxi,let,lze),order='F')
     
     def clone(self):
+        """Clones the variable.
+
+            Returns:
+                obj (var): copy of the variable class to be returned
+
+        """
         obj=copy.copy(self)
         return obj
         
     def wrVar(self,fh,lh,nvar,nb,lblk,Type='grid'):
+        """Writes variable to file from self.val.
+
+            Args:
+            fh (file): file to wrie to
+            lh (int): length of header in bytes
+            nvar (int): variable number within the file
+            nb (int): block where value is to be read from
+            lblk (list of ints): Total number of points per each block within the file
+            Type (char): can be either 'grid'(default) or 'sol'. Depending on that the
+                is treated as a Plot3D grid or solution file
+                
+        """
         k8=np.float32; lk8=np.dtype(k8).itemsize
         if Type=='grid':
             tvar=3
@@ -72,7 +115,16 @@ class var():
         fh.write(v)
     
     def derVar(self,direction):
-        direction
+        """Derives variable with respect to any computational grid direction
+
+            Args:
+                direction (int): direction of derivative. Can be 0, 1 or 2.
+                    Indicates the index with respect to which the derivative
+                    is performed.
+            Returns:
+                dvar (np.ndarray(float32)): variable derivative
+
+        """
         dvar=np.zeros(self.size,dtype=float32)
         n=self.size[direction]
         dx=np.zeros(n,dtype=float32)
@@ -100,6 +152,15 @@ class var():
         return dvar.copy()
     
     def avgDir(self,direction=2):
+        """Averages variable in any computational grid direction.
+
+            Args:
+                direction (int): Direction of averaging
+
+            Returns:
+                aarr (np.ndarray(float32)): Averaged variable
+                
+        """
         size=self.size        
         if direction==0:
             lsize=size[1:]
@@ -123,17 +184,41 @@ class var():
         return aarr.copy()
     
     def getValues(self,oned=False):
+        """Extract variable values.
+
+            Args:
+                oned (int): If True returns a one-dimensional array. If False(default)
+                    returns a three-dimensional array.
+            Returns:
+                self.val (np.ndarray(float32): Variable values
+
+        """
         if oned:
            values=np.reshape(self.val.copy(),self.val.size) 
         else:
            values=self.val.copy()
         return values
     def getSize(self):
+        """Gets variable size."""
         return self.size.copy()
     def getName(self):
+        """Gets variable name."""
         return self.name
         
 class blk():
+    """Provides block class
+        Parameters:
+            id (int): Block id
+            size (list[3*int]): grid dimensions in each direction
+            glen (int): Total number of points 
+            var (dict{var}): Dictionary of var objects
+            data (list[var]): Array of var objects
+            metFlag (logical): Flag stating if grid mettrics have been 
+                already computed
+                metFlag (logical): Flag stating if grid mettrics have been 
+                    already computed. Default is False.
+
+    """
     def __init__(self,blk_id,size=(1,1,1)):
         self.id=blk_id
         self.size=size
@@ -143,6 +228,7 @@ class blk():
         self.metFlag=False
         
     def getMetrics(self):
+        """Compute grid mettrics"""
         flag=(not self.metFlag)
         if flag:
             self.mets=[]
@@ -217,6 +303,14 @@ class blk():
             self.metFlag=True
             
     def derive(self,varName1,varName2):
+        """Derive one variable with respect to x, y or z
+            
+            Args:
+                varName1 (char): Variable to be derived
+                varName2 (char): Variable with respect to be derived. It must be
+                    either 'x', 'y' or 'z'.
+
+        """
         if varName1 in self.var:
             var0=self.var[varName1]
             dvdxi=var0.derVar(0)
@@ -241,9 +335,19 @@ class blk():
             print('{} is not a valid variable!'.format(varName1))
 
     def interpolate(self,vname,xi,yi,zi,method='nearest'):
-        """Interpolate data form variable (vname) into points (ipts)
-           Available methods: 'nearest' (default) or 'linear'
-           Returns a block object"""
+        """Interpolate variable at some points
+
+                Args:
+                    vname (char): Varible's name to be interpolated
+                    xi (np.ndarray(size*float32): X coordinate of interpolation points
+                    yi (np.ndarray(size*float32): Y coordinate of interpolation points
+                    zi (np.ndarray(size*float32): Z coordinate of interpolation points
+                    method (char): Available methods: 'nearest' (default) or 'linear'
+
+                Returns:
+                    iblock (block): Block containing interpolated variables
+
+        """
         x=self.var['x'].getValues(oned=True)
         y=self.var['y'].getValues(oned=True)
         z=self.var['z'].getValues(oned=True)
@@ -263,8 +367,19 @@ class blk():
     def interpolate2dk(self,vname,xi,yi,ki,method='cubic',mode='block'):
         """Interpolate data form variable (vname) into points (ipts)
            at ki span-plane.
-           Available methods: 'cubic' (default) ,'linear', 'nearest'
-           Returns a block object"""
+                Args:
+                    vname (char): Varible's name to be interpolated
+                    xi (np.ndarray(size*float32): X coordinate of interpolation points
+                    yi (np.ndarray(size*float32): Y coordinate of interpolation points
+                    ki (int): Zeta plane on to which perform interpolation
+                    method (char): Available methods: 'nearest' (default) or 'linear'
+                    mode (char): If mode='block' returns a block object. 
+                        If mode='values' returns just a numpy array
+                Returns:
+                    iblock (blk): if mode='block'
+                    iblock (np.ndarray[size*float32]): if mode='values'
+
+                    """
         size=self.size[0]*self.size[1]
         x=self.var['x'].val[:,:,ki];x=np.reshape(x,x.size)
         y=self.var['y'].val[:,:,ki];y=np.reshape(y,y.size)
@@ -288,6 +403,20 @@ class blk():
         return iblock
 
     def getSubset(self,xlim=None,ylim=None,zlim=None):
+        """Extracts a subset of the block data
+
+                Args:
+                    xlim (range): Range xi planes from which to extract data
+                        If none, uses all available
+                    ylim (range): Range eta planes from which to extract data
+                        If none, uses all available
+                    zlim (range): Range zeta planes from which to extract data
+                        If none, uses all available
+
+                Returns:
+                    sblk (blk): Block object containing subset
+
+        """
         ndata=len(self.data)
         size=self.size
         if xlim==None:
@@ -317,6 +446,13 @@ class blk():
         return sblk.clone()
         
     def setData(self,vname=None,val=[],vid=None):
+        """Sets values for a given variable in the block. If variable exists, overwrites its values.
+            If variable does not exist yet it appeds a new one.
+
+            Args:
+                vname (char): Variable's name
+                val (np.ndarray[size*float32]): Variable values
+        """
         if vname==None:
             vname='v{:d}'.format(len(self.data))
         if len(val)==0:
