@@ -9,7 +9,7 @@ pi=np.pi
 plt.close('all')
 #%%
 folder='6blocks/';sclcd='SCl'
-osim=8;aoa=20;iaoah=20;freq=0.19
+osim=80;aoa=20;iaoah=20;freq=0.19
 if(osim==0):
     sim='A00'
     odata=0
@@ -75,7 +75,7 @@ cll();clt();ns=1024
 #tmin=95.0/0.3
 tmin=tin[-1]-(25/0.3)       #in jfm paper its -(25/0.3)
 n0=np.where(tin>tmin)[0][0]
-t0=tin[n0:]*0.3#-tin[n0];
+t0=tin[n0:]#*0.3#-tin[n0];
 if prdl==1:
     fctr=np.sqrt(1-0.3**2)
 else:
