@@ -194,7 +194,13 @@ class var():
 
         """
         if oned:
-           values=np.reshape(self.val.copy(),self.val.size) 
+           values=np.zeros(self.val.size)
+           ii=0;lxi=self.size[0];let=self.size[1];lze=self.size[2]
+           for k in range(lze):
+               for j in range(let):
+                   for i in range(lxi):
+                        values[ii]=self.val[i,j,k]
+                        ii+=1
         else:
            values=self.val.copy()
         return values
@@ -607,8 +613,11 @@ class flow():
                 for n in sflow.vnames:
                     vr2=sflow.blk[nb].var[n].getValues()
                     lze=sflow.blk[nb].size[2]
+                    lze_1=lze-1
                     for sk in range(lze):
-                        kk=sk+(k-lze)
+                        kk=sk+(k-1)
+                        if (kk>(lze_1)):
+                            kk-=lze_1
                         sflow.blk[nb].var[n].val[:,:,sk]=vr2[:,:,kk].copy()
                         
             return sflow

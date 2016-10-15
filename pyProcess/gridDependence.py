@@ -5,7 +5,7 @@ from lib.stats import *
 from scipy.signal import butter, filtfilt
 
 #%%
-save=1
+save=0
 sims=('G1','G2','G3','G4')
 nsecs=(201,201,201,161)
 #sims=('G3','G2')
@@ -44,7 +44,7 @@ for ll in range(len(sims)):
         else:
             cs=''
         dataset=path+filename+cs+ext
-        cf=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=[4])
+        cf=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=[0])
     
         x=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=[6,7,8])
        
