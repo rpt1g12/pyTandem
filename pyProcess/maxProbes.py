@@ -6,7 +6,7 @@ from lib.myPlots import *
 
 #%%
 #plt.close('all')
-save=True; scale=False; step=False;sclg='density'
+save=False; scale=False; step=False;sclg='density'
 nxk=(9,4)
 sim='4A00W11AoA20'
 path='maxProbes/'+sim+'/20-140-15/maxpln'
@@ -62,7 +62,7 @@ for i in range(0,nxk[0]-0,1):
     axFreq.loglog(st,psgn,label='i'+str(i),linewidth=2)
     
 handle,labels=axFreq.get_legend_handles_labels()
-legend=axFreq.legend(handle,labels,bbox_to_anchor=(0,0),ncol=2,loc=3)    
+legend=axFreq.legend(handle,labels,bbox_to_anchor=(1,1),ncol=2,loc=3)    
 axFreq.grid(b=True, which='major', color='k', linestyle='--')
 axFreq.grid(b=True, which='minor', color='k', linestyle=':')
 axFreq.set_xlabel(r'$St$',fontsize=20)
