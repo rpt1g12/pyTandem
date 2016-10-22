@@ -5,7 +5,7 @@ from lib.myPlots import *
 pi=np.pi
 sina=np.sin(np.deg2rad(20))
 cosa=np.cos(np.deg2rad(20))
-#plt.close('all')
+plt.close('all')
 #%%
 path='pgfPlots/'
 #%%
@@ -15,8 +15,11 @@ cl_wle/=xl;cd_wle/=xl
 cd=cd_wle*cosa+cl_wle*sina
 cl=cl_wle*cosa-cd_wle*sina
 cd_wle=cd.copy();cl_wle=cl.copy()
+for i in range(3,203,7):
+    cl_wle[i-3:i+4]=cl_wle[i-3:i+4].mean()
+    cd_wle[i-3:i+4]=cd_wle[i-3:i+4].mean()
 
-f0,a0=getFig(fname)
+f0,a0=getFig('8WLE_pint_avg')
 a0.grid(True)
 a0.plot(xm,cl_wle,color='blue',lw=2,label='cl_wle')
 a0.plot(xm,cd_wle,color='red',lw=2,label='cd_wle')
@@ -36,8 +39,11 @@ cd_sle*=np.sqrt(1-0.3**2)
 cd=cd_sle*cosa+cl_sle*sina
 cl=cl_sle*cosa-cd_sle*sina
 cd_sle=cd.copy();cl_sle=cl.copy()
+for i in range(3,203,7):
+    cl_sle[i-3:i+4]=cl_sle[i-3:i+4].mean()
+    cd_sle[i-3:i+4]=cd_sle[i-3:i+4].mean()
 
-f1,a1=getFig(fname)
+f1,a1=getFig('8SLE_pint_avg')
 ax=plt.gca()
 ax.grid(True)
 ax.plot(xm,cl_sle,color='blue',lw=2,label='cl_sle')
@@ -76,9 +82,7 @@ ax=plt.gca()
 ax.grid(True)
 delta_cl=cl_wle-cl_sle
 delta_cd=cd_wle-cd_sle
-for i in range(3,203,7):
-    delta_cl[i-3:i+4]=delta_cl[i-3:i+4].mean()
-    delta_cd[i-3:i+4]=delta_cd[i-3:i+4].mean()
+
 
 ax.plot(xm,delta_cl,color='blue',lw=2,label='cl')
 ax.plot(xm,delta_cd,color='red',lw=2,label='cd')
@@ -101,12 +105,7 @@ fit(ax)
 #ax.set_ylabel(r'$\Delta\Gamma$',fontsize=18)
 #fit(ax)
 #%%
-ax=a4
+save=True
 
-save=False
-name=ax.figure.canvas.get_window_title()
 if (save==True):
-    plt.sca(ax)
-    handle,labels=ax.get_legend_handles_labels()
-    path='pgfPlots/'
-    savePlotFile(path=path+name+'.dat',vary=labels)
+    savePlotFile(ax=a1)

@@ -73,17 +73,25 @@ def fit (axes=None,spg=(0.0,0.2)):
     axes.figure.canvas.toolbar.update()
     axes.figure.canvas.toolbar.push_current()
 
-def savePlotFile(path='plt.dat',ax=None,varx=None,vary=None):
+def savePlotFile(path=None,ax=None,varx=None,vary=None,name=None):
     if (ax==None):
         ax=plt.gca()
     #n=len(ax.lines[0].get_xdata())
+    if  name==None:
+        name=ax.figure.canvas.get_window_title()
+    if path==None:
+        path='pgfPlots/'+name+'.dat'
     if (varx==None):
         m=len(ax.lines);
         varx=['x'+str(j) for j in range(m)]
-        
     if (vary==None):
-        m=len(ax.lines);
-        vary=['y'+str(j) for j in range(m)]
+        handle,labels,legend=getLabels(ax)
+        if len(labels)==0:
+            m=len(ax.lines);
+            vary=['y'+str(j) for j in range(m)]
+        else:
+            vary=labels
+            m=len(vary)
     else:
         m=len(vary)
         
@@ -106,6 +114,7 @@ def savePlotFile(path='plt.dat',ax=None,varx=None,vary=None):
         s+=' \n'
     
     fh=open(path,'w')
+    print('Writing to {}'.format(path))
     fh.write(s)
     fh.close()
     

@@ -4,12 +4,29 @@ Created on Thu Sep 15 11:24:30 2016
 
 @author: rpt1g12
 """
-from lib.myPlot3dOperator import *
+#from lib.myPlot3dOperator import *
 import numpy as np
+import struct
 import copy as copy
 from scipy.interpolate import griddata  
 #Define a float32
 float32=np.float32
+
+def rdType(file,Type,count=1,verbose=False):
+    f=file
+    if(Type=='i'): l=4
+    elif(Type=='f'): l=4
+    elif(Type=='c'): l=1
+    elif(Type=='d'): l=8
+    if count==1:
+        v=struct.unpack(Type,f.read(l))[0]
+    else:
+        v=[]
+        for i in range(count):
+            v.append(struct.unpack(Type,f.read(l))[0])
+    if (verbose):
+        print(v)
+    return v
 
 # Classes
 class var():
@@ -18,7 +35,7 @@ class var():
     Args:
         size (list[3*int]): contains grid sizes in each direction
         vid (int): variable id
-        name (char): variable name
+        vname (char): variable name
         val (np.ndarray(size*float32)): contains variable values
     """
     def __init__(self,size,vid,name='var',val=[]):
@@ -28,8 +45,9 @@ class var():
 
         """
         self.id=vid
-        self.name=name
+        self.vname=name
         self.size=size
+        self.flowc=list(np.zeros(4))
         if len(val)==0:
             self.val=np.zeros(size,dtype=float32)
         else:
@@ -127,28 +145,34 @@ class var():
         """
         dvar=np.zeros(self.size,dtype=float32)
         n=self.size[direction]
-        dx=np.zeros(n,dtype=float32)
-        a=np.zeros(n-2,dtype=float32);b=np.zeros(n-1,dtype=float32);c=np.zeros(n,dtype=float32)
-        d=np.zeros(n-1,dtype=float32);e=np.zeros(n-2,dtype=float32);
-        a[-1]=1;e[0]=-1
-        b[0:-1]=-1;b[-1]=-4;d[1:]=1;d[0]=4;
-        c[0]=-3;c[-1]=3
-        m=np.mat(np.diag(a,-2)+np.diag(b,-1)+np.diag(c,0)+np.diag(d,1)+np.diag(e,2))
-        if (direction==0):
-            for k in range(self.size[2]):
-                for j in range(self.size[1]):
-                    dx=m*np.mat(self.val[:,j,k]).T
-                    dvar[:,j,k]=np.asarray(dx.T)[0]
-        if (direction==1):
-            for i in range(self.size[0]):
+        if (n<3):
+            dvar[:,:,:]=1.0
+            print('Not enough points to perform derivation')
+        else:
+            dx=np.zeros(n,dtype=float32)
+            a=np.zeros(n-2,dtype=float32);b=np.zeros(n-1,dtype=float32)
+            c=np.zeros(n,dtype=float32)
+            d=np.zeros(n-1,dtype=float32);e=np.zeros(n-2,dtype=float32);
+            a[-1]=1;e[0]=-1
+            b[0:-1]=-1;b[-1]=-4;d[1:]=1;d[0]=4;
+            c[0]=-3;c[-1]=3
+            m=np.mat(np.diag(a,-2)+np.diag(b,-1)+np.diag(c,0)+np.diag(d,1)+np.diag(e,2))
+            if (direction==0):
                 for k in range(self.size[2]):
-                    dx=m*np.mat(self.val[i,:,k]).T
-                    dvar[i,:,k]=np.asarray(dx.T)[0]
-        if (direction==2):
-            for j in range(self.size[1]):
+                    for j in range(self.size[1]):
+                        dx=m*np.mat(self.val[:,j,k]).T
+                        dvar[:,j,k]=np.asarray(dx.T)[0]
+            if (direction==1):
                 for i in range(self.size[0]):
-                    dx=m*np.mat(self.val[i,j,:]).T
-                    dvar[i,j,:]=np.asarray(dx.T)[0]
+                    for k in range(self.size[2]):
+                        dx=m*np.mat(self.val[i,:,k]).T
+                        dvar[i,:,k]=np.asarray(dx.T)[0]
+            if (direction==2):
+                for j in range(self.size[1]):
+                    for i in range(self.size[0]):
+                        dx=m*np.mat(self.val[i,j,:]).T
+                        dvar[i,j,:]=np.asarray(dx.T)[0]
+            dvar*=0.5
         return dvar.copy()
     
     def avgDir(self,direction=2):
@@ -209,7 +233,7 @@ class var():
         return self.size.copy()
     def getName(self):
         """Gets variable name."""
-        return self.name
+        return self.vname
         
 class blk():
     """Provides block class
@@ -308,13 +332,14 @@ class blk():
             
             self.metFlag=True
             
-    def derive(self,varName1,varName2):
+    def derive(self,varName1,varName2,r=False):
         """Derive one variable with respect to x, y or z
             
             Args:
                 varName1 (char): Variable to be derived
                 varName2 (char): Variable with respect to be derived. It must be
                     either 'x', 'y' or 'z'.
+                r (logic): If true returns the derivative array
 
         """
         if varName1 in self.var:
@@ -336,7 +361,10 @@ class blk():
                    dvdze*self.mets[8].getValues())
             else:
                 print('Needs to be derived with respect to: x, y or z')
-            self.setData(vname='d{}d{}'.format(varName1,varName2),val=dv)
+            if  r:
+                return dv
+            else:
+                self.setData(vname='d{}d{}'.format(varName1,varName2),val=dv)
         else:
             print('{} is not a valid variable!'.format(varName1))
 
@@ -461,6 +489,7 @@ class blk():
         """
         if vname==None:
             vname='v{:d}'.format(len(self.data))
+        
         if len(val)==0:
             size=self.size
             val=np.zeros(size,dtype=float32)
@@ -475,7 +504,6 @@ class blk():
             self.data.append(var(size,len(self.data),vname,val))
             self.var[vname]=self.data[-1]
             
-      
     def clone (self):
         obj=copy.copy(self)
         return obj 
@@ -492,6 +520,7 @@ class flow():
          * blk: list(block) containing the block objects
          * lblk: list(int) containing the number of points in each block
          * lhdr: (int) length of the header in files counted in bytes
+         * vnames (list): Variable names
          """
         def __init__(self,path,gfile,sfile):
             #Path where grid and solution files are stored
@@ -506,6 +535,9 @@ class flow():
             self.blk=[]
             #Total number of points per block list
             self.lblk=[]
+            #Variable names
+            self.vnames=[]
+            self.gnames=[]
         def rdHdr(self):
             """Reads header from the grid file and sets up basic class parameters such as:
              * nbk
@@ -537,6 +569,50 @@ class flow():
                 self.lblk.append(self.blk[nb].glen)
             fh.close()
 
+        def setHdr(self,nbks,lxib,letb,lzeb):
+            """Sets up the flow object and the header file"""
+            #Compute total number of blocks
+            self.nbk=nbks[0]*nbks[1]*nbks[2]
+            #Read Grid sizes for each block
+            for i in range(nbks[0]):
+                for j in range(nbks[1]):
+                    for k in range(nbks[2]):
+                        nb=i+j*nbks[0]+k*nbks[1]*nbks[2]
+                        self.blk.append(blk(blk_id=nb))
+                        self.blk[nb].size=[lxib[i],letb[j],lzeb[k]]
+                        #Compute total size of arrays
+                        for n in range(3):
+                            self.blk[nb].glen*=self.blk[nb].size[n]
+            #Store header length
+            self.lhdr=4*(1+self.nbk*3)
+            #Store total sizes for all blocks
+            for nb in range(self.nbk):
+                self.lblk.append(self.blk[nb].glen)
+            pass
+
+        def wrGrid(self):
+            """Writes grid file"""
+            fh=open(self.path+self.gfile,'wb')
+            nbk=self.nbk
+            lblk=self.lblk
+            ghdr=[nbk]
+            gnames=['x','y','z']
+            self.gnames=gnames
+            print('Writing grid: {}'.format(self.gfile))
+            for nb in range(nbk): 
+                lh=self.lhdr
+                ghdr.append(self.blk[nb].size[0])
+                ghdr.append(self.blk[nb].size[1])
+                ghdr.append(self.blk[nb].size[2])
+                for nvar in range(3):
+                    gname=gnames[nvar]
+                    self.blk[nb].var[gname].wrVar(fh,lh,nvar,nb,lblk,Type='grid')
+            fh.seek(0)
+            fhdr=np.int32(np.array(ghdr))
+            fh.write(fhdr)
+            fh.close()
+            pass
+
         def rdGrid(self):
             #Open file for reading in binary
             fh=open(self.path+self.gfile,'rb')
@@ -544,6 +620,7 @@ class flow():
             nbk=self.nbk
             #Variable names
             names=['x','y','z']
+            self.gnames=names
             #Number of points per block
             lblk=self.lblk
             print('Reading grid: {}'.format(self.gfile))
@@ -583,21 +660,39 @@ class flow():
             self.vnames=names
             fh.close()
 
-        def wrSol(self,sfile=None):
+        def wrSol(self,sfile=None,vnames=None):
             if sfile==None:
                 sfile=self.sfile
+
+            self.vnames=list(self.blk[0].var.keys())
+            if vnames==None:
+                vnames=[name for name in self.vnames[:6]]
+                vnames.sort()
+            else:
+                if (len(vnames)>5):
+                    print('WARNING: Maximum number of variables exceed!')
+                    print('Only the first 5 variables will be writen.')
+                    vnames=[name for name in self.vnames[:6]]
+                elif (len(vnames)<5):
+                    print('WARNING: Minimum number of variables not reached!')
+                    print('Aborting...')
+                    return
+
             fh=open(self.path+sfile,'wb')
             nbk=self.nbk
             lblk=self.lblk
             ghdr=[nbk]
             print('Writing solution: {}'.format(sfile))
+            print('variables: {}, {}, {}, {}, {}'.format(vnames[0],
+                            vnames[1],vnames[2],vnames[3],vnames[4]))
             for nb in range(nbk): 
                 lh=self.lhdr
                 ghdr.append(self.blk[nb].size[0])
                 ghdr.append(self.blk[nb].size[1])
                 ghdr.append(self.blk[nb].size[2])
                 for nvar in range(5):
-                    self.blk[nb].data[nvar+3].wrVar(fh,lh,nvar,nb,lblk,Type='sol')
+                    name=vnames[nvar]
+                    self.blk[nb].var[name].wrVar(fh,lh,nvar,nb,lblk,Type='sol')
             fh.seek(0)
             fhdr=np.int32(np.array(ghdr))
             fh.write(fhdr)
