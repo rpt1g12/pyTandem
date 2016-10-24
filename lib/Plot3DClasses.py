@@ -6,8 +6,10 @@ Created on Thu Sep 15 11:24:30 2016
 """
 #from lib.myPlot3dOperator import *
 import numpy as np
+import matplotlib.pyplot as plt
 import struct
 import copy as copy
+from lib.myPlots import *
 from scipy.interpolate import griddata  
 #Define a float32
 float32=np.float32
@@ -503,6 +505,33 @@ class blk():
             print('Adding {} to variable list'.format(vname))
             self.data.append(var(size,len(self.data),vname,val))
             self.var[vname]=self.data[-1]
+
+    def contourf(self,varname,vmin=-1,vmax=1,k=0,ax=None,nlvl=11,avg=False,bar=True):
+        """Produces a contour plot of the variable varname"""
+        if (ax==None):
+            f,ax=getFig(varname)
+        else:
+            f=ax.figure
+        if avg:
+            x=self.var['x'].avgDir(2)
+            y=self.var['y'].avgDir(2)
+            v=self.var[varname].avgDir(2)
+        else:
+            x=self.var['x'].val[:,:,k]
+            y=self.var['y'].val[:,:,k]
+            v=self.var[varname].val[:,:,k]
+
+        lvl=np.linspace(vmin,vmax,nlvl)
+            
+        im=ax.contourf(x,y,v,levels=lvl,cmap=plt.cm.coolwarm)
+        if bar:
+            cb=f.colorbar(im,orientation='vertical')
+            cb.set_label(varname,fontsize=20)
+        ax.set_xlabel(r'$x$',fontsize=20)
+        ax.set_ylabel(r'$y$',fontsize=20)
+        if bar:
+            axShow(ax)
+        pass
             
     def clone (self):
         obj=copy.copy(self)
@@ -574,9 +603,9 @@ class flow():
             #Compute total number of blocks
             self.nbk=nbks[0]*nbks[1]*nbks[2]
             #Read Grid sizes for each block
-            for i in range(nbks[0]):
+            for k in range(nbks[2]):
                 for j in range(nbks[1]):
-                    for k in range(nbks[2]):
+                    for i in range(nbks[0]):
                         nb=i+j*nbks[0]+k*nbks[1]*nbks[2]
                         self.blk.append(blk(blk_id=nb))
                         self.blk[nb].size=[lxib[i],letb[j],lzeb[k]]

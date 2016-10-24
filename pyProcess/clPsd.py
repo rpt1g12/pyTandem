@@ -6,10 +6,10 @@ from lib.myPlots import *
 from scipy import stats
 pi=np.pi
 #from lib.matplotlib2tikz import save as tikz_save
-plt.close('all')
+#plt.close('all')
 #%%
-folder='6blocks/';sclcd='SCd'
-osim=2;aoa=20;iaoah=20;freq=0.19
+folder='6blocks/';sclcd='SCl'
+osim=8;aoa=20;iaoah=20;freq=0.19
 if(osim==0):
     sim='A00'
     odata=0
@@ -45,12 +45,12 @@ elif(osim==8):
     
 sim+='W11AoA'+str(aoa)
 
-dataset='/home/rpt1g12/anaconda3/pyTandem/clData/'+folder+sim+'.dat';
+dataset='/home/rperezt/anaconda3/pyTandem/clData/'+folder+sim+'.dat';
 if(odata==1):    
     n,tin,clin,cdin,taoa,tmach=np.loadtxt(dataset,skiprows=1,unpack=True)
 elif(odata==0):
     n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True);taoa=np.array([20.0 for i in range(len(n))]);tmach=np.array([0.3 for i in range(len(n))]);
-tdum,clha,cdha=np.loadtxt('/home/rpt1g12/anaconda3/pyTandem/clData/HansenClCd.dat',skiprows=1,unpack=True)
+tdum,clha,cdha=np.loadtxt('/home/rperezt/anaconda3/pyTandem/clData/HansenClCd.dat',skiprows=1,unpack=True)
 idum=np.where(tdum==iaoah)[0][0]
 clh=clha[idum];cdh=cdha[idum]
 #clh=0.54;cdh=0.31
@@ -73,7 +73,7 @@ cll();clt();ns=1024
 
 
 #tmin=95.0/0.3
-tmin=tin[-1]-(25/0.3)       #in jfm paper its -(25/0.3)
+tmin=tin[-1]-(30/0.3)       #in jfm paper its -(25/0.3)
 n0=np.where(tin>tmin)[0][0]
 t0=tin[n0:]*0.3#-tin[n0];
 if prdl==1:
