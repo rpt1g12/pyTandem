@@ -5,15 +5,15 @@ from lib.stats import *
 from lib.myPlots import *
 
 #%%
-#plt.close('all')
+plt.close('all')
 save=False; scale=False; step=False;sclg='density'
-nxk=(9,4)
-sim='4A00W11AoA20'
-path='maxProbes/'+sim+'/20-140-15/maxpln'
+nxk=(9,8)
+sim='A4A15W11AoA20'
+path='maxProbes/'+sim+'/60-140-10/maxpln'
 file=path+str(1)+'.dat'
 t=np.loadtxt(file,skiprows=1,unpack=True,usecols=range(1))
 nsam=len(t)
-t*=0.3
+#t*=0.3
 mval=np.zeros((nxk[0],nsam,5,nxk[1]))
 
 for k in range(nxk[1]):
@@ -30,19 +30,22 @@ fFreq=plt.figure()
 fFreq.canvas.set_window_title('Frequency '+sim)
 axFreq=fFreq.add_subplot(111)
 #%%
-i=0;k=0;vflag=False
+i=0;k=3;vflag=True
 q=4;nw=16;ovlp=0.5
 sgn=mval[i,:,q,k]
 sgn,tn,nsam,fsam=rsample(sgn,t)
 nseg,novlp,ntt,fmax,fmin=defWin(tn,sgn,nw,ovlp,verbose=False)
-
+u_avg=0
 axTime.lines.clear()
 axFreq.lines.clear()
 for i in range(0,nxk[0]-0,1):
     if(vflag):
         sgn=(mval[i,:,1,k]**2+mval[i,:,2,k]**2+mval[i,:,3,k]**2)**0.5
+        print('i={:d}, u={:e}'.format(i,sgn.mean()))
+        u_avg+=sgn.mean()
     else:
         sgn=mval[i,:,q,k]
+    
     sgn,tn,nsam,fsam=rsample(sgn,t,verbose=True,rmAvg=True)
     ff,psgn=psdw(sgn,fs=fsam,nperseg=nseg,noverlap=novlp,scaling=sclg)
     axTime.plot(tn,sgn+i*0.4)
@@ -56,7 +59,7 @@ for i in range(0,nxk[0]-0,1):
             var=np.var(sgn)
             psgn/=var
     
-    sin20=np.sin(np.deg2rad(20))
+    sin20=1#np.sin(np.deg2rad(20))
     #st=(sin20/0.3)*ff
     st=sin20*ff
     axFreq.loglog(st,psgn,label='i'+str(i),linewidth=2)
@@ -70,7 +73,7 @@ axFreq.set_ylabel(r'$PSD$',fontsize=20)
 fit(axFreq)
 axFreq.set_xlim(0,fmax)
 axFreq.figure.canvas.draw()
-
+print('Average velocity in shear layer is {:e}'.format(u_avg/nxk[0]))
 #%%
 name=sim.split('W')[0]+'pS'+'k'+str(k)
 if (save==True):

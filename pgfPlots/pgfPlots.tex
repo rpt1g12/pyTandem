@@ -1,41 +1,80 @@
-\documentclass[class=letter,border=0pt]{standalone}
+\documentclass[a4paper,12pt]{article}
 \usepackage{preamble}
 \begin{document}
-\pgfplotsset{
-/pgfplots/legend image code/.code={
-\draw[mark repeat=2,mark phase=2]
-plot coordinates {
-(0cm,0cm)
-(0.1cm,0cm)        %% default is (0.3cm,0cm)
-(0.2cm,0cm)         %% default is (0.6cm,0cm)
-};%
-}
-}
-	\begin{tikzpicture}
-	\tikzset{>=latex}
-	\begin{axis}[name=ax0,
-	anchor=south east,
-	font=\small,
-        xlabel={$x$},
-	%xticklabels={,,},
-	%xtick={-0.6,-0.5,...,0.6},
-        ylabel={$<C_f>$},
-        %xmin=0.05, xmax=1,
-        %ymin=-0.005, ymax=0.005,
-        %xmode=log,
-        %ymode=log,
-	%y dir=reverse,
-        %axis on top,
-        xmajorgrids,
-	minor tick num=1,
-        ymajorgrids,
-	xminorgrids,
-	yminorgrids,
-        legend style={at={(1.00,1.00)}, anchor=north east},
-        legend entries={{SLE-4}},
-	cycle list name = mynomarklist,
-	mark repeat={1}]
-		\addplot table [x={x}, y={Cf}] {8SLE_Cf.dat};
-	\end{axis}
-	\end{tikzpicture}
+\begin{tikzpicture}
+\tikzset{>=latex}
+\node (ref) at (0,0) {};
+\newcommand\tw{\textwidth}
+\begin{axis}[name=msc0,
+font=\small,
+anchor=north,
+scale only axis,
+%xlabel={$x$},
+ylabel={$z/\lambda_{LE}$},
+ytick={-2,-1.5,...,2},
+width=0.35\textwidth,
+height=0.30\textwidth,
+at={($(0,0)+(0.00\textwidth,-0.0\textwidth)$)},
+enlargelimits=false,
+%axis equal image,
+axis on top,
+]
+\addplot graphics [xmin=-0.5,xmax=0.48,ymin=-2,ymax=2]
+{4SLE};
+\addplot[black,thick,dashed] coordinates {(-0.5,-0.25)(0.48,-0.25)}
+node[fill=white,pos=0.5,anchor=south,opacity=0.3,text opacity=1,inner sep=1pt] {ref.};
+\end{axis}  
+\begin{scope}[shift={($(msc0.south west)$)},
+              x={(msc0.south east)},y={(msc0.north west)}]
+\end{scope}
+\begin{axis}[name=msc4,
+font=\small,
+anchor=north east,
+scale only axis,
+xlabel={$x$},
+ylabel={$z/\lambda_{LE}$},
+ytick={-2,-1.5,...,2},
+%yticklabels=\empty,
+width=0.35\textwidth,
+height=0.30\textwidth,
+at={($(msc0.south east)-(0.00\textwidth,0.04\textwidth)$)},
+enlargelimits=false,
+%axis equal image,
+axis on top,
+]
+\addplot graphics [xmin=-0.5,xmax=0.48,ymin=-2,ymax=2]
+{4WLE};
+\addplot[black,thick,dashed] coordinates {(-0.5,-0.25)(0.48,-0.25)}
+node[fill=white,pos=0.5,anchor=south,opacity=0.3,text opacity=1,inner sep=1pt] {ref.};
+\end{axis}  
+\begin{scope}[shift={($(msc4.south west)$)},
+              x={(msc4.south east)},y={(msc4.north west)}]
+\end{scope}
+\newcommand\ymin{0}
+\newcommand\ymax{1}
+\pgfmathsetmacro\xmax{(\ymax-\ymin)/20}
+\pgfmathsetmacro\yavg{(\ymax-\ymin)/2}
+\begin{axis}[name=bar,
+   font=\scriptsize,
+   axis y line*=right,
+   ylabel near ticks, 
+   yticklabel pos=right,
+   ylabel style={rotate=-90,
+   at={(rel axis cs:-1,1.08)}},
+   anchor=west,
+   xtick=\empty,
+   ytick={\ymin,\yavg,\ymax},
+   scale only axis,
+   scaled y ticks=false,
+   ylabel={MSC($f^*=0.2$)},
+   height=0.30\textwidth,
+   at={($(msc4.north east)+(0.02\textwidth,0.02\textwidth)$)},
+   enlargelimits=false,
+   axis equal image,
+   axis on top,
+   ]
+   \addplot graphics [xmin=0,xmax=\xmax,ymin=\ymin,ymax=\ymax]
+   {bars/bgr_v};
+\end{axis}  
+\end{tikzpicture}
 \end{document}

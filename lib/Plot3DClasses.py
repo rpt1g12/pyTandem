@@ -31,7 +31,7 @@ def rdType(file,Type,count=1,verbose=False):
     return v
 
 # Classes
-class var():
+class var(object):
     """Defines a variable class.
 
     Args:
@@ -237,7 +237,7 @@ class var():
         """Gets variable name."""
         return self.vname
         
-class blk():
+class blk(object):
     """Provides block class
         Parameters:
             id (int): Block id
@@ -531,13 +531,60 @@ class blk():
         ax.set_ylabel(r'$y$',fontsize=20)
         if bar:
             axShow(ax)
-        pass
+        return f,ax
             
     def clone (self):
         obj=copy.copy(self)
         return obj 
+    def drawMeshPlane(self,direction=2,pln=0,skp=1,ax=None,color='black',lw=1,showBlock=False,hideAx=False):
+        """Plots one plane of the grid
+            Args:
+                direction (int): 0->yz-plane; 1->xz-plane; 2->xy-plane
+                pln (int): Plane of constant xi,eta or zeta to take slice from
+                skp (int): Skip index. Plot every skp line.
+                ax (plt.axis): axis used to plot. Default is None, so it uses the current axis.
+                color (string): Color of the mesh.
+                lw (int): Width of the lines
+                showBlock (boolean): If True show block boundaries in blue
+
+            Returns:
+                Nothing
+        """
+        if ax==None:
+            ax=plt.gca()
+
+        if direction==0:
+            size=[int(np.ceil(self.size[1]/skp)),int(np.ceil(self.size[2]/skp)),2]
+            grid=np.zeros(size)
+            grid[:,:,0]=self.var['y'].getValues()[pln,0::skp,0::skp]
+            grid[:,:,1]=self.var['z'].getValues()[pln,0::skp,0::skp]
+        elif direction==1:
+            size=[int(np.ceil(self.size[0]/skp)),int(np.ceil(self.size[2]/skp)),2]
+            grid=np.zeros(size)
+            grid[:,:,0]=self.var['x'].getValues()[0::skp,pln,0::skp]
+            grid[:,:,1]=self.var['z'].getValues()[0::skp,pln,0::skp]
+        elif direction==2:
+            size=[int(np.ceil(self.size[0]/skp)),int(np.ceil(self.size[1]/skp)),2]
+            grid=np.zeros(size)
+            grid[:,:,0]=self.var['x'].getValues()[0::skp,0::skp,pln]
+            grid[:,:,1]=self.var['y'].getValues()[0::skp,0::skp,pln]
         
-class flow():
+        for j in range(size[1]):
+            ax.plot(grid[:,j,0],grid[:,j,1],lw=lw,color=color)
+        for i in range(size[0]):
+            ax.plot(grid[i,:,0],grid[i,:,1],lw=lw,color=color)
+        if showBlock:
+            ax.plot(grid[:,0,0],grid[:,0,1],lw=lw+1,color='blue')
+            ax.plot(grid[0,:,0],grid[0,:,1],lw=lw+1,color='blue')
+            ax.plot(grid[:,-1,0],grid[:,-1,1],lw=lw+1,color='blue')
+            ax.plot(grid[-1,:,0],grid[-1,:,1],lw=lw+1,color='blue')
+        if hideAx:
+            ax.axes.get_yaxis().set_visible(False)
+            ax.axes.get_xaxis().set_visible(False)
+        axShow(ax)
+        pass
+        
+class flow(object):
         """This class provides a flow object. 
         A flow object contains blocks from a multiblock structured grid.
         Data is read/writen from/to files stored in Plot3D format

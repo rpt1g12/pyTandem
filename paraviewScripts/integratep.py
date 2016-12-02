@@ -3,6 +3,8 @@ except: from paraview.simple import *
 paraview.simple._DisableFirstRenderCameraReset()
 import os
 import numpy as np
+import getpass
+user=getpass.getuser()
 
 p0=FindSource('from')
 p1=FindSource('to')
@@ -47,7 +49,7 @@ for i in range(n):
                 s+='{:12.5e} \t'.format(data[j][i])
         s+='\n'
 
-path='/home/rperezt/anaconda3/pyTandem/pgfPlots/8SLE_pint.dat'
+path='/home/'+user+'/anaconda3/pyTandem/pgfPlots/8SLE_pint.dat'
 print (path)
 
 fh=open(path,'w')

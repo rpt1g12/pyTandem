@@ -19,7 +19,7 @@ user='rpt1g12'
 path='/home/'+user+'/Desktop/post/'
 opt=4
 vnames=['Cf','twx','twy','twz','Cp']    
-varname=vnames[0];block=4;
+varname=vnames[4];block=4;
 if opt==2:
     sim='A15W11AoA20/'
     name='2WLE'
@@ -36,10 +36,16 @@ elif opt==4:
     section=[37,87,137,187]
     sName=['T1','T2','T3','T4']
 elif opt==8:
-    sim='8A15W11AoA20/vsmallDomain/'
+    sim='8A15W11AoA20/vsmallDomain/T100T180/'
     name='8WLE'
-    section=[19,44,69,119]
+    section=[94,119,144,194]
     sName=['T4','T5','T6','T8']
+elif opt==80:
+    sim='8A00W11AoA20/vsmallDomain/T380T460/'
+    name='8SLE'
+    section=[0]
+    sName=['avg']
+    
 #%%
 fl=p3d.flow(path+sim,"grid.xyz","solTCf+tw+Cp.qa")     
 fl.rdHdr()
@@ -47,6 +53,12 @@ fl.rdGrid()
 fl.rdSol(vnames=vnames)
 bk=fl.blk[block]
 surf=bk.getSubset(ylim=[0])
+if opt==80:
+    avg_v=surf.var[varname].getValues()
+    avg_v[:,:,0]=surf.var[varname].avgDir(2)
+    varname='avg'+varname
+    fctr=np.sqrt(1-0.3**2)
+    surf.setData(vname=varname,val=avg_v*fctr)
 #%%    
 fg,ax=getFig('{}_{}'.format(name,varname))
 #%%
@@ -59,7 +71,7 @@ ax.grid(True)
 handle,labels,legend=getLabels(ax,1,(1,1))
 fit(ax)
 #%%
-save=True
+save=False
 name=ax.figure.canvas.get_window_title()
 if (save==True):
     plt.sca(ax)

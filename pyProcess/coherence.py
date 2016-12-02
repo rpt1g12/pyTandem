@@ -91,15 +91,15 @@ print(st[0],st[-1],(st[-1]-st[0])/len(st))
 #%%
 X,Y=np.meshgrid(px[:nprob],z)
 lvl=np.linspace(0,1,41)
-cm='gray'
+cm='jet'
 fig,ax=getFig('MSC_St='+'{:4.2f}'.format(st[sts]))
 img=ax.contourf(X,Y,CX,levels=lvl,cmap=cm) 
 
-
+path2='pgfPlots/'
 ax.axes.get_yaxis().set_visible(False)
 ax.axes.get_xaxis().set_visible(False)
-fig.savefig(path+fig.canvas.get_window_title()+'.pdf')
-ax.axhline(y=z[nbase],color='black',linewidth=3,linestyle='--')
+fig.savefig(path2+fig.canvas.get_window_title()+'.pdf')
+#ax.axhline(y=z[nbase],color='black',linewidth=3,linestyle='--')
 #%%
 figPSD,axPSD=getFig('PSD_St='+'{:4.2f}'.format(st[sts]))
 #psdmax=CY.max()

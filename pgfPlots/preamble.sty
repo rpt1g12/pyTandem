@@ -1,15 +1,33 @@
 \ProvidesPackage{preamble}
+%--- Used to precompile the tikz/pgfplots figures ---
 \usepackage{tikz}
-\usepackage{pgfplots} 
+\usetikzlibrary{external}
+\tikzexternalize[prefix=tikzfigs/] % activate! 
+% "tikzfigs/" folder needs to created before hand. It is were the compiled
+% images are stored in pdf format.
+%----------------------------------------------------
+\tikzset{font=\scriptsize}
+\usepackage{pgfplots}
 \usetikzlibrary{plotmarks}
 \pgfplotsset{compat=newest}
-\pgfplotsset{every axis/.append style={thick}}
 \usepgfplotslibrary{groupplots}
-\usepackage{graphicx}
+\pgfplotsset{every axis/.append style={thick}}
+%Smaller Legends
+\pgfplotsset{
+/pgfplots/legend image code/.code={
+\draw[mark repeat=2,mark phase=2]
+plot coordinates {
+(0pt,0pt)
+(5pt,0pt)        %% default is (0.3cm,0cm)
+(10pt,0pt)         %% default is (0.6cm,0cm)
+};%
+}
+}
+%Cycle lists
 \pgfplotscreateplotcyclelist{mymarkslist}{%
 only marks,blue,mark=*,mark size=1.5pt\\%
 only marks,red,mark=square*,mark size=1.5pt\\%
-only marks,green,mark=diamond*,mark size=1.5pt\\%
+only marks,Green,mark=diamond*,mark size=1.5pt\\%
 only marks,violet,mark=triangle*,mark size=1.5pt\\%
 only marks,orange,mark=x,mark size=1.5pt\\%
 only marks,cyan,mark=pentagon*,mark size=1.5pt\\%
@@ -17,41 +35,58 @@ only marks,brown,mark=+,mark size=1.5pt\\%
 only marks,black,mark=star,mark size=1.5pt\\%
 only marks,blue,densely dashed,mark=o,mark size=1.5pt\\%
 only marks,red,densely dashed,mark=square,mark size=1.5pt\\%
-only marks,green,densely dashed,mark=diamond,mark size=1.5pt\\%
+only marks,Green,densely dashed,mark=diamond,mark size=1.5pt\\%
 only marks,violet,densely dashed,mark=triangle,mark size=1.5pt\\%
 only marks,orange,densely dashed,mark=asterisk,mark size=1.5pt\\%
 only marks,cyan,densely dashed,mark=10-pointed star,mark size=1.5pt\\%
 only marks,brown,densely dashed,mark=Mercedes star,mark size=1.5pt\\%
 }
+\pgfplotscreateplotcyclelist{mysolidlist}{%
+blue,mark size=1.5pt\\%
+red,mark size=1.5pt\\%
+Green,mark size=1.5pt\\%
+violet,mark size=1.5pt\\%
+orange,mark size=1.5pt\\%
+cyan,mark size=1.5pt\\%
+black,mark size=1.5pt\\%
+brown,mark size=1.5pt\\%
+blue,densely dashed,mark size=1.5pt\\%
+red,densely dashed,mark size=1.5pt\\%
+Green,densely dashed,mark size=1.5pt\\%
+violet,densely dashed,mark size=1.5pt\\%
+orange,densely dashed,mark size=1.5pt\\%
+cyan,densely dashed,mark size=1.5pt\\%
+black,densely dashed,mark size=1.5pt\\%
+}
 \pgfplotscreateplotcyclelist{mycolorlist}{%
 blue,mark=*,mark size=1.5pt\\%
 red,mark=square*,mark size=1.5pt\\%
-green,mark=diamond*,mark size=1.5pt\\%
+Green,mark=diamond*,mark size=1.5pt\\%
 violet,mark=triangle*,mark size=1.5pt\\%
 orange,mark=x,mark size=1.5pt\\%
 cyan,mark=pentagon*,mark size=1.5pt\\%
-brown,mark=+,mark size=1.5pt\\%
 black,mark=star,mark size=1.5pt\\%
+brown,mark=+,mark size=1.5pt\\%
 blue,densely dashed,mark=o,mark size=1.5pt\\%
 red,densely dashed,mark=square,mark size=1.5pt\\%
-green,densely dashed,mark=diamond,mark size=1.5pt\\%
+Green,densely dashed,mark=diamond,mark size=1.5pt\\%
 violet,densely dashed,mark=triangle,mark size=1.5pt\\%
 orange,densely dashed,mark=asterisk,mark size=1.5pt\\%
 cyan,densely dashed,mark=10-pointed star,mark size=1.5pt\\%
-brown,densely dashed,mark=Mercedes star,mark size=1.5pt\\%
+black,densely dashed,mark=Mercedes star,mark size=1.5pt\\%
 }
 \pgfplotscreateplotcyclelist{mynomarklist}{%
 blue,mark size=1.5pt\\%
 red,densely dashed,mark size=1.5pt\\%
-green, densely dotted,mark size=1.5pt\\%
+Green, densely dotted,mark size=1.5pt\\%
 violet, densely dashdotted,mark size=1.5pt\\%
 orange,densely dashdotdotted,mark size=1.5pt\\%
 cyan,loosely dashed,mark size=1.5pt\\%
-brown,loosely dotted,mark size=1.5pt\\%
 black,loosely dashdotted,mark size=1.5pt\\%
+brown,dotted,mark size=1.5pt\\%
 blue,loosely dashdotdotted,densely dashed,mark size=1.5pt\\%
 red,densely dashed,mark size=1.5pt\\%
-green,densely dashed,mark size=1.5pt\\%
+Green,densely dashed,mark size=1.5pt\\%
 violet,densely dashed,mark size=1.5pt\\%
 orange,densely dashed,mark size=1.5pt\\%
 cyan,densely dashed,mark size=1.5pt\\%

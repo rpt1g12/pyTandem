@@ -9,13 +9,14 @@ def getFig(title=None,layout=111):
     ax=fig.add_subplot(layout)
     return fig,ax
 
-def getLabels(ax=None,ncol=1,pos=(1,1)):
+def getLabels(ax=None,ncol=1,fontsize=16,loc='upper right',sep=0,hspace=0.2):
     """Get labels of plot and set legend"""
     if ax==None:
         ax=plt.gca()
 
     handle,labels=ax.get_legend_handles_labels()
-    legend=ax.legend(handle,labels,bbox_to_anchor=pos,ncol=ncol)
+    legend=ax.legend(handle,labels,ncol=ncol,fontsize=fontsize,
+                    loc=loc,borderaxespad=sep,columnspacing=hspace)
     return handle,labels,legend
 
 def addAx(fig=None,layout=111):

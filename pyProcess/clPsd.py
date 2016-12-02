@@ -4,56 +4,83 @@ import matplotlib.pyplot as plt
 from lib.stats import *
 from lib.myPlots import *
 from scipy import stats
+import getpass
+user=getpass.getuser()
 pi=np.pi
 #from lib.matplotlib2tikz import save as tikz_save
-#plt.close('all')
+plt.close('all')
 #%%
-folder='6blocks/';sclcd='SCl'
-osim=8;aoa=20;iaoah=20;freq=0.19
+sin20=np.sin(np.deg2rad(20))
+folder='6blocks/';sclcd='scl'
+osim=80;aoa=20;iaoah=20;freq=0.21;ttotal=25
+nw=4;ovlp=0.5;
 if(osim==0):
     sim='A00'
     odata=0
-    prdl=1
+    prdl=0
+    linreg=1
+    name='2SLE'
 elif(osim==80):
     sim='8A00'
     odata=1
     prdl=1
+    linreg=1
+    ttotal=42
+    name='8SLE'
+    nw=6;ovlp=0.5;
+    sin20=0.36
 elif(osim==40):
     sim='4A00'
     odata=1
     prdl=1
+    linreg=0
+    name='4SLE'
 elif(osim==2):
     sim='A15'
     odata=0
     prdl=0
+    linreg=0
+    name='2WLE'
 elif(osim==3):
     sim='3A15'
     odata=0
     prdl=0
+    linreg=0
+    name='3WLE'
 elif(osim==4):
     sim='A4A15'
     odata=0
     prdl=0
+    linreg=0
+    name='4WLE'
 elif(osim==41):
     sim='4A15'
     odata=0
     prdl=0
+    linreg=0
+    name='4WLE'
 elif(osim==8):
     sim='8A15'
     odata=1
     prdl=0
+    linreg=1
+    ttotal=42
+    name='8WLE'
+    nw=6;ovlp=0.5;
+    sin20=0.43
     
 sim+='W11AoA'+str(aoa)
 
-dataset='/home/rperezt/anaconda3/pyTandem/clData/'+folder+sim+'.dat';
+dataset='/home/'+user+'/anaconda3/pyTandem/clData/'+folder+sim+'.dat';
 if(odata==1):    
     n,tin,clin,cdin,taoa,tmach=np.loadtxt(dataset,skiprows=1,unpack=True)
 elif(odata==0):
     n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True);taoa=np.array([20.0 for i in range(len(n))]);tmach=np.array([0.3 for i in range(len(n))]);
-tdum,clha,cdha=np.loadtxt('/home/rperezt/anaconda3/pyTandem/clData/HansenClCd.dat',skiprows=1,unpack=True)
+tdum,clha,cdha=np.loadtxt('/home/'+user+'/anaconda3/pyTandem/clData/HansenClCd.dat',skiprows=1,unpack=True)
 idum=np.where(tdum==iaoah)[0][0]
 clh=clha[idum];cdh=cdha[idum]
-#clh=0.54;cdh=0.31
+if prdl==1:
+    clh=0.54;cdh=0.31
 
 
 #%%
@@ -63,17 +90,16 @@ clh=clha[idum];cdh=cdha[idum]
 
 
 fTime,axTime=getFig('Time '+sim)
-name=sim.split('W')[0]
+#name=sim.split('W')[0]
 
 
-show=False;showAoA=False;getAvg=False
+show=False;showAoA=False;getAvg=True
 plt.sca(axTime)
 axTime.lines.clear()
 cll();clt();ns=1024
 
 
-#tmin=95.0/0.3
-tmin=tin[-1]-(30/0.3)       #in jfm paper its -(25/0.3)
+tmin=tin[-1]-(ttotal/0.3)       #in jfm paper its -(25/0.3)
 n0=np.where(tin>tmin)[0][0]
 t0=tin[n0:]*0.3#-tin[n0];
 if prdl==1:
@@ -86,10 +112,27 @@ taoa0=taoa[n0:]
 cln,tn,nsam,fsam=rsample(cl0,t0,verbose=True,nsample=ns)
 cdn,tn,nsam,fsam=rsample(cd0,t0,nsample=ns)
 dtaoa,tn,nsam,fsam=rsample(taoa0,t0,nsample=ns)
-s=np.sqrt(np.var(cln))
+
 clM=cln.mean()
-cds=np.sqrt(np.var(cdn))
 cdM=cdn.mean()
+if linreg==1:
+    #Linear regression
+    x=tn.copy();y=cln.copy()
+    z=np.polyfit(x,y,3)    
+    p_cl=np.poly1d(z)
+
+    y=cdn.copy()
+    z=np.polyfit(x,y,3)
+    p_cd=np.poly1d(z)
+    lin_cl=p_cl(x)
+    lin_cd=p_cd(x)
+else:
+    lin_cl=np.ones(len(tn))*clM
+    lin_cd=np.ones(len(tn))*cdM
+
+s=np.sqrt(np.var(cln-lin_cl))
+cds=np.sqrt(np.var(cdn-lin_cd))
+
 
 
 if (show):
@@ -108,12 +151,12 @@ axTime.plot([tn[0],tn[-1]],[clh,clh],'k',linewidth=2,label=r'exp $\alpha=$'+str(
 axTime.plot([tn[0],tn[-1]],[cdh,cdh],'k',linewidth=2)
 
 if (getAvg):
-    axTime.plot([tn[0],tn[-1]],[clM,clM],'g-.',linewidth=2,label='avg');lClnm=plt.gca().lines[-1]
-    axTime.plot([tn[0],tn[-1]],[clM-s,cln.mean()-s],'r-.',linewidth=2,label='s0');lCls0=plt.gca().lines[-1]
-    axTime.plot([tn[0],tn[-1]],[clM+s,clM+s],'r-.',linewidth=2,label='s1');lCls1=plt.gca().lines[-1]
-    axTime.plot([tn[0],tn[-1]],[cdM,cdM],'g-.',linewidth=2,label='avg');lCdnm=plt.gca().lines[-1]
-    axTime.plot([tn[0],tn[-1]],[cdM-cds,cdn.mean()-cds],'r-.',linewidth=2,label='s0');lCds0=plt.gca().lines[-1]
-    axTime.plot([tn[0],tn[-1]],[cdM+cds,cdM+cds],'r-.',linewidth=2,label='s1');lCds1=plt.gca().lines[-1]
+    axTime.plot(tn,lin_cl,'g-.',linewidth=2,label='avg');lClnm=plt.gca().lines[-1]
+    axTime.plot(tn,lin_cl-s,'r-.',linewidth=2,label='s0');lCls0=plt.gca().lines[-1]
+    axTime.plot(tn,lin_cl+s,'r-.',linewidth=2,label='s1');lCls1=plt.gca().lines[-1]
+    axTime.plot(tn,lin_cd,'g-.',linewidth=2,label='avg');lCdnm=plt.gca().lines[-1]
+    axTime.plot(tn,lin_cd-cds,'r-.',linewidth=2,label='s0');lCds0=plt.gca().lines[-1]
+    axTime.plot(tn,lin_cd+cds,'r-.',linewidth=2,label='s1');lCds1=plt.gca().lines[-1]
 
 
 axTime.set_xlabel(r'$t^*$',fontsize=20)
@@ -139,12 +182,12 @@ if (showAoA):
 #%%
 
 scale=False;sclg='density'
-nw=4;ovlp=0.5;
+#nw=6;ovlp=0.5;
 
-if sclcd=='SCl':
-    sgnl=cln
+if sclcd=='scl':
+    sgnl=cln-lin_cl
 else:
-    sgnl=cdn
+    sgnl=cdn-lin_cd
 
 fFreq,axFreq=getFig('Frequency '+sim)
 
@@ -157,7 +200,7 @@ if (scale):
 plt.sca(axFreq)
 axFreq.lines.clear()
 #cll();clt()
-sin20=np.sin(np.deg2rad(20))
+
 #st=(sin20/0.3)*ff
 st=(sin20)*ff
 stdif=abs(st-freq)
@@ -175,11 +218,11 @@ fit(axFreq)
 axFreq.set_xlim(0,1)
 #%%
 save=False;
-name=sim.split('W')[0]+sclcd
+#name=sim.split('W')[0]+sclcd
 if (save==True):
     plt.sca(axFreq)
     path='pgfPlots/'
-    savePlotFile(path=path+name+'.dat',vary=[sclcd],varx=['f'])
+    savePlotFile(path=path+name+'_'+sclcd+'.dat',vary=[sclcd],varx=['f'])
 
 #%%
 #fig,ax=getFig('vsAoA')

@@ -94,19 +94,19 @@ ax.set_xlabel(r'$x$',fontsize=18)
 ax.set_ylabel(r'$\Delta$',fontsize=18)
 axShow(ax)
 #%%
-#f4,a4=getFig('Delta_Gamma')
-#ax=plt.gca()
-#ax.grid(True)
-#delta_g=c_wle-c_sle
-#ax.plot(z0,delta_g,color='blue',lw=2,label='Gamma')
-#ax=plt.gca()
-#handle,labels=ax.get_legend_handles_labels()
-#legend=ax.legend(handle,labels,bbox_to_anchor=(1,1),ncol=1)
-#ax.set_xlabel(r'$z/L_{LE}$',fontsize=18)
-#ax.set_ylabel(r'$\Delta\Gamma$',fontsize=18)
-#fit(ax)
+f4,a4=getFig('Delta_Gamma')
+ax=plt.gca()
+ax.grid(True)
+delta_g=c_wle-c_sle
+ax.plot(z0,delta_g,color='blue',lw=2,label='Gamma')
+ax=plt.gca()
+handle,labels=ax.get_legend_handles_labels()
+legend=ax.legend(handle,labels,bbox_to_anchor=(1,1),ncol=1)
+ax.set_xlabel(r'$z/L_{LE}$',fontsize=18)
+ax.set_ylabel(r'$\Delta\Gamma$',fontsize=18)
+fit(ax)
 #%%
 save=True
 
 if (save==True):
-    savePlotFile(ax=a3)
+    savePlotFile(ax=a4)
