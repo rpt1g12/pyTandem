@@ -583,6 +583,94 @@ class blk(object):
             ax.axes.get_xaxis().set_visible(False)
         axShow(ax)
         pass
+
+    def wrVarASCII(self,varnames=None,k=0,fpath=None,direction=2):
+        """Writes values of the variables contained in varnames in ASCII format"""
+        if varnames==None:
+            print('Error! You need to specify varnames')
+            return
+        if fpath==None:
+            print('Error! You need to specify fpath')
+            return
+        fname=''
+        cvariables='VARIABLES='
+        for c in varnames:
+            fname+=c
+            cvariables+='"{}", '.format(c)
+        ctitle='TITLE="{} TecPlot file"\n'.format(fname)
+        cvariables+='\n'
+        fname+='.dat'
+        fpath+=fname
+        nvar=len(varnames)
+        if direction==0:
+            nt=self.size[2]*self.size[1]
+        elif direction==1:
+            nt=self.size[0]*self.size[2]
+        elif direction==2:
+            nt=self.size[0]*self.size[1]
+        csize='ZONE I={:d}, J={:d}, DATAPACKING=POINT\n'.format(self.size[0],self.size[1])
+        aout=np.zeros((nvar,nt))
+
+
+        i=0
+        for c in varnames:
+            if direction==0:
+                aout[i,:]=np.reshape(self.var[c].getValues()[k,:,:],nt,order='F')
+            elif direction==1:
+                aout[i,:]=np.reshape(self.var[c].getValues()[:,k,:],nt,order='F')
+            elif direction==2:
+                aout[i,:]=np.reshape(self.var[c].getValues()[:,:,k],nt,order='F')
+            i+=1
+
+        fh=open(fpath,'w')
+        s=ctitle+cvariables+csize
+        for i in range(nt):
+            for j in range(nvar):
+                s+='{:12.5e}\t'.format(aout[j,i])
+            s+='\n'
+        print('Writing to {}'.format(fpath))
+        fh.write(s)
+        fh.close()
+        pass
+
+    def wrVarASCII3D(self,varnames=None,fpath=None):
+        """Writes values of the variables contained in varnames in ASCII format"""
+        if varnames==None:
+            print('Error! You need to specify varnames')
+            return
+        if fpath==None:
+            print('Error! You need to specify fpath')
+            return
+        fname=''
+        cvariables='VARIABLES='
+        for c in varnames:
+            fname+=c
+            cvariables+='"{}", '.format(c)
+        ctitle='TITLE="{} TecPlot file"\n'.format(fname)
+        cvariables+='\n'
+        fname+='_3D.dat'
+        fpath+=fname
+        nvar=len(varnames)
+        nt=self.glen
+        csize='ZONE I={:d}, J={:d}, K={:d}, DATAPACKING=POINT\n'.format(self.size[0],self.size[1],self.size[2])
+        aout=np.zeros((nvar,nt))
+
+
+        i=0
+        for c in varnames:
+            aout[i,:]=self.var[c].getValues(True)
+            i+=1
+
+        fh=open(fpath,'w')
+        s=ctitle+cvariables+csize
+        for i in range(nt):
+            for j in range(nvar):
+                s+='{:12.5e}\t'.format(aout[j,i])
+            s+='\n'
+        print('Writing to {}'.format(fpath))
+        fh.write(s)
+        fh.close()
+        pass
         
 class flow(object):
         """This class provides a flow object. 

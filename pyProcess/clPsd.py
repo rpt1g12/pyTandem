@@ -12,7 +12,7 @@ plt.close('all')
 #%%
 sin20=np.sin(np.deg2rad(20))
 folder='6blocks/';sclcd='scl'
-osim=80;aoa=20;iaoah=20;freq=0.21;ttotal=25
+osim=8;aoa=20;iaoah=20;freq=0.21;ttotal=250
 nw=4;ovlp=0.5;
 if(osim==0):
     sim='A00'
@@ -101,7 +101,7 @@ cll();clt();ns=1024
 
 tmin=tin[-1]-(ttotal/0.3)       #in jfm paper its -(25/0.3)
 n0=np.where(tin>tmin)[0][0]
-t0=tin[n0:]*0.3#-tin[n0];
+t0=tin[n0:]#*0.3#-tin[n0];
 if prdl==1:
     fctr=np.sqrt(1-0.3**2)
 else:
