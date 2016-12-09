@@ -12,7 +12,7 @@ plt.close('all')
 #%%
 sin20=np.sin(np.deg2rad(20))
 folder='6blocks/';sclcd='scl'
-osim=8;aoa=20;iaoah=20;freq=0.21;ttotal=250
+osim=8;aoa=20;iaoah=20;freq=0.20;ttotal=68
 nw=4;ovlp=0.5;
 if(osim==0):
     sim='A00'
@@ -25,10 +25,9 @@ elif(osim==80):
     odata=1
     prdl=1
     linreg=1
-    ttotal=42
+    #ttotal=42 used for jfm paper with tmax=180
     name='8SLE'
     nw=6;ovlp=0.5;
-    sin20=0.36
 elif(osim==40):
     sim='4A00'
     odata=1
@@ -64,10 +63,9 @@ elif(osim==8):
     odata=1
     prdl=0
     linreg=1
-    ttotal=42
+    #ttotal=42 used for jfm paper with tmax=180
     name='8WLE'
     nw=6;ovlp=0.5;
-    sin20=0.43
     
 sim+='W11AoA'+str(aoa)
 
@@ -101,7 +99,7 @@ cll();clt();ns=1024
 
 tmin=tin[-1]-(ttotal/0.3)       #in jfm paper its -(25/0.3)
 n0=np.where(tin>tmin)[0][0]
-t0=tin[n0:]#*0.3#-tin[n0];
+t0=tin[n0:]*0.3#-tin[n0];
 if prdl==1:
     fctr=np.sqrt(1-0.3**2)
 else:
@@ -201,8 +199,8 @@ plt.sca(axFreq)
 axFreq.lines.clear()
 #cll();clt()
 
-#st=(sin20/0.3)*ff
-st=(sin20)*ff
+st=(sin20/0.3)*ff
+#st=(sin20)*ff
 stdif=abs(st-freq)
 sts=np.argmin(stdif)
 axFreq.loglog(st,pcl,label=sclcd)
