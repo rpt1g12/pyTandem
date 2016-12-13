@@ -11,6 +11,11 @@ import struct
 import copy as copy
 from lib.myPlots import *
 from scipy.interpolate import griddata  
+
+import glob
+
+import os
+
 #Define a float32
 float32=np.float32
 
@@ -29,6 +34,29 @@ def rdType(file,Type,count=1,verbose=False):
     if (verbose):
         print(v)
     return v
+
+def getFileNames(path=None,pattern='solT???.????.q'):
+    """Get solution files with extension='.ext'
+    
+    Arguments:
+        path (string): Path to look for files. If none use the working directory.
+        pattern (string): String that resembles the solution file with character wild cards, i.e. solT???.????.q
+    
+    Return:
+        sfiles (list(string)[nfiles]: List containing file names"""
+    
+    if path==None:
+        path=os.getcwd()
+
+    sfiles=glob.glob(path+pattern)
+    nfiles=len(sfiles)
+
+    for i in range(nfiles):
+        sfiles[i]=sfiles[i].split('/')[-1]
+
+    sfiles.sort()
+
+    return sfiles
 
 # Classes
 class var(object):
@@ -801,7 +829,9 @@ class flow(object):
                     self.blk[nb].var[vname]=self.blk[nb].data[-1]
             fh.close()
         
-        def rdSol(self,vnames=None):
+        def rdSol(self,vnames=None,sfile=None):
+            if sfile!=None:
+                self.sfile=sfile
             fh=open(self.path+self.sfile,'rb')
             nbk=self.nbk
             if vnames==None:
