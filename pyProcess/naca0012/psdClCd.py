@@ -14,7 +14,7 @@ plt.close('all')
 sin20=np.sin(np.deg2rad(20))
 
 folder='naca0012/';sclcd='scl'
-osim=1;aoa=5;iaoah=20;freq=0.20;ttotal=68;ns=1024
+osim=1;aoa=5;iaoah=20;freq=0.20;ttotal=40*0.3;ns=1024
 nw=4;ovlp=0.5;
 
 sina=np.sin(np.deg2rad(aoa))
@@ -89,7 +89,7 @@ if (showAoA):
     
 axTime.plot(tn,cln,'b',linewidth=2,label='Cl'+name)
 axTime.plot(tn,cdn,'r',linewidth=2,label='Cd'+name)
-axTime.plot([tn[0],tn[-1]],[clh,clh],'k',linewidth=2,label=r'exp $\alpha=$'+str(iaoah))
+axTime.plot([tn[0],tn[-1]],[clh,clh],'k',linewidth=2,label=r'DNS $\alpha=$'+str(iaoah))
 axTime.plot([tn[0],tn[-1]],[cdh,cdh],'k',linewidth=2)
 
 if (getAvg):
