@@ -19,7 +19,7 @@ import importlib
 importlib.reload(p3d)
 #%%
 
-path='/home/'+user+'/Desktop/post/naca0012/ss001/'
+path='/home/'+user+'/fortran/tandemProject/out/ss001/'
 
 files=p3d.getFileNames(path=path)
 
@@ -66,14 +66,14 @@ for n in range(nfiles):
 
 p_avg=p/nfiles
 
-cp_avg=(p_avg-p_inf)/(0.5*u_inf**2)
+cp=(p_avg-p_inf)/(0.5*u_inf**2)
 
 dudy_avg=dudy/nfiles
 
-cf_avg=(dudy_avg)/(Re*0.5*u_inf**2)
+cf=(dudy_avg)/(Re*0.5*u_inf**2)
 
-ustar=np.sqrt(2*u_inf**2*np.abs(cf_avg))
+ustar=np.sqrt(2*u_inf**2*np.abs(cf))
 
 yplus=ustar*y1*Re
 
-a.plot(x,yplus,lw=2,marker='o')
+a.plot(x,cf,lw=2,marker='o')
