@@ -74,7 +74,7 @@ def fit (axes=None,spg=(0.0,0.2)):
     axes.figure.canvas.toolbar.update()
     axes.figure.canvas.toolbar.push_current()
 
-def savePlotFile(path=None,ax=None,varx=None,vary=None,name=None):
+def savePlotFile(path=None,ax=None,varx=None,vary=None,name=None,nan=True):
     if (ax==None):
         ax=plt.gca()
     #n=len(ax.lines[0].get_xdata())
@@ -110,7 +110,10 @@ def savePlotFile(path=None,ax=None,varx=None,vary=None,name=None):
             if (i<len(ax.lines[j].get_xdata())):
                 s+='%e \t %e \t' % (datx[j][i], daty[j][i])
             else:
-                space='nan'+' '*9
+                if nan:
+                    space='nan'+' '*9
+                else:
+                    space=' '*12
                 s+=(space+' \t'+space+' \t')
         s+=' \n'
     

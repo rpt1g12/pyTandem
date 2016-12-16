@@ -14,7 +14,7 @@ plt.close('all')
 sin20=np.sin(np.deg2rad(20))
 
 folder='naca0012/';sclcd='scl'
-osim=1;aoa=5;iaoah=20;freq=0.20;ttotal=40*0.3;ns=1024
+osim=1;aoa=5;iaoah=20;freq=0.20;ttotal=60*0.3;ns=1024
 nw=4;ovlp=0.5;
 
 sina=np.sin(np.deg2rad(aoa))
@@ -37,8 +37,7 @@ n,tin,clin,cdin,taoa,tmach=np.loadtxt(dataset,skiprows=1,unpack=True)
 
 fTime,axTime=getFig('Time '+sim)
 
-show=False;showAoA=False;getAvg=False
-
+show=False;showAoA=False;getAvg=True
 
 
 tmin=tin[-1]-(ttotal/0.3)       #in jfm paper its -(25/0.3)
@@ -115,7 +114,7 @@ axTime.text(0.75,-0.15,scd,ha='center',va='bottom',transform=axTime.transAxes)
 #xstart=np.where(tn>195)[0][0];xend=np.where(tn>314.8)[0][0]
 #ystart=cdn.min();yend=cln.max()
 #axTime.fill_between(tn[xstart:xend], ystart, yend, facecolor='gray', alpha=0.5)
-fit(axTime)
+fit(axTime,spg=(0,0.4))
 
 if (showAoA):
     fit(ax2,spg=(0,0))
