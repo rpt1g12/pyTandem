@@ -14,7 +14,7 @@ plt.close('all')
 sin20=np.sin(np.deg2rad(20))
 
 folder='naca0012/';sclcd='scl'
-osim=1;aoa=5;iaoah=20;freq=0.20;ttotal=60*0.3;ns=1024
+osim=2;aoa=5;iaoah=20;freq=0.20;ttotal=60*0.3;ns=1024
 nw=4;ovlp=0.5;
 
 sina=np.sin(np.deg2rad(aoa))
@@ -28,6 +28,11 @@ if(osim==1):
     prdl=0
     linreg=0
     name='G1'
+elif(osim==2):
+    sim='G2'
+    prdl=0
+    linreg=0
+    name='G2'
     
 dataset='/home/'+user+'/anaconda3/pyTandem/clData/'+folder+sim+'.dat';
    
