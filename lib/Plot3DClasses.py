@@ -560,10 +560,7 @@ class blk(object):
         if bar:
             axShow(ax)
         return f,ax
-            
-    def clone (self):
-        obj=copy.copy(self)
-        return obj 
+
     def drawMeshPlane(self,direction=2,pln=0,skp=1,ax=None,color='black',lw=1,showBlock=False,hideAx=False):
         """Plots one plane of the grid
             Args:
@@ -699,6 +696,27 @@ class blk(object):
         fh.write(s)
         fh.close()
         pass
+            
+    def getViscosity(self,tflag=True):
+        """Computes viscosity based on Sutherlands law and stores in a new variable 'nu'
+        It also stores Temperature if tflag==True
+        """
+        rhoI=1/self.var['r'].getValues()
+        p=self.var['p'].getValues()
+        T=1.4*p*rhoI #T=\gamma*p/\rho (non-dimensional)
+        S=111/273 #S=S0/T0 (non-dimensional) 
+        C1=(1+S) # Sutherlands constant C1=(T0/T0+S0)*(T0/T0)^{-1.5} (non-dimensional)
+        nu=C1*T**(1.5)/(T+S)
+
+        if  tflag:
+            self.setData(vname='T',val=T)
+
+        self.setData(vname='nu',val=nu)
+        pass
+
+    def clone (self):
+        obj=copy.copy(self)
+        return obj 
         
 class flow(object):
         """This class provides a flow object. 

@@ -18,8 +18,8 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%%
-opt=1; plus=False; save=True
-path='/home/'+user+'/Desktop/post/naca0012/ss003/'
+opt=1; plus=False; save=False; dudy=True
+path='/home/'+user+'/Desktop/post/naca0012G1/ss003/'
 
 files=p3d.getFileNames(path=path)
 
@@ -34,6 +34,7 @@ bot=fl.blk[1]
 
 cp_up=up.var['cp'].avgDir()[:,0]
 cf_up=up.var['cf'].avgDir()[:,0]
+#cf_up=2*(up.var['twx'].avgDir()[:,0])/(0.4**2)
 x_up=up.var['x'].getValues()[:,0,0]
 
 if plus:    
@@ -44,6 +45,7 @@ if plus:
 
 cp_bot=bot.var['cp'].avgDir()[:,-1]
 cf_bot=bot.var['cf'].avgDir()[:,-1]
+#cf_bot=2*(bot.var['twx'].avgDir()[:,-1])/(0.4**2)
 x_bot=bot.var['x'].getValues()[:,-1,0]
 
 
@@ -52,6 +54,7 @@ xcp_up,jcp_up=np.loadtxt('cpData/Jones2008_up.dat',skiprows=1,unpack=True)
 xcp_bot,jcp_bot=np.loadtxt('cpData/Jones2008_bot.dat',skiprows=1,unpack=True)
 xcf_up,jcf_up=np.loadtxt('cfData/Jones2008_up.dat',skiprows=1,unpack=True)
 xcf_bot,jcf_bot=np.loadtxt('cfData/Jones2008_bot.dat',skiprows=1,unpack=True)
+sxcf_up,scf_up=np.loadtxt('pgfPlots/Cf_dudy.dat',skiprows=1,unpack=True)
 
 
 if opt==0:    
@@ -80,9 +83,9 @@ f,a=getFig(title)
     
 a.plot(x_up,var_up,color='blue',lw=2,marker='o',label='LES',markevery=5)
 a.plot(jx_up,jvar_up,color='red',lw=2,label='DNS')
-a.plot(x_bot,var_bot,color='blue',lw=2,marker='o',markevery=5)
-a.plot(jx_bot,jvar_bot,color='red',lw=2)
-h,lbl,lgd=getLabels(ax=a)
+#a.plot(x_bot,var_bot,color='blue',lw=2,marker='o',markevery=5)
+#a.plot(jx_bot,jvar_bot,color='red',lw=2)
+
 
 
 a.set_xlabel(r'$x$',fontsize=20)
@@ -99,10 +102,13 @@ if opt==1:
         f2,a2=getFig('Wall Units')
         y_plus=125000*0.5*0.4*np.sqrt(2*abs(var_up))*dy_up
         a2.plot(x_up,y_plus)
+    if dudy:
+        a.plot(sxcf_up,scf_up,lw=2,color='green',label='2ndOrder')
 else:    
     fit(a,(0,0.05))
     a.invert_yaxis()
-
+    
+h,lbl,lgd=getLabels(ax=a)
 f.tight_layout()
 
 if save:

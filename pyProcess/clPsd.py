@@ -12,7 +12,7 @@ plt.close('all')
 #%%
 sin20=np.sin(np.deg2rad(20))
 folder='6blocks/';sclcd='scl'
-osim=8;aoa=20;iaoah=20;freq=0.20;ttotal=68
+osim=41;aoa=10;iaoah=20;freq=0.20;ttotal=68
 nw=4;ovlp=0.5;
 if(osim==0):
     sim='A00'
@@ -54,10 +54,12 @@ elif(osim==4):
     name='4WLE'
 elif(osim==41):
     sim='4A15'
-    odata=0
+    odata=1
     prdl=0
     linreg=0
     name='4WLE'
+    folder='aoa10/'
+    aoa=10
 elif(osim==8):
     sim='8A15'
     odata=1

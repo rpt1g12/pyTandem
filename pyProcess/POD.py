@@ -27,10 +27,10 @@ fit(ax)
 
 axs.semilogy(m[:11],s[:11],'b-o',linewidth=2)
 #%%
-line=ax.axvline(x=t[0],color='green',linewidth=2,linestyle='--')
-for i in range(640):
-    adum=[t[i],t[i]]
-    line.set_xdata(adum)
-    axShow(ax)
-    plt.pause(0.01)
-    fig.savefig('/home/rpt1g12/Desktop/post/4A15W11AoA10/rom/pics/img.'+'{:04d}'.format(i)+'.png')
+#line=ax.axvline(x=t[0],color='green',linewidth=2,linestyle='--')
+#for i in range(640):
+#    adum=[t[i],t[i]]
+#    line.set_xdata(adum)
+#    axShow(ax)
+#    plt.pause(0.01)
+#    fig.savefig('/home/rpt1g12/Desktop/post/4A15W11AoA10/rom/pics/img.'+'{:04d}'.format(i)+'.png')
