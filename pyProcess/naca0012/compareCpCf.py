@@ -18,8 +18,8 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%%
-opt=1; plus=False; save=False; dudy=True
-path='/home/'+user+'/Desktop/post/naca0012G1/ss003/'
+opt=1; plus=True; save=True; dudy=True
+path='/home/'+user+'/Desktop/post/naca0012G2/ss003/'
 
 files=p3d.getFileNames(path=path)
 
@@ -54,7 +54,7 @@ xcp_up,jcp_up=np.loadtxt('cpData/Jones2008_up.dat',skiprows=1,unpack=True)
 xcp_bot,jcp_bot=np.loadtxt('cpData/Jones2008_bot.dat',skiprows=1,unpack=True)
 xcf_up,jcf_up=np.loadtxt('cfData/Jones2008_up.dat',skiprows=1,unpack=True)
 xcf_bot,jcf_bot=np.loadtxt('cfData/Jones2008_bot.dat',skiprows=1,unpack=True)
-sxcf_up,scf_up=np.loadtxt('pgfPlots/Cf_dudy.dat',skiprows=1,unpack=True)
+sxcf_up,scf_up,sxcf_bot,scf_bot=np.loadtxt('pgfPlots/Cf_dudy_G2.dat',skiprows=1,unpack=True)
 
 
 if opt==0:    
@@ -75,16 +75,17 @@ else:
     jvar_bot=jcf_bot
     jx_bot=xcf_bot-0.5
     title='Cf_comparison'
-    ns=np.where(var_up<0)[0][0]
-    nr=np.where(var_up<0)[0][-1]
+    
+    ns=np.where(scf_up<0)[0][0]
+    nr=np.where(scf_up<0)[0][-1]
     xs=x_up[ns];xr=x_up[nr]
 
 f,a=getFig(title)
     
 a.plot(x_up,var_up,color='blue',lw=2,marker='o',label='LES',markevery=5)
 a.plot(jx_up,jvar_up,color='red',lw=2,label='DNS')
-#a.plot(x_bot,var_bot,color='blue',lw=2,marker='o',markevery=5)
-#a.plot(jx_bot,jvar_bot,color='red',lw=2)
+a.plot(x_bot,var_bot,color='blue',lw=2,marker='o',markevery=5)
+a.plot(jx_bot,jvar_bot,color='red',lw=2)
 
 
 
@@ -92,8 +93,7 @@ a.set_xlabel(r'$x$',fontsize=20)
 a.set_ylabel(cvar,fontsize=20)
 
 
-if opt==1:
-    a.axhline(y=0,lw=2,color='black')
+if opt==1:    
     s=r'$x_{sep}=$'+'{:-5.3f}'.format(xs)+'\t'+r'$x_{rea}=$'+'{:-5.3f}'.format(xr)
     a.text(0.25,-0.15,s,ha='center',va='bottom',transform=a.transAxes)
     a.set_xlim(-0.5,0.5)
@@ -103,7 +103,10 @@ if opt==1:
         y_plus=125000*0.5*0.4*np.sqrt(2*abs(var_up))*dy_up
         a2.plot(x_up,y_plus)
     if dudy:
-        a.plot(sxcf_up,scf_up,lw=2,color='green',label='2ndOrder')
+        a.plot(sxcf_up,scf_up,lw=2,color='green',label='O2_up')
+        a.plot(sxcf_bot,scf_bot,lw=2,color='green',label='O2_bot')
+        
+    a.axhline(y=0,lw=2,color='black')
 else:    
     fit(a,(0,0.05))
     a.invert_yaxis()
@@ -112,4 +115,7 @@ h,lbl,lgd=getLabels(ax=a)
 f.tight_layout()
 
 if save:
-    savePlotFile(ax=a,vary=['g1_up','dns_up','g1_bot','dns_bot'])
+    if dudy and (opt==1):
+        savePlotFile(ax=a,vary=['g1_up','dns_up','g1_bot','dns_bot','O2_up','O2_bot'],name='Cf_comparison_G2')
+    else:
+        savePlotFile(ax=a,vary=['g1_up','dns_up','g1_bot','dns_bot'],name='Cp_comparison_G2')

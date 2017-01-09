@@ -14,7 +14,7 @@ plt.close('all')
 sin20=np.sin(np.deg2rad(20))
 
 folder='naca0012/';sclcd='scl'
-osim=2;aoa=5;iaoah=20;freq=0.20;ttotal=60*0.3;ns=1024
+osim=2;aoa=5;iaoah=20;freq=0.20;ttotal=20*0.3;ns=1024
 nw=4;ovlp=0.5;
 
 sina=np.sin(np.deg2rad(aoa))
@@ -113,12 +113,7 @@ scl=r'$\sigma_L=$'+str(np.around(s,3))+'\t'+r'$\bar{C_L}=$'+str(np.around(clM,3)
 scd=r'$\sigma_D=$'+str(np.around(cds,3))+'\t'+r'$\bar{C_D}=$'+str(np.around(cdM,3))
 axTime.text(0.25,-0.15,scl,ha='center',va='bottom',transform=axTime.transAxes)
 axTime.text(0.75,-0.15,scd,ha='center',va='bottom',transform=axTime.transAxes)
-#xstart=np.where(tn>45)[0][0];xend=np.where(tn>165)[0][0]
-#ystart=cdn.min();yend=cln.max()
-#axTime.fill_between(tn[xstart:xend], ystart, yend, facecolor='gray', alpha=0.5)
-#xstart=np.where(tn>195)[0][0];xend=np.where(tn>314.8)[0][0]
-#ystart=cdn.min();yend=cln.max()
-#axTime.fill_between(tn[xstart:xend], ystart, yend, facecolor='gray', alpha=0.5)
+
 fit(axTime,spg=(0,0.4))
 
 if (showAoA):
