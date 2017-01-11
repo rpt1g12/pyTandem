@@ -534,7 +534,7 @@ class blk(object):
             self.data.append(var(size,len(self.data),vname,val))
             self.var[vname]=self.data[-1]
 
-    def contourf(self,varname,vmin=-1,vmax=1,k=0,ax=None,nlvl=11,avg=False,bar=True):
+    def contourf(self,varname,vmin=-1,vmax=1,k=0,ax=None,nlvl=11,avg=False,bar=True,cmap=None):
         """Produces a contour plot of the variable varname"""
         if (ax==None):
             f,ax=getFig(varname)
@@ -548,10 +548,12 @@ class blk(object):
             x=self.var['x'].val[:,:,k]
             y=self.var['y'].val[:,:,k]
             v=self.var[varname].val[:,:,k]
+        if cmap==None:
+            cmap=plt.cm.coolwarm
 
         lvl=np.linspace(vmin,vmax,nlvl)
             
-        im=ax.contourf(x,y,v,levels=lvl,cmap=plt.cm.coolwarm)
+        im=ax.contourf(x,y,v,levels=lvl,cmap=cmap)
         if bar:
             cb=f.colorbar(im,orientation='vertical')
             cb.set_label(varname,fontsize=20)
@@ -559,7 +561,7 @@ class blk(object):
         ax.set_ylabel(r'$y$',fontsize=20)
         if bar:
             axShow(ax)
-        return f,ax
+        return f,ax,im
 
     def drawMeshPlane(self,direction=2,pln=0,skp=1,ax=None,color='black',lw=1,showBlock=False,hideAx=False):
         """Plots one plane of the grid
@@ -969,6 +971,13 @@ class flow(object):
                 mfl.blk[0].var[vname]=mfl.blk[0].data[-1]
                 nvar+=1
             return mfl.clone()
+
+        def contourf(self,varname,vmin=-1,vmax=1,k=0,ax=None,nlvl=11,avg=False,bar=True,cmap=None):
+            """Produces a contour plot of the variable varname"""
+            f,a,im=self.blk[0].contourf(varname,vmin,vmax,k,ax,nlvl,avg,bar,cmap)
+            for i in range(1,self.nbk):
+                self.blk[i].contourf(varname,vmin,vmax,k,a,nlvl,avg,bar,cmap)
+            return f,a,im
 
         def clone(self):
             """Returns a clone of the flow object"""
