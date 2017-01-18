@@ -20,7 +20,7 @@ importlib.reload(p3d)
 #%%
 visible=False;save=True;rotate=True
 
-path='/home/'+user+'/Desktop/post/naca0012G2/k25/'
+path='/home/'+user+'/Desktop/post/naca0012G3/k25/'
 
 
 files=p3d.getFileNames(path=path)
@@ -54,6 +54,32 @@ a.get_yaxis().set_visible(visible)
 f.set_frameon(False)
 f.tight_layout(pad=0)
 if save:
-    f.savefig('/home/'+user+'/anaconda3/pyTandem/pgfPlots/wz_G2.pdf', bbox_inches='tight', pad_inches=0,dpi=300)
+    f.savefig('/home/'+user+'/anaconda3/pyTandem/pgfPlots/wz_G3.pdf', bbox_inches='tight', pad_inches=0,dpi=300)
 
-
+#%%
+#def naca(x,c=1.0,t0=12):
+#    """NACA 00XX series equation"""
+#    t=abs(t0)*0.01
+#    k=0.991148635
+#    if (t0<0.0):
+#       fctr=-1.0
+#    else:
+#       fctr=1.0
+#    xc=x/c
+#    y= fctr*(t*c*k/0.2) \
+#    * (0.298222773*np.sqrt(xc)-0.127125232*xc-0.357907806*xc**2 \
+#    +0.291984971*xc**3-0.105174606*xc**4)
+#    return y
+#def x2xhat(x,y):
+#    a=np.deg2rad(5)
+#    y=naca(x+0.5)
+#    xh=(x-0.5)*np.cos(a)+y*np.sin(a)+1
+#    yh=y*np.cos(a)-(x-0.5)*np.sin(a)
+#    return xh,yh
+#def xhat2x(xh,yh):
+#    a=np.deg2rad(5)
+#    A=np.array([[np.cos(a),np.sin(a)],[-np.sin(a),np.cos(a)]])
+#    Ainv=np.linalg.inv(A)
+#    [x,y]=np.matmul(Ainv,[xh-1,yh]
+#    x+=0.5
+#    return x,y
