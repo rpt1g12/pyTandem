@@ -553,7 +553,7 @@ class blk(object):
 
         lvl=np.linspace(vmin,vmax,nlvl)
             
-        im=ax.contourf(x,y,v,levels=lvl,cmap=cmap)
+        im=ax.contourf(x,y,v,levels=lvl,cmap=cmap,vmin=vmin,vmax=vmax,extend='both')
         if bar:
             cb=f.colorbar(im,orientation='vertical')
             cb.set_label(varname,fontsize=20)
@@ -715,6 +715,24 @@ class blk(object):
 
         self.setData(vname='nu',val=nu)
         pass
+
+    def setTouch(self,x0=0,y0=0,R=0.001,H=3e-8,acc=1e-6):
+        """docstring for setTouch"""
+        k0=np.log(acc)/(R**2)
+        xo=np.sqrt(-1/(2*k0))
+        f0=xo*np.exp(-0.5)
+        Gamma=H/f0
+        x=self.var['x'].getValues()-x0
+        y=self.var['y'].getValues()-y0
+        r=x**2+y**2
+        A=Gamma*np.exp(k0*r)
+        fu=-A*y
+        fv=A*x
+        fU=(fu**2+fv**2)**0.5
+        self.setData(vname='fu',val=fu)
+        self.setData(vname='fv',val=fv)
+        self.setData(vname='fU',val=fU)
+        self.setData(vname='FA',val=A)
 
     def clone (self):
         obj=copy.copy(self)
@@ -972,12 +990,22 @@ class flow(object):
                 nvar+=1
             return mfl.clone()
 
+        def drawMeshPlane(self,direction=2,pln=0,skp=1,ax=None,color='black',lw=1,showBlock=False,hideAx=False):
+
+            for i in range(self.nbk):
+                self.blk[i].drawMeshPlane(direction,pln,skp,ax,color,lw,showBlock,hideAx)
+
         def contourf(self,varname,vmin=-1,vmax=1,k=0,ax=None,nlvl=11,avg=False,bar=True,cmap=None):
             """Produces a contour plot of the variable varname"""
             f,a,im=self.blk[0].contourf(varname,vmin,vmax,k,ax,nlvl,avg,bar,cmap)
-            for i in range(1,self.nbk):
+            for i in range(self.nbk):
                 self.blk[i].contourf(varname,vmin,vmax,k,a,nlvl,avg,bar,cmap)
             return f,a,im
+
+        def setTouch(self,x0=0,y0=0,R=0.001,H=1,acc=1e-6):
+            """docstring for setTouch"""
+            for i in range(self.nbk):
+                self.blk[i].setTouch(x0,y0,R,H,acc)
 
         def clone(self):
             """Returns a clone of the flow object"""

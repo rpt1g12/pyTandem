@@ -19,7 +19,7 @@ import importlib
 importlib.reload(p3d)
 #%%
 save=True
-path='/home/'+user+'/Desktop/post/naca0012G2/ss003/'
+path='/home/'+user+'/Desktop/post/naca0012G3/ss003/'
 
 files=p3d.getFileNames(path=path)
 
@@ -53,7 +53,7 @@ x_bot=bot.var['x'].getValues()[:,-1,0]
 
 jx,jcf=np.loadtxt('cfData/Jones2008_bot.dat',skiprows=1,unpack=True)
 
-f,a=getFig('Cf_dudy_G2')
+f,a=getFig('Cf_dudy_G3')
 
 a.plot(x_up,cf_up,lw=2,color="blue",label='up')
 a.plot(x_bot,cf_bot,lw=2,color="blue",label='bot')

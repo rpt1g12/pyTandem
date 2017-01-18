@@ -18,8 +18,8 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%%
-opt=1; plus=True; save=True; dudy=True
-path='/home/'+user+'/Desktop/post/naca0012G2/ss003/'
+opt=0; plus=True; save=True; dudy=True
+path='/home/'+user+'/Desktop/post/naca0012G3/ss003/'
 
 files=p3d.getFileNames(path=path)
 
@@ -54,7 +54,7 @@ xcp_up,jcp_up=np.loadtxt('cpData/Jones2008_up.dat',skiprows=1,unpack=True)
 xcp_bot,jcp_bot=np.loadtxt('cpData/Jones2008_bot.dat',skiprows=1,unpack=True)
 xcf_up,jcf_up=np.loadtxt('cfData/Jones2008_up.dat',skiprows=1,unpack=True)
 xcf_bot,jcf_bot=np.loadtxt('cfData/Jones2008_bot.dat',skiprows=1,unpack=True)
-sxcf_up,scf_up,sxcf_bot,scf_bot=np.loadtxt('pgfPlots/Cf_dudy_G2.dat',skiprows=1,unpack=True)
+sxcf_up,scf_up,sxcf_bot,scf_bot=np.loadtxt('pgfPlots/Cf_dudy_G3.dat',skiprows=1,unpack=True)
 
 
 if opt==0:    
@@ -116,6 +116,6 @@ f.tight_layout()
 
 if save:
     if dudy and (opt==1):
-        savePlotFile(ax=a,vary=['g1_up','dns_up','g1_bot','dns_bot','O2_up','O2_bot'],name='Cf_comparison_G2')
+        savePlotFile(ax=a,vary=['g1_up','dns_up','g1_bot','dns_bot','O2_up','O2_bot'],name='Cf_comparison_G3')
     else:
-        savePlotFile(ax=a,vary=['g1_up','dns_up','g1_bot','dns_bot'],name='Cp_comparison_G2')
+        savePlotFile(ax=a,vary=['g1_up','dns_up','g1_bot','dns_bot'],name='Cp_comparison_G3')
