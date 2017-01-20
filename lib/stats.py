@@ -239,3 +239,19 @@ def myFilter(x,cut):
     b,a=butter(4,cut,analog=False)
     f=filtfilt(b,a,x)
     return f
+
+def fcbFD(x,fctr=1):
+    """Derivative scheme 2nd Order
+    forward in left boundary
+    central in middle 
+    backward in right boundary"""
+    n=max(x.shape); dx=np.zeros(n)
+    a=np.zeros(n-2);b=np.zeros(n-1);c=np.zeros(n)
+    d=np.zeros(n-1);e=np.zeros(n-2);
+    a[-1]=1;e[0]=-1
+    b[0:-1]=-1;b[-1]=-4;d[1:]=1;d[0]=4;
+    c[0]=-3;c[-1]=3
+    m=(1/(2*fctr))*np.mat(np.diag(a,-2)+np.diag(b,-1)+np.diag(c,0)+np.diag(d,1)+np.diag(e,2))
+    dx=m*np.mat(x).T
+    dx=np.asarray(dx.T)[0]
+    return dx
