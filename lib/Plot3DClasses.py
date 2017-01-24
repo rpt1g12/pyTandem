@@ -867,6 +867,20 @@ class flow(object):
                     self.blk[nb].var[vname]=self.blk[nb].data[-1]
             fh.close()
         
+        def rdFlowInfo(self,sfile=None):
+            """Read Flow Operating Conditions"""
+            if sfile!=None:
+                self.sfile=sfile
+            fh=open(self.path+self.sfile,'rb')
+            lh=self.lhdr
+            fh.seek(lh)
+            mach,aoa,Re,time=rdType(fh,'f',4)
+            self.mach=mach
+            self.aoa=aoa
+            self.Re=Re
+            self.time=time
+            return mach,aoa,Re,time
+
         def rdSol(self,vnames=None,sfile=None):
             if sfile!=None:
                 self.sfile=sfile

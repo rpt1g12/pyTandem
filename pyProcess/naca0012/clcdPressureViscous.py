@@ -13,29 +13,42 @@ plt.close('all')
 #%%
 sin20=np.sin(np.deg2rad(20))
 
-folder='naca0012/';sclcd='scl'
-osim=3;aoa=5;iaoah=20;freq=0.20;
-ttotal=20*0.3;ns=1024
+folder='pitchUp/';sclcd='scl'
+osim=10;aoa=5;iaoah=aoa;freq=0.20;
+ttotal=50*0.3;ns=1024
 nw=4;ovlp=0.5;
 
 sina=np.sin(np.deg2rad(aoa))
 cosa=np.cos(np.deg2rad(aoa))
 
 #Expected values
-clh=0.621;cdh=0.0358
+dataset='/home/'+user+'/anaconda3/pyTandem/clData/HansenClCd.dat';
+aoah,hcl,hcd=np.loadtxt(dataset,skiprows=1,unpack=True)
+clh=np.interp(aoa,aoah,hcl)
+cdh=np.interp(aoa,aoah,hcd)
+print(clh,cdh)
+#clh=0.35;cdh=0.035
 
 if(osim==1):
     sim='G1'
     prdl=0
     name='G1'
+    folder='naca0012/'
+if(osim==10):
+    sim='G1'
+    prdl=0
+    name='G1'
+    folder='pitchUp/'
 elif(osim==2):
     sim='G2'
     prdl=0
     name='G2'
+    folder='naca0012/'
 elif(osim==3):
     sim='G3'
     prdl=0
     name='G3'
+    folder='naca0012/'
     
 dataset='/home/'+user+'/anaconda3/pyTandem/clData/'+folder+'clcdPresVisc_'+sim+'.dat';
    

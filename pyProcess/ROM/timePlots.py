@@ -10,6 +10,7 @@ pi=np.pi
 #from lib.matplotlib2tikz import save as tikz_save
 plt.close('all')
 #%%
+
 # Font Size
 fs=18
 folder='rom/4A15W11AoA10/upperSurf/'
@@ -17,6 +18,8 @@ sim="POD_time"
 dataset='/home/'+user+'/anaconda3/pyTandem/'+folder+sim+'.dat';
 t0=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=(range(1)))
 modes0=np.loadtxt(dataset,skiprows=1,unpack=True,usecols=(range(1,6)))
+
+ts,te=t0[0],t0[-2]
 
 sim="POD_SngV"
 dataset='/home/'+user+'/anaconda3/pyTandem/'+folder+sim+'.dat';
@@ -30,8 +33,8 @@ savePlotFile(ax=asgma)
 
 sizes=modes0.shape
 
-ns=np.where((t0>=106.25))[0][0]
-ne=np.where((t0>137.5))[0][0]
+ns=np.where((t0>=ts))[0][0]
+ne=np.where((t0>te))[0][0]
 trom=t0[ns:ne]
 modes=modes0[:,ns:ne]
 
@@ -58,10 +61,11 @@ amod.set_ylabel(r'POD Coefficient',fontsize=fs)
 folder='clData/aoa10/'
 sim="4A15W11AoA10"
 dataset='/home/'+user+'/anaconda3/pyTandem/'+folder+sim+'.dat';
+ts,te=45,314.98
 n,t0,clin,cdin,taoa,tmach=np.loadtxt(dataset,skiprows=1,unpack=True)
 
-ns=np.where((t0>=106.25))[0][0]
-ne=np.where((t0>137.5))[0][0]
+ns=np.where((t0>=ts))[0][0]
+ne=np.where((t0>te))[0][0]
 tcl=t0[ns:ne]
 cl=clin[ns:ne];cd=cdin[ns:ne]
 aoa=taoa[ns:ne]
@@ -90,18 +94,18 @@ acl.set_ylabel(r'$C_L\, &\, C_D$',fontsize=fs)
 
 for a in [amod,acl]:
     axShow(a)
-    a.set_xlim(106.25,137,5)
+    a.set_xlim(ts,te)
 
-for i in range(250):
-    print(i)
-    tt=106.25+0.125*i
-    adum=[tt,tt]
-    line1.set_xdata(adum)
-    line2.set_xdata(adum)
-#    line3.set_xdata(adum)
-    axShow(amod)
-#    axShow(acl)
-    #plt.pause(0.01)
-    fmod.savefig('/home/rpt1g12/kdenlive/rom/mod/mod.'+'{:04d}'.format(i)+'.png',dpi=300)
-#    fcl.savefig('/home/rpt1g12/kdenlive/rom/cl/cl.'+'{:04d}'.format(i)+'.png')
-#    faoa.savefig('/home/rpt1g12/kdenlive/rom/aoa/aoa.'+'{:04d}'.format(i)+'.png')
+#for i in range(int((te-ts)/0.125)):
+#    print(i)
+#    tt=ts+0.125*i
+#    adum=[tt,tt]
+#    line1.set_xdata(adum)
+#    line2.set_xdata(adum)
+##    line3.set_xdata(adum)
+#    axShow(amod)
+##    axShow(acl)
+#    plt.pause(0.01)
+#    #fmod.savefig('/home/rpt1g12/kdenlive/rom/mod/mod.'+'{:04d}'.format(i)+'.png',dpi=300)
+##    fcl.savefig('/home/rpt1g12/kdenlive/rom/cl/cl.'+'{:04d}'.format(i)+'.png')
+##    faoa.savefig('/home/rpt1g12/kdenlive/rom/aoa/aoa.'+'{:04d}'.format(i)+'.png')
