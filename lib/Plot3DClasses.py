@@ -105,6 +105,8 @@ class var(object):
         if Type=='sol':
             tvar=5
             fl_hdr=4*lk8
+            fh.seek(lh)
+            mach,aoa,Re,time=rdType(fh,'f',4)
         
         lh+=fl_hdr*(nb)+sum(lblk[:nb])*lk8*tvar
         if Type=='sol':
@@ -117,6 +119,9 @@ class var(object):
         fh.seek(lh)
         self.val=np.fromfile(fh,dtype=k8,count=ltomb)
         self.val=np.reshape(self.val,(lxi,let,lze),order='F')
+        if Type=='sol':
+            return mach,aoa,Re,time
+
     
     def clone(self):
         """Clones the variable.
@@ -879,6 +884,7 @@ class flow(object):
             self.aoa=aoa
             self.Re=Re
             self.time=time
+            fh.close()
             return mach,aoa,Re,time
 
         def rdSol(self,vnames=None,sfile=None):

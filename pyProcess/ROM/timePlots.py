@@ -43,8 +43,8 @@ fmod.set_size_inches(19.2/2,10.8/2,forward=True)
 amod.set_xlabel(r'$t^*$',fontsize=fs)
 fmod.tight_layout()
 
-for m in range(sizes[0]):
-    amod.plot(trom,modes[m,:],lw=2,label='mode{:d}'.format(m))
+for m in range(1,sizes[0]):
+    amod.plot(trom,sgma[m]*modes[m,:],lw=2,label='mode{:d}'.format(m))
 
 fit(amod,spg=(0,0.1))
 
