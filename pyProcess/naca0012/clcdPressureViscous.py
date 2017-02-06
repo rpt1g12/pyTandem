@@ -15,7 +15,7 @@ sin20=np.sin(np.deg2rad(20))
 
 folder='pitchUp/';sclcd='scl'
 osim=10;aoa=12;iaoah=aoa;freq=0.20;
-ttotal=80*0.3;ns=1024
+ttotal=10*0.3;ns=1024
 nw=4;ovlp=0.5;
 
 sina=np.sin(np.deg2rad(aoa))

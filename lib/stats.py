@@ -63,6 +63,8 @@ def rsample(x,t,nsample=0,verbose=False,rmAvg=False,force=False):
     xspln=interpolate.splrep(t,x,s=0)
     if (nsample==0):
         nsample=len(t)
+        if(force):
+            nsample=nextpow2(nsample)
     else:
         nsample=nextpow2(nsample)
         if (nsample>len(t) and force==False):

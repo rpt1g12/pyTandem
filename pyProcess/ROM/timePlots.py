@@ -29,7 +29,7 @@ fsgma,asgma=getFig('SingularValues')
 asgma.semilogy(nmode[:5],sgma[:5],lw=2,marker='o',label='sgma')
 asgma.set_ylabel(r'$\sigma_i$',fontsize=fs)
 asgma.set_xlabel(r'mode #',fontsize=fs)
-savePlotFile(ax=asgma)
+#savePlotFile(ax=asgma)
 
 sizes=modes0.shape
 
@@ -51,6 +51,7 @@ fit(amod,spg=(0,0.1))
 handle1,labels1,legend1=getLabels(ax=amod,ncol=5,fontsize=12,loc='upper right',hspace=0.2)
    
 line1=amod.axvline(x=trom[0],color='black',linewidth=2,linestyle='--')
+amod.axhline(y=0,color='k',lw=2)
 
 #amod.set_xlabel(r'$t^*$',fontsize=20)
 amod.set_ylabel(r'POD Coefficient',fontsize=fs)
@@ -92,9 +93,9 @@ acl.set_ylabel(r'$C_L\, &\, C_D$',fontsize=fs)
 #aaoa.set_xlabel(r'$t^*$',fontsize=20)
 #aaoa.set_ylabel(r'$\alpha$',fontsize=20)
 
-for a in [amod,acl]:
-    axShow(a)
-    a.set_xlim(ts,te)
+#for a in [amod,acl]:
+#    axShow(a)
+#    a.set_xlim(ts,te)
 
 #for i in range(int((te-ts)/0.125)):
 #    print(i)
