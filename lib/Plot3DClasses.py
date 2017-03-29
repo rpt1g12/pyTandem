@@ -367,6 +367,48 @@ class blk(object):
             
             self.metFlag=True
             
+    def deriveSurface(self,varName1,varName2,plane=1,r=False):
+        """Derive one variable with respect to x, y or z
+            
+            Args:
+                varName1 (char): Variable to be derived
+                varName2 (char): Variable with respect to be derived. It must be
+                    either 'x', 'y' or 'z'.
+                r (logic): If true returns the derivative array
+
+        """
+        if varName1 in self.var:
+            var0=self.var[varName1]
+            if plane==0:
+                dvdxi=var0.derVar(1)
+                dvdet=var0.derVar(2)
+            if plane==1:
+                dvdxi=var0.derVar(0)
+                dvdet=var0.derVar(2)
+            if plane==2:
+                dvdxi=var0.derVar(0)
+                dvdet=var0.derVar(1)
+            if varName2 =='x':           
+                dv=(dvdxi*self.imets[0].getValues()+
+                   dvdet*self.mets[3].getValues()+
+                   dvdze*self.mets[6].getValues())
+            elif varName2 =='y':           
+                dv=(dvdxi*self.mets[1].getValues()+
+                   dvdet*self.mets[4].getValues()+
+                   dvdze*self.mets[7].getValues())
+            elif varName2 =='z':           
+                dv=(dvdxi*self.mets[2].getValues()+
+                   dvdet*self.mets[5].getValues()+
+                   dvdze*self.mets[8].getValues())
+            else:
+                print('Needs to be derived with respect to: x, y or z')
+            if  r:
+                return dv
+            else:
+                self.setData(vname='d{}d{}'.format(varName1,varName2),val=dv)
+        else:
+            print('{} is not a valid variable!'.format(varName1))
+
     def derive(self,varName1,varName2,r=False):
         """Derive one variable with respect to x, y or z
             
@@ -394,8 +436,14 @@ class blk(object):
                 dv=(dvdxi*self.mets[2].getValues()+
                    dvdet*self.mets[5].getValues()+
                    dvdze*self.mets[8].getValues())
+            elif varName2 =='xi':           
+                dv=dvdxi
+            elif varName2 =='et':           
+                dv=dvdet
+            elif varName2 =='ze':           
+                dv=dvdze
             else:
-                print('Needs to be derived with respect to: x, y or z')
+                print('Needs to be derived with respect to: x, y, z or xi, et, ze')
             if  r:
                 return dv
             else:
@@ -471,7 +519,7 @@ class blk(object):
         
         return iblock
 
-    def getSubset(self,xlim=None,ylim=None,zlim=None):
+    def getSubset(self,xlim=None,ylim=None,zlim=None,link=False):
         """Extracts a subset of the block data
 
                 Args:
@@ -512,7 +560,10 @@ class blk(object):
             sblk.setData(name,sarr)
             sblk.var[name]=sblk.data[n]
         
-        return sblk.clone()
+        if link:
+            return sblk
+        else:
+            return sblk.clone()
         
     def setData(self,vname=None,val=[],vid=None):
         """Sets values for a given variable in the block. If variable exists, overwrites its values.
@@ -539,20 +590,38 @@ class blk(object):
             self.data.append(var(size,len(self.data),vname,val))
             self.var[vname]=self.data[-1]
 
-    def contourf(self,varname,vmin=-1,vmax=1,k=0,ax=None,nlvl=11,avg=False,bar=True,cmap=None):
+    def contourf(self,varname,vmin=-1,vmax=1,k=0,plane=2,ax=None,nlvl=11,avg=False,bar=True,cmap=None):
         """Produces a contour plot of the variable varname"""
         if (ax==None):
             f,ax=getFig(varname)
         else:
             f=ax.figure
         if avg:
-            x=self.var['x'].avgDir(2)
-            y=self.var['y'].avgDir(2)
-            v=self.var[varname].avgDir(2)
+            if plane==2:
+               x_char,y_char='x','y'
+            elif plane==0:
+               x_char,y_char='y','z'
+            elif plane==1:
+               x_char,y_char='x','z'
+            x=self.var[x_char].avgDir(plane)
+            y=self.var[y_char].avgDir(plane)
+            v=self.var[varname].avgDir(plane)
         else:
-            x=self.var['x'].val[:,:,k]
-            y=self.var['y'].val[:,:,k]
-            v=self.var[varname].val[:,:,k]
+            if plane==2:
+               x_char,y_char='x','y'
+               x=self.var[x_char].val[:,:,k]
+               y=self.var[y_char].val[:,:,k]
+               v=self.var[varname].val[:,:,k]
+            elif plane==0:
+               x_char,y_char='y','z'
+               x=self.var[x_char].val[k,:,:]
+               y=self.var[y_char].val[k,:,:]
+               v=self.var[varname].val[k,:,:]
+            elif plane==1:
+               x_char,y_char='x','z'
+               x=self.var[x_char].val[:,k,:]
+               y=self.var[y_char].val[:,k,:]
+               v=self.var[varname].val[:,k,:]
         if cmap==None:
             cmap=plt.cm.coolwarm
 
@@ -562,8 +631,8 @@ class blk(object):
         if bar:
             cb=f.colorbar(im,orientation='vertical')
             cb.set_label(varname,fontsize=20)
-        ax.set_xlabel(r'$x$',fontsize=20)
-        ax.set_ylabel(r'$y$',fontsize=20)
+        ax.set_xlabel(r'$'+x_char+'$',fontsize=20)
+        ax.set_ylabel(r'$'+y_char+'$',fontsize=20)
         if bar:
             axShow(ax)
         return f,ax,im
@@ -903,11 +972,16 @@ class flow(object):
             for nb in range(nbk):
                 size=self.blk[nb].size 
                 lh=self.lhdr
+
                 for nvar in range(5):
                     vname=names[nvar]
-                    self.blk[nb].data.append(var(size,nvar,name=vname))
-                    self.blk[nb].data[-1].rdVar(fh,lh,nvar,nb,lblk,Type='sol')
-                    self.blk[nb].var[vname]=self.blk[nb].data[-1]
+                    if len(self.blk[nb].data)<8:
+                        self.blk[nb].data.append(var(size,nvar,name=vname))
+                        nn=-1
+                    else:
+                        nn=nvar+3
+                    self.blk[nb].data[nn].rdVar(fh,lh,nvar,nb,lblk,Type='sol')
+                    self.blk[nb].var[vname]=self.blk[nb].data[nn]
                     
             self.vnames=names
             fh.close()
@@ -1015,22 +1089,62 @@ class flow(object):
             for i in range(self.nbk):
                 self.blk[i].drawMeshPlane(direction,pln,skp,ax,color,lw,showBlock,hideAx)
 
-        def contourf(self,varname,vmin=-1,vmax=1,k=0,ax=None,nlvl=11,avg=False,bar=True,cmap=None):
+        def contourf(self,varname,vmin=-1,vmax=1,k=0,plane=2,ax=None,nlvl=11,avg=False,bar=True,cmap=None):
             """Produces a contour plot of the variable varname"""
-            f,a,im=self.blk[0].contourf(varname,vmin,vmax,k,ax,nlvl,avg,bar,cmap)
-            for i in range(self.nbk):
-                self.blk[i].contourf(varname,vmin,vmax,k,a,nlvl,avg,bar,cmap)
+            f,a,im=self.blk[0].contourf(varname,vmin,vmax,k,plane,ax,nlvl,avg,bar=False,cmap=cmap)
+            for i in range(1,self.nbk-1):
+                self.blk[i].contourf(varname,vmin,vmax,k,plane,a,nlvl,avg,bar=False,cmap=cmap)
+            self.blk[-1].contourf(varname,vmin,vmax,k,plane,a,nlvl,avg,bar,cmap)
             return f,a,im
 
         def setTouch(self,x0=0,y0=0,R=0.001,H=1,acc=1e-6):
             """docstring for setTouch"""
             for i in range(self.nbk):
                 self.blk[i].setTouch(x0,y0,R,H,acc)
+        
+        def getMetrics(self):
+            """Compute grid mettrics"""
+            for i in range(self.nbk):
+                print('Metrics block {:}'.format(i))
+                self.blk[i].getMetrics()
+
+        def getAvg(self,files,vnames):
+            """Returns time average of files"""
+            path,gfile,sfile=self.path,self.gfile,self.sfile
+            flavg=flow(path,gfile,sfile)
+            flavg.rdHdr()
+            flavg.rdGrid()
+            flavg.rdSol(vnames,files[0])
+            flavg.sfile='solTA.qa'
+            nt=len(files)
+            
+            for f in files[1:]:
+                self.rdSol(vnames,f)
+                for bk in range(self.nbk):
+                    for cvar in vnames:
+                        flavg.blk[bk].var[cvar].val[:,:,:]+=self.blk[bk].var[cvar].val[:,:,:]
+
+            for bk in range(flavg.nbk):
+                for cvar in vnames:
+                    flavg.blk[bk].var[cvar].val[:,:,:]/=nt
+
+            return flavg
 
         def clone(self):
             """Returns a clone of the flow object"""
             obj=copy.copy(self)
             return obj
         
-            
-        
+class rake(object):
+    """Defines a rake of points"""
+    def __init__(self, xo,yo,dx,dy,n,l):
+        dmod=np.sqrt(dx**2+dy**2)
+        dl=l/(n-1)  
+        self.dl=dl
+        self.dx,self.dy=dl*dx/dmod,dl*dy/dmod        
+        self.tx,self.ty=self.dy/dl,-self.dx/dl
+        self.x,self.y,self.var=np.zeros((n,1)),np.zeros((n,1)),np.zeros((n,1))
+
+        for i in range(n):
+            self.x[i]=xo+i*self.dx
+            self.y[i]=yo+i*self.dy

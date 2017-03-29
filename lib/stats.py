@@ -257,3 +257,10 @@ def fcbFD(x,fctr=1):
     dx=m*np.mat(x).T
     dx=np.asarray(dx.T)[0]
     return dx
+
+def myIntegral (u,l):
+    n=len(u)
+    U=np.zeros_like(u)
+    for i in range(1,n):
+        U[i]=0.5*(l[i]-l[i-1])*(u[i]+u[i-1])+U[i-1]
+    return U
