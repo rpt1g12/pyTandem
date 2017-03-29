@@ -20,4 +20,4 @@ ax.grid(True)
 ax.figure.show()
 path='wallUnits/clean/AoA20/'
 #plt.savefig(savepath,dpi=300)
-savePlotFile(path=path+cs+'Plus.dat',vary=labels)
+#savePlotFile(path=path+cs+'Plus.dat',vary=labels)

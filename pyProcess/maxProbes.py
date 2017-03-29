@@ -30,7 +30,7 @@ fFreq=plt.figure()
 fFreq.canvas.set_window_title('Frequency '+sim)
 axFreq=fFreq.add_subplot(111)
 #%%
-i=0;k=3;vflag=True
+i=0;k=3;vflag=False
 q=4;nw=16;ovlp=0.5
 sgn=mval[i,:,q,k]
 sgn,tn,nsam,fsam=rsample(sgn,t)
@@ -59,9 +59,10 @@ for i in range(0,nxk[0]-0,1):
             var=np.var(sgn)
             psgn/=var
     
-    sin20=1#np.sin(np.deg2rad(20))
-    #st=(sin20/0.3)*ff
-    st=sin20*ff
+    #sin20=1
+    sin20=np.sin(np.deg2rad(20))
+    st=(sin20/0.3)*ff
+    #st=sin20*ff
     axFreq.loglog(st,psgn,label='i'+str(i),linewidth=2)
     
 handle,labels=axFreq.get_legend_handles_labels()
