@@ -18,16 +18,32 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%%
-path='/home/'+user+'/Desktop/post/rom/'
-
+path='/home/'+user+'/Desktop/post/1A15W11AoA10/ss002/'
+path_ss='/home/'+user+'/Desktop/post/rom/fl_ss/'
 
 files=p3d.getFileNames(path=path)
 
-vnames=['Cf','twx','twy','twz','Cp'];Re=125000;M=0.4
+vnames=['r','u','v','w','p']#['r','dpdz','drdz','w','p']
 
-fl=p3d.flow(path,"grid.xyz",'solTCf+tw+Cp0000.q')
+fl=p3d.flow(path,"grid.xyz",files[0])
 fl.rdHdr()
 fl.rdGrid()
-mach,aoa,Re,time=fl.rdFlowInfo(sfile='solTCf+tw+Cp1919.q')
+mach,aoa,Re,time=fl.rdFlowInfo(sfile=files[0])
 print(mach,aoa,Re,time)
-fl.rdSol(vnames=vnames)
+
+#%%
+rx,ry,rz=range(90),range(1),range(fl.blk[0].size[2])
+lxib,letb,lzeb=[len(rx)],[len(ry)],[len(rz)]
+fl_ss=p3d.flow(path_ss,"grid.xyz",files[0])
+fl_ss.setHdr([1,1,1],lxib,letb,lzeb)
+
+for n in range(len(files)):
+    fl.rdSol(sfile=files[n],vnames=vnames)
+    ss=fl.blk[1].getSubset(xlim=rx,ylim=ry,zlim=rz)
+    ss.getMetrics()
+    ss.derive('p','ze')
+    ss.derive('r','ze')    
+    fl_ss.blk[0]=ss
+    if n==0:
+        fl_ss.wrGrid()
+    fl_ss.wrSol(files[n],vnames=['r','dpdze','drdze','w','p'])
