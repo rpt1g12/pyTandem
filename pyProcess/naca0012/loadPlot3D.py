@@ -18,8 +18,8 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%%
-save=True
-path='/home/'+user+'/Desktop/post/naca0012G3/ss003/'
+save=False
+path='/home/'+user+'/Desktop/post/naca0012G1/ss003/'
 
 files=p3d.getFileNames(path=path)
 

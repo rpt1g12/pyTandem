@@ -90,7 +90,7 @@ cds=np.sqrt(np.var(cdn))
     
 axTime.plot(tn,cln,'b',linewidth=2,label='Cl'+name)
 axTime.plot(tn,cdn,'r',linewidth=2,label='Cd'+name)
-axTime.plot(tn,clnh,color='blue',lw=2,linestyle='--',label=r'DNS $\alpha=$'+str(iaoah))
+axTime.plot(tn,clnh,color='blue',lw=2,linestyle='--',label=r'Exp')
 axTime.plot(tn,cdnh,color='red',lw=2,linestyle='--')
 
 axTime.set_xlabel(r'$t^*$',fontsize=20)
@@ -103,3 +103,13 @@ axTime.text(0.25,-0.15,scl,ha='center',va='bottom',transform=axTime.transAxes)
 axTime.text(0.75,-0.15,scd,ha='center',va='bottom',transform=axTime.transAxes)
 
 fit(axTime,spg=(0,0.4))
+#%%
+
+AoA0=15.6;AoA1=16.0
+ns=np.where(AoA>AoA0)[0][0]-1
+ne=np.where(AoA<AoA1)[0][-1]+1
+claoa,aoa_2,nsam_aoa,faoa=rsample(cln[ns:ne],AoA[ns:ne],nsample=16)
+dcldaoa=fcbFD(claoa,1/faoa)
+
+f,a=getFig('dCl/dAoA')
+a.plot(aoa_2,dcldaoa)
