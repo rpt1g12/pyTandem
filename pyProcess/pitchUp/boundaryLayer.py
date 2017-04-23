@@ -20,15 +20,26 @@ import importlib
 importlib.reload(p3d)
 
 #%%
-comp=True;block=4;kk=62
-#path='/home/rperezt/Desktop/post/1A15W11AoA15.8/ss001/'
-path='/home/rperezt/Desktop/post/1A15W11AoA15.8/fullDomain/'
-#path='/media/rperezt/082F-63FE/post/naca0012G1/ss003/'
-path='/home/rperezt/Desktop/post/4A15W11AoA20/vsmallDomain/'
+comp=True; #Compressible??
+block=0;kk=0
+#2SLE
+#path='/media/'+user+'/My Passport/results/6Blocks/post/A00W11AoA20/vsmallDomain/'
+#2WLE
+#path='/media/'+user+'/My Passport/results/6Blocks/post/A15W11AoA20/'
+#4WLE
+#path='/media/'+user+'/My Passport/results/6Blocks/post/A4A15W11AoA20/f64/'
+#3WLE
+#path='/media/'+user+'/My Passport/results/6Blocks/post/3A15W11AoA20/'
+#8WLE LSB
+path='/media/'+user+"/dell\'s_hdd/post/8A15W11AoA20/subsets/ss003/ss001/"
+#8WLE SSL
+path='/media/'+user+"/dell\'s_hdd/post/8A15W11AoA20/subsets/ss007/ss001/"
+#8SLE 
+path='/media/'+user+"/dell\'s_hdd/post/8A00W11AoA20/subsets/ss004/"
+
 files=p3d.getFileNames(path=path)
 
 vnames=['r','u','v','w','p'];
-#vnames2=['Q','Wx','Wy','Wz','Cp'];
 
 fl=p3d.flow(path,"grid.xyz",'solTA.qa')
 
@@ -63,7 +74,7 @@ rl=np.array([i*dl for i in range(nn)])
 u=np.zeros_like(rl)
 dudy=np.zeros(nn)
 i=4
-while i<60:#dudy[0]>=0:
+while dudy[0]>=0:
     print('i={:}'.format(i))
     rakes.append(p3d.rake(xo[i],yo[i],nx[i],ny[i],nn,l))
     x,y=rakes[-1].x,rakes[-1].y  
@@ -109,7 +120,7 @@ delta=np.asarray(delta)
 H=dstr/theta
 nr=len(rakes)
 
-cout='theta={:},Ue={:},theta/Ue={:}'.format(theta[-1],um,theta[-1]/um)
+cout='theta={:};Ue={:}'.format(theta[-1],um)
 print(cout)   
 
 #%%  
@@ -121,10 +132,3 @@ ad.plot(delta,'r')
 ft,at=getFig('Theta')
 at.plot(theta)
 a.plot(xbl,ybl,lw=2,color='black',linestyle='--')
-#%%
-#def myIntegral (u,l):
-#    n=len(u)
-#    U=np.zeros_like(u)
-#    for i in range(1,n):
-#        U[i]=0.5*(l[i]-l[i-1])*(u[i]+u[i-1])+U[i-1]
-#    return U

@@ -12,8 +12,8 @@ plt.close('all')
 #%%
 sin20=np.sin(np.deg2rad(20))
 folder='6blocks/';sclcd='scl'
-osim=41;aoa=10;iaoah=20;freq=0.20;ttotal=68
-nw=4;ovlp=0.5;
+osim=80;aoa=20;iaoah=20;freq=0.20;ttotal=68
+nw=8;ovlp=0.5;
 if(osim==0):
     sim='A00'
     odata=0
@@ -25,7 +25,7 @@ elif(osim==80):
     odata=1
     prdl=1
     linreg=1
-    #ttotal=42 used for jfm paper with tmax=180
+    #ttotal=42 used for jfm paper with tmax=180    
     name='8SLE'
     nw=6;ovlp=0.5;
 elif(osim==40):
@@ -76,7 +76,7 @@ if(odata==1):
     n,tin,clin,cdin,taoa,tmach=np.loadtxt(dataset,skiprows=1,unpack=True)
 elif(odata==0):
     n,tin,clin,cdin=np.loadtxt(dataset,skiprows=1,unpack=True);taoa=np.array([20.0 for i in range(len(n))]);tmach=np.array([0.3 for i in range(len(n))]);
-tdum,clha,cdha=np.loadtxt('/home/'+user+'/anaconda3/pyTandem/clData/HansenClCd.dat',skiprows=1,unpack=True)
+tdum,clha,cdha,_,_=np.loadtxt('/home/'+user+'/anaconda3/pyTandem/clData/HansenClCd.dat',skiprows=1,unpack=True)
 idum=np.where(tdum==iaoah)[0][0]
 clh=clha[idum];cdh=cdha[idum]
 if prdl==1:
@@ -101,7 +101,7 @@ cll();clt();ns=1024
 
 tmin=tin[-1]-(ttotal/0.3)       #in jfm paper its -(25/0.3)
 n0=np.where(tin>tmin)[0][0]
-t0=tin[n0:]*0.3#-tin[n0];
+t0=tin[n0:]#-tin[n0];
 if prdl==1:
     fctr=np.sqrt(1-0.3**2)
 else:
@@ -182,7 +182,7 @@ if (showAoA):
 #%%
 
 scale=False;sclg='density'
-#nw=6;ovlp=0.5;
+nw=6;ovlp=0.5;
 
 if sclcd=='scl':
     sgnl=cln-lin_cl
