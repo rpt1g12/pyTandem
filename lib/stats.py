@@ -264,3 +264,10 @@ def myIntegral (u,l):
     for i in range(1,n):
         U[i]=0.5*(l[i]-l[i-1])*(u[i]+u[i-1])+U[i-1]
     return U
+
+def rmvLS(x,y,o):
+    """Removes the least-squares polynomial approximation of y(x) of order 'o' from y(x)"""
+    p=np.polyfit(x,y,o)
+    f=np.polyval(p,x)
+    yn=y-f
+    return yn

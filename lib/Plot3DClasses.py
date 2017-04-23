@@ -83,7 +83,7 @@ class var(object):
         else:
             self.val=val.copy()
            
-    def rdVar(self,fh,lh,nvar,nb,lblk,Type='grid'):
+    def rdVar(self,fh,lh,nvar,nb,lblk,ntvar=0,Type='grid'):
         """Reads variable values from file to self.val
         
         Args:
@@ -101,6 +101,9 @@ class var(object):
         k8=np.float32; lk8=np.dtype(k8).itemsize
         if Type=='grid':
             tvar=3
+            fl_hdr=0*lk8
+        if Type=='fun':
+            tvar=ntvar
             fl_hdr=0*lk8
         if Type=='sol':
             tvar=5
@@ -133,7 +136,7 @@ class var(object):
         obj=copy.copy(self)
         return obj
         
-    def wrVar(self,fh,lh,nvar,nb,lblk,Type='grid'):
+    def wrVar(self,fh,lh,nvar,nb,lblk,ntvar=0,Type='grid',flInfo=None):
         """Writes variable to file from self.val.
 
             Args:
@@ -150,6 +153,9 @@ class var(object):
         if Type=='grid':
             tvar=3
             fl_hdr=0*lk8
+        if Type=='fun':
+            tvar=ntvar
+            fl_hdr=0*lk8
         if Type=='sol':
             tvar=5
             fl_hdr=4*lk8
@@ -157,7 +163,10 @@ class var(object):
         lh+=fl_hdr*(nb)+sum(lblk[:nb])*lk8*tvar
         if Type=='sol':
             fh.seek(lh)
-            flowc=self.flowc.copy()
+            if flInfo==None:
+                flowc=self.flowc.copy()
+            else:
+                flowc=flInfo
             fhdr=np.float32(np.array(flowc))
             fh.write(fhdr)
         
@@ -590,7 +599,7 @@ class blk(object):
             self.data.append(var(size,len(self.data),vname,val))
             self.var[vname]=self.data[-1]
 
-    def contourf(self,varname,vmin=-1,vmax=1,k=0,plane=2,ax=None,nlvl=11,avg=False,bar=True,cmap=None):
+    def contourf(self,varname,vmin=None,vmax=None,k=0,plane=2,ax=None,nlvl=11,avg=False,bar=True,cmap=None):
         """Produces a contour plot of the variable varname"""
         if (ax==None):
             f,ax=getFig(varname)
@@ -624,6 +633,13 @@ class blk(object):
                v=self.var[varname].val[:,k,:]
         if cmap==None:
             cmap=plt.cm.coolwarm
+
+        if vmin==None:
+            vmin=np.min(v)
+        if vmax==None:
+            vmax=np.max(v)
+
+        print(vmin,vmax)
 
         lvl=np.linspace(vmin,vmax,nlvl)
             
@@ -986,7 +1002,64 @@ class flow(object):
             self.vnames=names
             fh.close()
 
-        def wrSol(self,sfile=None,vnames=None):
+        def rdFun(self,vnames=None,ffile=None):
+            """Reads a Plot3D function file"""
+            if ffile==None:
+                print('Must provide a function file name!!')
+                pass
+            lblk=self.lblk
+            nbk=self.nbk
+            k8=np.float32; lk8=np.dtype(k8).itemsize
+            lh=self.lhdr+nbk*lk8
+            fh=open(self.path+ffile,'rb')
+            fh.seek(lh-lk8)
+            ntvar=rdType(fh,'i',1)
+            print(ntvar)
+            if vnames==None:
+                names=[]
+                for n in range(ntvar):
+                    names.append('v{:d}'.format(n))
+            else:
+                names=vnames
+            print('Reading function file: {}'.format(ffile))
+            for nb in range(nbk):
+                size=self.blk[nb].size 
+                lh=self.lhdr
+                for nvar in range(ntvar):
+                    vname=names[nvar]
+                    self.blk[nb].data.append(var(size,nvar,name=vname));nn=-1
+                    self.blk[nb].data[nn].rdVar(fh,lh,nvar,nb,lblk,ntvar,Type='fun')
+                    self.blk[nb].var[vname]=self.blk[nb].data[nn]
+                    
+            #self.vnames=names
+            fh.close()
+
+            pass
+
+        def wrFun(self,vnames=None,ffile=None):
+            """Writes Plot3D function files"""
+            k8=np.float32; lk8=np.dtype(k8).itemsize
+            fh=open(self.path+ffile,'wb')
+            nbk=self.nbk
+            lblk=self.lblk
+            ghdr=[nbk]
+            ntvar=len(vnames)
+            for nb in range(nbk): 
+                lh=self.lhdr+nbk*lk8
+                ghdr.append(self.blk[nb].size[0])
+                ghdr.append(self.blk[nb].size[1])
+                ghdr.append(self.blk[nb].size[2])
+                ghdr.append(ntvar)
+                for nvar in range(ntvar):
+                    name=vnames[nvar]
+                    self.blk[nb].var[name].wrVar(fh,lh,nvar,nb,lblk,ntvar,Type='fun')
+            fh.seek(0)
+            fhdr=np.int32(np.array(ghdr))
+            fh.write(fhdr)
+            fh.close()
+            pass
+
+        def wrSol(self,sfile=None,vnames=None,flInfo=np.zeros(4)):
             if sfile==None:
                 sfile=self.sfile
 
@@ -1018,25 +1091,31 @@ class flow(object):
                 ghdr.append(self.blk[nb].size[2])
                 for nvar in range(5):
                     name=vnames[nvar]
-                    self.blk[nb].var[name].wrVar(fh,lh,nvar,nb,lblk,Type='sol')
+                    self.blk[nb].var[name].wrVar(fh,lh,nvar,nb,lblk,Type='sol',flInfo=flInfo)
             fh.seek(0)
             fhdr=np.int32(np.array(ghdr))
             fh.write(fhdr)
             fh.close()
 
-        def shiftK(self,k):
+        def shiftK(self,k,vnames=None):
             """Shifts the flow object in the ze direction so the kth point is set to be 0 in the returning flow object
                Returns a flow object"""
             # Clone the current flow object
             sflow=self.clone()
             print('Shifting data by {:d}'.format(k))
+            if vnames==None:
+                names=sflow.vnames
+            else:
+                names=vnames
             for nb in range(sflow.nbk):
-                for n in sflow.vnames:
-                    vr2=sflow.blk[nb].var[n].getValues()
+                for n in names:
+                    vr2=self.blk[nb].var[n].getValues()
                     lze=sflow.blk[nb].size[2]
                     lze_1=lze-1
-                    for sk in range(lze):
-                        kk=sk+(k-1)
+                    sflow.blk[nb].var[n].val[:,:,0]=vr2[:,:,k].copy()
+                    sflow.blk[nb].var[n].val[:,:,lze_1]=vr2[:,:,k].copy()
+                    for sk in range(1,lze_1):
+                        kk=sk+(k)
                         if (kk>(lze_1)):
                             kk-=lze_1
                         sflow.blk[nb].var[n].val[:,:,sk]=vr2[:,:,kk].copy()
@@ -1089,7 +1168,7 @@ class flow(object):
             for i in range(self.nbk):
                 self.blk[i].drawMeshPlane(direction,pln,skp,ax,color,lw,showBlock,hideAx)
 
-        def contourf(self,varname,vmin=-1,vmax=1,k=0,plane=2,ax=None,nlvl=11,avg=False,bar=True,cmap=None):
+        def contourf(self,varname,vmin=None,vmax=None,k=0,plane=2,ax=None,nlvl=11,avg=False,bar=True,cmap=None):
             """Produces a contour plot of the variable varname"""
             f,a,im=self.blk[0].contourf(varname,vmin,vmax,k,plane,ax,nlvl,avg,bar=False,cmap=cmap)
             for i in range(1,self.nbk-1):
@@ -1117,16 +1196,33 @@ class flow(object):
             flavg.rdSol(vnames,files[0])
             flavg.sfile='solTA.qa'
             nt=len(files)
+
+            for bk in range(self.nbk):
+                for cvar in vnames:
+                    flavg.blk[bk].setData(vname=cvar+cvar)
+                for cvar in ['uv','uw','vw']:
+                    flavg.blk[bk].setData(vname=cvar)
             
             for f in files[1:]:
                 self.rdSol(vnames,f)
                 for bk in range(self.nbk):
                     for cvar in vnames:
                         flavg.blk[bk].var[cvar].val[:,:,:]+=self.blk[bk].var[cvar].val[:,:,:]
+                        flavg.blk[bk].var[cvar+cvar].val[:,:,:]+=self.blk[bk].var[cvar].val[:,:,:]*self.blk[bk].var[cvar].val[:,:,:]
+                    for cvar in ['v','w']:
+                        flavg.blk[bk].var['u'+cvar].val[:,:,:]+=self.blk[bk].var['u'].val[:,:,:]*self.blk[bk].var[cvar].val[:,:,:]
+                    flavg.blk[bk].var['vw'].val[:,:,:]+=self.blk[bk].var['v'].val[:,:,:]*self.blk[bk].var['w'].val[:,:,:]
 
             for bk in range(flavg.nbk):
-                for cvar in vnames:
+                for cvar in vnames+['rr','uu','vv','ww','pp','uv','uw','vw']:
                     flavg.blk[bk].var[cvar].val[:,:,:]/=nt
+
+            for bk in range(flavg.nbk):
+                    for cvar in vnames:
+                        flavg.blk[bk].var[cvar+cvar].val[:,:,:]=flavg.blk[bk].var[cvar+cvar].val[:,:,:]-flavg.blk[bk].var[cvar].val[:,:,:]*flavg.blk[bk].var[cvar].val[:,:,:]
+                    for cvar in ['v','w']:
+                        flavg.blk[bk].var['u'+cvar].val[:,:,:]+=flavg.blk[bk].var['u'+cvar].val[:,:,:]-flavg.blk[bk].var['u'].val[:,:,:]*flavg.blk[bk].var[cvar].val[:,:,:]
+                    flavg.blk[bk].var['vw'].val[:,:,:]+=flavg.blk[bk].var['vw'].val[:,:,:]-flavg.blk[bk].var['v'].val[:,:,:]*flavg.blk[bk].var['w'].val[:,:,:]
 
             return flavg
 
