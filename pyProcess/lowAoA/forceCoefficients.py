@@ -13,7 +13,7 @@ plt.close('all')
 figs=[];axs=[];hdls=[];lbls=[];lgds=[];nfig=-1;fs=18
 #%%
 AoA=0;wavy=True
-ts,te=0,315
+ts,te=30,'max'
 #%%Expected values
 dataset='/home/'+user+'/anaconda3/pyTandem/clData/HansenClCd.dat';
 aoah,clh,cdh,clh0,cdh0=np.loadtxt(dataset,skiprows=1,unpack=True)
@@ -30,11 +30,19 @@ sim="1A15W11AoA00"
 dataset='/home/'+user+'/anaconda3/pyTandem/'+folder+sim+'.dat';
 n,t0,clin,cdin,taoa,tmach=np.loadtxt(dataset,skiprows=1,unpack=True)
 #%%
+
+if ts=='min': ts=min(t0) 
+if te=='max': te=max(t0) 
+    
 ns=np.where((t0>=ts))[0][0]
 ne=np.where((t0<=te))[0][-1]
 t=t0[ns:ne]
 cl=clin[ns:ne];cd=cdin[ns:ne]
 aoa=taoa[ns:ne]
+
+clmean,cdmean,clvar,cdvar=np.mean(cl),np.mean(cd),np.var(cl),np.var(cd)
+
+
 #%%
 f,a=getFig(sim);figs.append(f),axs.append(a);nfig+=1
 axs[nfig].plot(t,cl,lw=2,color='blue',label=r'$C_L$')
@@ -50,3 +58,7 @@ for i in range(nfigs):
     fit(axs[i])
     hdl,lbl,lgd=getLabels(ax=axs[i],ncol=2,fontsize=15)
     hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
+#%%
+axs[nfig].set_xlim(ts,te)
+
+print('\nCl_mean={:2.4f} Cl_var={:1.4e} Cd_mean{:2.4f} Cd_var={:1.4e}'.format(clmean,clvar,cdmean,cdvar))
