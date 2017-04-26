@@ -12,8 +12,8 @@ pi=np.pi
 plt.close('all')
 figs=[];axs=[];hdls=[];lbls=[];lgds=[];nfig=-1;fs=18
 #%%
-AoA=0;wavy=True
-ts,te=30,'max'
+AoA=0;wavy=False
+ts,te=60,'max'
 #%%Expected values
 dataset='/home/'+user+'/anaconda3/pyTandem/clData/HansenClCd.dat';
 aoah,clh,cdh,clh0,cdh0=np.loadtxt(dataset,skiprows=1,unpack=True)
@@ -26,7 +26,7 @@ clh,cdh=float(clh),float(cdh)
 print(r'Expected Values: (cl,cd)=({:1.3f},{:1.3f})'.format(clh,cdh))
 #%%Simulation time history
 folder='clData/lowAoA/'
-sim="1A15W11AoA00"
+sim="1A00W11AoA00"
 dataset='/home/'+user+'/anaconda3/pyTandem/'+folder+sim+'.dat';
 n,t0,clin,cdin,taoa,tmach=np.loadtxt(dataset,skiprows=1,unpack=True)
 #%%
