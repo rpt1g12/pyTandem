@@ -18,25 +18,31 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%% Options
-save=False
+save=True
 side='both'
-var='cf' # Variable to plot
-A=15 #WLE Amplitude, if SLE A=0
-AoA=10 #Angle of Attack
+var='cp' # Variable to plot
+A=00 #WLE Amplitude, if SLE A=0
+AoA=0 #Angle of Attack
+nwave=1 #Number of WLE wavelenghts
 topBlk=1 # Suction side block
 botBlk=0 # Pressure side block
-slices=np.asarray(range(0,48,12)) # Array of slice indices
+slices=np.asarray(range(0,48,1)) # Array of slice indices
 nslice=len(slices) # Number of slices
 #%% Paths set-up
-subpath='average/ss005/ss001/'
+if A>0:
+    sim='WLE'
+else:
+    sim='SLE'
+subpath='average/ss003/ss001/'
 simfolder='1A{:02d}W11AoA{:02d}'.format(A,AoA)
-path="/media/{}/dell\'s_hdd/post/{}/{}".format(user,simfolder,subpath)
-spath='/home/rpt1g12/Documents/thesis/data/lowAoA/{}Distribution/'.format(var)
+path="/media/{}/dellHDD/post/{}/{}".format(user,simfolder,subpath)
+spath='/home/rpt1g12/Documents/thesis/data/lowAoA/{:1d}WLE{:d}_{}Dist/'.format(nwave,AoA,var)
 print('Reading data from:\n {}'.format(path))
 #%%
 vnames=['cf','twx','twy','twz','cp']; # Variable names
 gfile='grid.xyz' # Grid file name
-sfile='solTavgCf+tw+Cp.q'# Solution file name
+files=p3d.getFileNames(path=path,pattern='solTavgCf+tw+Cp*.q')
+sfile=files[0]#'solTavgCf+tw+Cp.q'# Solution file name
 
 fl=p3d.flow(path,"grid.xyz",sfile) # Check-out flow object
 fl.rdHdr() # Read header from grid file and set-up flow object properties
@@ -60,12 +66,25 @@ fname='{}_{}'.format(simfolder,var)
 f,a=getFig(fname);nfig+=1 # Get figure and axis objects
 figs.append(f);axs.append(a) # Append them to the figures and axes arrays
 
+v_top_avg=np.zeros_like(v_top[:,0])
+v_bot_avg=np.zeros_like(v_top[:,0])
 for kk in range(nslice):
     k=slices[kk]
-    if side=='top' or side=='both':
-        axs[nfig].plot(x_top[:,kk],v_top[:,kk],lw=2,label='k{:03}_top'.format(k))
-    if side=='bot' or side=='both':
-        axs[nfig].plot(x_bot[:,kk],v_bot[:,kk],lw=2,label='k{:03}_bot'.format(k))
+    if sim=='SLE':
+        v_top_avg+=v_top[:,kk]
+        v_bot_avg+=v_bot[:,kk]
+        if kk==(nslice-1):
+            v_top_avg/=nslice
+            v_bot_avg/=nslice
+            if side=='top' or side=='both':
+                axs[nfig].plot(x_top[:,kk],v_top_avg[:],lw=2,label='top')
+            if side=='bot' or side=='both':
+                axs[nfig].plot(x_bot[:,kk],v_bot_avg[:],lw=2,label='bot')
+    else:
+        if side=='top' or side=='both':
+            axs[nfig].plot(x_top[:,kk],v_top[:,kk],lw=2,label='k{:03}_top'.format(k))
+        if side=='bot' or side=='both':
+            axs[nfig].plot(x_bot[:,kk],v_bot[:,kk],lw=2,label='k{:03}_bot'.format(k))
 
 for i in range(nfig+1):    
     hdl,lbl,lgd=getLabels(axs[i],fontsize=fs,ncol=int(nslice/2))
@@ -76,7 +95,7 @@ for i in range(nfig+1):
 
 #%% Saving
 if save:
-    savePlotFile(path=spath,ax=axs[nfig],name=fname)
+    savePlotFile(path=spath,ax=axs[nfig],name=fname+'.dat')
 #%% If ploting Cf, add x-axis line
 if var=='cf':
     axs[nfig].axhline(y=0,color='black',lw=2)

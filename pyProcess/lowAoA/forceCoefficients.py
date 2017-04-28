@@ -12,8 +12,26 @@ pi=np.pi
 plt.close('all')
 figs=[];axs=[];hdls=[];lbls=[];lgds=[];nfig=-1;fs=18
 #%%
-AoA=0;wavy=False
-ts,te=60,'max'
+prandtl=True #Apply Prandtl-Glauert correction?
+AoA=6 #Angle of attack
+A=0 #WLE amplitude
+nwave=1 #Number of WLE wavelengths
+if A>0:
+    wavy=True
+else:
+    wavy=False
+ts,te='min','max' #Time interval considered
+
+#%%Simulation time history
+folder='clData/lowAoA/'
+sim="{:1d}A{:02d}W11AoA{:02d}.dat".format(nwave,A,AoA)
+dataset='/home/'+user+'/anaconda3/pyTandem/'+folder+sim
+n,t0,clin,cdin,taoa,tmach=np.loadtxt(dataset,skiprows=1,unpack=True)
+M_inf=tmach[-1]
+if prandtl:
+    beta=np.sqrt(1-M_inf**2)
+else:
+    beta=1
 #%%Expected values
 dataset='/home/'+user+'/anaconda3/pyTandem/clData/HansenClCd.dat';
 aoah,clh,cdh,clh0,cdh0=np.loadtxt(dataset,skiprows=1,unpack=True)
@@ -24,11 +42,6 @@ else:
     clh,cdh=fcl0.f(AoA),fcd0.f(AoA)
 clh,cdh=float(clh),float(cdh)
 print(r'Expected Values: (cl,cd)=({:1.3f},{:1.3f})'.format(clh,cdh))
-#%%Simulation time history
-folder='clData/lowAoA/'
-sim="1A00W11AoA00"
-dataset='/home/'+user+'/anaconda3/pyTandem/'+folder+sim+'.dat';
-n,t0,clin,cdin,taoa,tmach=np.loadtxt(dataset,skiprows=1,unpack=True)
 #%%
 
 if ts=='min': ts=min(t0) 
@@ -37,7 +50,7 @@ if te=='max': te=max(t0)
 ns=np.where((t0>=ts))[0][0]
 ne=np.where((t0<=te))[0][-1]
 t=t0[ns:ne]
-cl=clin[ns:ne];cd=cdin[ns:ne]
+cl=clin[ns:ne]*beta;cd=cdin[ns:ne]*beta
 aoa=taoa[ns:ne]
 
 clmean,cdmean,clvar,cdvar=np.mean(cl),np.mean(cd),np.var(cl),np.var(cd)
@@ -61,4 +74,4 @@ for i in range(nfigs):
 #%%
 axs[nfig].set_xlim(ts,te)
 
-print('\nCl_mean={:2.4f} Cl_var={:1.4e} Cd_mean{:2.4f} Cd_var={:1.4e}'.format(clmean,clvar,cdmean,cdvar))
+print('\nCl_mean={:2.4f} Cd_mean={:2.4f} Cl_var={:1.4e} Cd_var={:1.4e}'.format(clmean,cdmean,clvar,cdvar))

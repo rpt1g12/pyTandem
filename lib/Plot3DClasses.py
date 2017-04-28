@@ -376,63 +376,22 @@ class blk(object):
             
             self.metFlag=True
             
-    def deriveSurface(self,varName1,varName2,plane=1,r=False):
-        """Derive one variable with respect to x, y or z
-            
-            Args:
-                varName1 (char): Variable to be derived
-                varName2 (char): Variable with respect to be derived. It must be
-                    either 'x', 'y' or 'z'.
-                r (logic): If true returns the derivative array
-
-        """
-        if varName1 in self.var:
-            var0=self.var[varName1]
-            if plane==0:
-                dvdxi=var0.derVar(1)
-                dvdet=var0.derVar(2)
-            if plane==1:
-                dvdxi=var0.derVar(0)
-                dvdet=var0.derVar(2)
-            if plane==2:
-                dvdxi=var0.derVar(0)
-                dvdet=var0.derVar(1)
-            if varName2 =='x':           
-                dv=(dvdxi*self.imets[0].getValues()+
-                   dvdet*self.mets[3].getValues()+
-                   dvdze*self.mets[6].getValues())
-            elif varName2 =='y':           
-                dv=(dvdxi*self.mets[1].getValues()+
-                   dvdet*self.mets[4].getValues()+
-                   dvdze*self.mets[7].getValues())
-            elif varName2 =='z':           
-                dv=(dvdxi*self.mets[2].getValues()+
-                   dvdet*self.mets[5].getValues()+
-                   dvdze*self.mets[8].getValues())
-            else:
-                print('Needs to be derived with respect to: x, y or z')
-            if  r:
-                return dv
-            else:
-                self.setData(vname='d{}d{}'.format(varName1,varName2),val=dv)
-        else:
-            print('{} is not a valid variable!'.format(varName1))
-
     def derive(self,varName1,varName2,r=False):
         """Derive one variable with respect to x, y or z
             
             Args:
                 varName1 (char): Variable to be derived
                 varName2 (char): Variable with respect to be derived. It must be
-                    either 'x', 'y' or 'z'.
+                    either 'x', 'y', 'z', 'xi', 'et', or 'ze'.
                 r (logic): If true returns the derivative array
 
         """
         if varName1 in self.var:
             var0=self.var[varName1]
-            dvdxi=var0.derVar(0)
-            dvdet=var0.derVar(1)
-            dvdze=var0.derVar(2)         
+            if varName2!='xi' or varName2!='et' or varName2!='ze':
+                dvdxi=var0.derVar(0)
+                dvdet=var0.derVar(1)
+                dvdze=var0.derVar(2)         
             if varName2 =='x':           
                 dv=(dvdxi*self.mets[0].getValues()+
                    dvdet*self.mets[3].getValues()+
@@ -446,11 +405,11 @@ class blk(object):
                    dvdet*self.mets[5].getValues()+
                    dvdze*self.mets[8].getValues())
             elif varName2 =='xi':           
-                dv=dvdxi
+                dv=var0.derVar(0)
             elif varName2 =='et':           
-                dv=dvdet
+                dv=var0.derVar(1)
             elif varName2 =='ze':           
-                dv=dvdze
+                dv=var0.derVar(2)
             else:
                 print('Needs to be derived with respect to: x, y, z or xi, et, ze')
             if  r:
@@ -653,7 +612,7 @@ class blk(object):
             axShow(ax)
         return f,ax,im
 
-    def drawMeshPlane(self,direction=2,pln=0,skp=1,ax=None,color='black',lw=1,showBlock=False,hideAx=False):
+    def drawMeshPlane(self,direction=2,pln=0,skp=(1,1),ax=None,color='black',lw=1,showBlock=False,hideAx=False):
         """Plots one plane of the grid
             Args:
                 direction (int): 0->yz-plane; 1->xz-plane; 2->xy-plane
@@ -667,24 +626,33 @@ class blk(object):
             Returns:
                 Nothing
         """
+        skp=np.asarray(skp)
+
+        if len(skp)==1:
+            a=np.asarray([skp,skp])
+            skp=a.copy()
+            del a
         if ax==None:
-            ax=plt.gca()
+            f,ax=getFig('Mesh')
+        else:
+            f=ax.figure
+
 
         if direction==0:
-            size=[int(np.ceil(self.size[1]/skp)),int(np.ceil(self.size[2]/skp)),2]
+            size=[int(np.ceil(self.size[1]/skp[0])),int(np.ceil(self.size[2]/skp[1])),2]
             grid=np.zeros(size)
-            grid[:,:,0]=self.var['y'].getValues()[pln,0::skp,0::skp]
-            grid[:,:,1]=self.var['z'].getValues()[pln,0::skp,0::skp]
+            grid[:,:,0]=self.var['y'].getValues()[pln,0::skp[0],0::skp[1]]
+            grid[:,:,1]=self.var['z'].getValues()[pln,0::skp[0],0::skp[1]]
         elif direction==1:
-            size=[int(np.ceil(self.size[0]/skp)),int(np.ceil(self.size[2]/skp)),2]
+            size=[int(np.ceil(self.size[0]/skp[0])),int(np.ceil(self.size[2]/skp[1])),2]
             grid=np.zeros(size)
-            grid[:,:,0]=self.var['x'].getValues()[0::skp,pln,0::skp]
-            grid[:,:,1]=self.var['z'].getValues()[0::skp,pln,0::skp]
+            grid[:,:,0]=self.var['x'].getValues()[0::skp[0],pln,0::skp[1]]
+            grid[:,:,1]=self.var['z'].getValues()[0::skp[0],pln,0::skp[1]]
         elif direction==2:
-            size=[int(np.ceil(self.size[0]/skp)),int(np.ceil(self.size[1]/skp)),2]
+            size=[int(np.ceil(self.size[0]/skp[0])),int(np.ceil(self.size[1]/skp[1])),2]
             grid=np.zeros(size)
-            grid[:,:,0]=self.var['x'].getValues()[0::skp,0::skp,pln]
-            grid[:,:,1]=self.var['y'].getValues()[0::skp,0::skp,pln]
+            grid[:,:,0]=self.var['x'].getValues()[0::skp[0],0::skp[1],pln]
+            grid[:,:,1]=self.var['y'].getValues()[0::skp[0],0::skp[1],pln]
         
         for j in range(size[1]):
             ax.plot(grid[:,j,0],grid[:,j,1],lw=lw,color=color)
@@ -698,8 +666,12 @@ class blk(object):
         if hideAx:
             ax.axes.get_yaxis().set_visible(False)
             ax.axes.get_xaxis().set_visible(False)
+        ax.set_aspect('equal')
+        fit(ax,(0.1,0.1))
+        if direction==1:
+            ax.invert_yaxis()
         axShow(ax)
-        pass
+        return f,ax
 
     def wrVarASCII(self,varnames=None,k=0,fpath=None,direction=2):
         """Writes values of the variables contained in varnames in ASCII format"""
