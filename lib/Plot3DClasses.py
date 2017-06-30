@@ -6,6 +6,7 @@ Created on Thu Sep 15 11:24:30 2016
 """
 #from lib.myPlot3dOperator import *
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import struct
 import copy as copy
@@ -189,9 +190,10 @@ class var(object):
         """
         dvar=np.zeros(self.size,dtype=float32)
         n=self.size[direction]
+        dirnames=['xi','eta','zeta']
         if (n<3):
             dvar[:,:,:]=1.0
-            print('Not enough points to perform derivation')
+            print('Not enough points to perform derivation in {} direction'.format(dirnames[direction]))
         else:
             dx=np.zeros(n,dtype=float32)
             a=np.zeros(n-2,dtype=float32);b=np.zeros(n-1,dtype=float32)
@@ -388,7 +390,8 @@ class blk(object):
         """
         if varName1 in self.var:
             var0=self.var[varName1]
-            if varName2!='xi' or varName2!='et' or varName2!='ze':
+            if varName2 not in ['xi','et','ze']:
+                self.getMetrics()
                 dvdxi=var0.derVar(0)
                 dvdet=var0.derVar(1)
                 dvdze=var0.derVar(2)         
@@ -413,13 +416,40 @@ class blk(object):
             else:
                 print('Needs to be derived with respect to: x, y, z or xi, et, ze')
             if  r:
+                self.setData(vname='d{}d{}'.format(varName1,varName2),val=dv)
                 return dv
             else:
                 self.setData(vname='d{}d{}'.format(varName1,varName2),val=dv)
         else:
             print('{} is not a valid variable!'.format(varName1))
 
-    def interpolate(self,vname,xi,yi,zi,method='nearest'):
+
+    def getStrain(self,uvars=['u','v','w'],xvars=['x','y','z'],invariants=False):
+        """docstring for getStrain"""
+        self.getMetrics()    
+        nxi,net,nze=self.size
+        A=np.zeros((9,nxi,net,nze))
+        ii=0
+        for uvar in uvars:
+            jj=0
+            for xvar in xvars:
+                print(ii*3+jj)
+                A[ii*3+jj]=self.derive(uvar,xvar,r=True)
+                jj+=1
+            ii+=1
+        if invariants:
+            P=A[0]+A[4]+A[8]
+            print('P done!')
+            Q=A[0]*(A[4]+A[8])+A[4]*A[8]-A[1]*A[3]-A[2]*A[6]-A[5]*A[7]
+            print('Q done!')
+            R=A[0]*(A[4]*A[8]-A[5]*A[7])+A[1]*(A[5]*A[6]-A[3]*A[8])+A[2]*(A[3]*A[7]-A[4]*A[6])
+            print('R done!')
+            
+            self.setData(vname='P',val=P)
+            self.setData(vname='R',val=-R)
+            self.setData(vname='Q',val=Q)
+
+    def interpolate(self,vname,xi,yi,zi,method='nearest',rblock=False):
         """Interpolate variable at some points
 
                 Args:
@@ -442,12 +472,16 @@ class blk(object):
         isize=list(xi.shape)
         print('Interpolating...')
         ival=griddata(points,values,ipoints,method=method)
-        iblock=blk(self.id,size=isize)
-        iblock.setData(vname='x',val=xi)
-        iblock.setData(vname='y',val=yi)
-        iblock.setData(vname='z',val=zi)
-        iblock.setData(vname,val=np.reshape(ival,isize))
-        return iblock.clone()
+        if  rblock:
+            iblock=blk(self.id,size=isize)
+            iblock.setData(vname='x',val=xi)
+            iblock.setData(vname='y',val=yi)
+            iblock.setData(vname='z',val=zi)
+            iblock.setData(vname,val=np.reshape(ival,isize))
+            return iblock.clone()
+        else:
+            return np.reshape(ival,isize)
+
 
     def interpolate2dk(self,vname,xi,yi,ki,method='cubic',mode='block'):
         """Interpolate data form variable (vname) into points (ipts)
@@ -459,7 +493,7 @@ class blk(object):
                     ki (int): Zeta plane on to which perform interpolation
                     method (char): Available methods: 'nearest' (default) or 'linear'
                     mode (char): If mode='block' returns a block object. 
-                        If mode='values' returns just a numpy array
+                                 else: returns just a numpy array
                 Returns:
                     iblock (blk): if mode='block'
                     iblock (np.ndarray[size*float32]): if mode='values'
@@ -482,7 +516,7 @@ class blk(object):
             zi=xi.copy();zi[:,:]=z[0]
             iblock.setData(vname='z',val=zi)
             iblock.setData(vname,val=np.reshape(ival,isize))
-        elif mode=='values':
+        else:
             iblock=np.reshape(ival,isize)
         
         return iblock
@@ -610,6 +644,61 @@ class blk(object):
         ax.set_ylabel(r'$'+y_char+'$',fontsize=20)
         if bar:
             axShow(ax)
+        
+        return f,ax,im
+
+    def contour(self,varname,vmin=None,vmax=None,k=0,plane=2,ax=None,nlvl=11,avg=False,colors=None,dashed=False):
+        """Produces a contour plot of the variable varname"""
+        if (ax==None):
+            f,ax=getFig(varname)
+        else:
+            f=ax.figure
+        if avg:
+            if plane==2:
+               x_char,y_char='x','y'
+            elif plane==0:
+               x_char,y_char='y','z'
+            elif plane==1:
+               x_char,y_char='x','z'
+            x=self.var[x_char].avgDir(plane)
+            y=self.var[y_char].avgDir(plane)
+            v=self.var[varname].avgDir(plane)
+        else:
+            if plane==2:
+               x_char,y_char='x','y'
+               x=self.var[x_char].val[:,:,k]
+               y=self.var[y_char].val[:,:,k]
+               v=self.var[varname].val[:,:,k]
+            elif plane==0:
+               x_char,y_char='y','z'
+               x=self.var[x_char].val[k,:,:]
+               y=self.var[y_char].val[k,:,:]
+               v=self.var[varname].val[k,:,:]
+            elif plane==1:
+               x_char,y_char='x','z'
+               x=self.var[x_char].val[:,k,:]
+               y=self.var[y_char].val[:,k,:]
+               v=self.var[varname].val[:,k,:]
+        if colors==None:
+            colors='black'
+        if dashed==False:
+            #Set negative contours to be solid instead of dashed:
+            matplotlib.rcParams['contour.negative_linestyle'] = 'solid'
+
+        if vmin==None:
+            vmin=np.min(v)
+        if vmax==None:
+            vmax=np.max(v)
+
+        print(vmin,vmax)
+
+        lvl=np.linspace(vmin,vmax,nlvl)
+            
+        im=ax.contour(x,y,v,levels=lvl,vmin=vmin,vmax=vmax,extend='both',colors=colors)
+        ax.set_xlabel(r'$'+x_char+'$',fontsize=20)
+        ax.set_ylabel(r'$'+y_char+'$',fontsize=20)
+        axShow(ax)
+        
         return f,ax,im
 
     def drawMeshPlane(self,direction=2,pln=0,skp=(1,1),ax=None,color='black',lw=1,showBlock=False,hideAx=False):
@@ -670,6 +759,7 @@ class blk(object):
         fit(ax,(0.1,0.1))
         if direction==1:
             ax.invert_yaxis()
+        f.canvas.manager.window.raise_()
         axShow(ax)
         return f,ax
 
@@ -882,15 +972,19 @@ class flow(object):
                 self.lblk.append(self.blk[nb].glen)
             pass
 
-        def wrGrid(self):
+        def wrGrid(self,gfile=None):
             """Writes grid file"""
-            fh=open(self.path+self.gfile,'wb')
+            if gfile==None:
+                gfile=self.gfile
+            if not os.path.exists(self.path):
+                os.makedirs(self.path)
+            fh=open(self.path+gfile,'wb')
             nbk=self.nbk
             lblk=self.lblk
             ghdr=[nbk]
             gnames=['x','y','z']
             self.gnames=gnames
-            print('Writing grid: {}'.format(self.gfile))
+            print('Writing grid: {}'.format(gfile))
             for nb in range(nbk): 
                 lh=self.lhdr
                 ghdr.append(self.blk[nb].size[0])
@@ -1011,6 +1105,8 @@ class flow(object):
         def wrFun(self,vnames=None,ffile=None):
             """Writes Plot3D function files"""
             k8=np.float32; lk8=np.dtype(k8).itemsize
+            if not os.path.exists(self.path):
+                os.makedirs(self.path)
             fh=open(self.path+ffile,'wb')
             nbk=self.nbk
             lblk=self.lblk
@@ -1031,10 +1127,13 @@ class flow(object):
             fh.close()
             pass
 
-        def wrSol(self,sfile=None,vnames=None,flInfo=np.zeros(4)):
+        def wrSol(self,vnames=None,sfile=None,flInfo=np.zeros(4)):
+
+            if not os.path.exists(self.path):
+                os.makedirs(self.path)
             if sfile==None:
                 sfile=self.sfile
-
+                
             self.vnames=list(self.blk[0].var.keys())
             if vnames==None:
                 vnames=[name for name in self.vnames[:6]]
@@ -1048,7 +1147,8 @@ class flow(object):
                     print('WARNING: Minimum number of variables not reached!')
                     print('Aborting...')
                     return
-
+            
+            
             fh=open(self.path+sfile,'wb')
             nbk=self.nbk
             lblk=self.lblk
@@ -1146,6 +1246,16 @@ class flow(object):
             for i in range(1,self.nbk-1):
                 self.blk[i].contourf(varname,vmin,vmax,k,plane,a,nlvl,avg,bar=False,cmap=cmap)
             self.blk[-1].contourf(varname,vmin,vmax,k,plane,a,nlvl,avg,bar,cmap)
+            
+            return f,a,im
+
+        def contour(self,varname,vmin=None,vmax=None,k=0,plane=2,ax=None,nlvl=11,avg=False,colors=None,dashed=False):
+            """Produces a contour plot of the variable varname"""
+            f,a,im=self.blk[0].contour(varname,vmin,vmax,k,plane,ax,nlvl,avg,colors,dashed)
+            for i in range(1,self.nbk-1):
+                self.blk[i].contour(varname,vmin,vmax,k,plane,a,nlvl,avg,colors,dashed)
+            self.blk[-1].contour(varname,vmin,vmax,k,plane,a,nlvl,avg,colors,dashed)
+            
             return f,a,im
 
         def setTouch(self,x0=0,y0=0,R=0.001,H=1,acc=1e-6):
@@ -1158,6 +1268,13 @@ class flow(object):
             for i in range(self.nbk):
                 print('Metrics block {:}'.format(i))
                 self.blk[i].getMetrics()
+
+        def getStrain(self,uvars=['u','v','w'],xvars=['x','y','z']):
+            """docstring for getStrain"""
+            for bk in range(self.nbk):
+                print('Strain-Rate block {:}'.format(bk))
+                self.blk[bk].getStrain(uvars,xvars)
+
 
         def getAvg(self,files,vnames):
             """Returns time average of files"""

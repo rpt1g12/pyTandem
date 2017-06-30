@@ -2,6 +2,13 @@ import numpy as np
 from scipy import interpolate
 from scipy.signal import butter, filtfilt
 import matplotlib.pyplot as plt
+
+def normalise(u,v):
+    m=np.sqrt(u**2+v**2)
+    u=u/m
+    v=v/m
+    return u,v
+
 def acorr(x):
     n=len(x)
     r=np.array([0.0 for i in range(0,n)])
@@ -58,26 +65,30 @@ def nextpow2(i):
     while n<i: n*=2
     return n
 
-def rsample(x,t,nsample=0,verbose=False,rmAvg=False,force=False):
+def rsample(x,t,nsample=0,verbose=False,rmAvg=False,force=False,tnew=None):
     """docstring for rsample"""
     xspln=interpolate.splrep(t,x,s=0)
-    if (nsample==0):
-        nsample=len(t)
-        if(force):
-            nsample=nextpow2(nsample)
+    if tnew==None:
+        if (nsample==0):
+            nsample=len(t)
+            if(force):
+                nsample=nextpow2(nsample)
+        else:
+            nsample=nextpow2(nsample-1)+1
+            if (nsample>len(t) and force==False):
+                nsample=(nsample-1)/2+1
+                if (verbose): print('# of samples modified to: ',nsample)
+        tnew=np.linspace(t[0],t[-1],nsample)
+        fsam=1/(tnew[1]-tnew[0])
+        fmax=fsam/2; fmin=fsam/nsample
+        if (verbose): print('fmax:',fmax,' fmin:',fmin)
+        xnew=interpolate.splev(tnew,xspln,der=0)
+        if (rmAvg):
+            xnew=xnew-xnew.mean()
+        return xnew,tnew,nsample,fsam
     else:
-        nsample=nextpow2(nsample)
-        if (nsample>len(t) and force==False):
-            nsample/=2
-            if (verbose): print('# of samples modified to: ',nsample)
-    tnew=np.linspace(t[0],t[-1],nsample)
-    fsam=1/(tnew[1]-tnew[0])
-    fmax=fsam/2; fmin=fsam/nsample
-    if (verbose): print('fmax:',fmax,' fmin:',fmin)
-    xnew=interpolate.splev(tnew,xspln,der=0)
-    if (rmAvg):
-        xnew=xnew-xnew.mean()
-    return xnew,tnew,nsample,fsam
+        xnew=interpolate.splev(tnew,xspln,der=0)
+        return xnew
 
 def defWindows(zin,nwin=2,ovlp=0.0,plot=0,zname='signal',verbose=True):
     """docstring for defWindows"""
@@ -256,6 +267,17 @@ def fcbFD(x,fctr=1):
     m=(1/(2*fctr))*np.mat(np.diag(a,-2)+np.diag(b,-1)+np.diag(c,0)+np.diag(d,1)+np.diag(e,2))
     dx=m*np.mat(x).T
     dx=np.asarray(dx.T)[0]
+    return dx
+
+def fcbFD2(x,fctr=1):
+    """2st Order 2nd Derivative central finite difference"""
+    n=len(x);dx=np.zeros(n)
+    dx[0]=x[2]-2*x[1]+x[0]
+    for i in range(1,n-1):
+        dx[i]=x[i+1]-2*x[i]+x[i-1]
+    dx[-1]=x[-1]-2*x[-2]+x[-3]
+    if fctr != 1:
+        dx/=fctr**2
     return dx
 
 def myIntegral (u,l):

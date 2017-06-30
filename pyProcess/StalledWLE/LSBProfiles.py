@@ -22,7 +22,7 @@ styles=['-','--',':','-.']
 importlib.reload(p3d)
 
 #%% Options
-save=True
+save=False
 auto=False #Automatic LSB index detection
 ibounds=[11,101] #Manually selected bounds for rakes to be placed inside LSB
 comp=True; #Compressible??

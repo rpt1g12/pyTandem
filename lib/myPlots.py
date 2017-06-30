@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import matplotlib as mpl
+import os
 
 def getFig(title=None,layout=111):
     fig=plt.figure()
@@ -8,6 +10,14 @@ def getFig(title=None,layout=111):
         fig.canvas.set_window_title(title)
         fig.set_tight_layout('tight')
     ax=fig.add_subplot(layout)
+    return fig,ax
+    
+def getFig3d(title=None,layout=111):
+    fig=plt.figure()
+    if (title!=None):
+        fig.canvas.set_window_title(title)
+        fig.set_tight_layout('tight')
+    ax=fig.add_subplot(layout,projection='3d')
     return fig,ax
 
 def getLabels(ax=None,ncol=1,fontsize=16,loc='best',sep=0,hspace=0.2):
@@ -83,6 +93,8 @@ def savePlotFile(path=None,ax=None,varx=None,vary=None,name=None,nan=True,sameX=
         name=ax.figure.canvas.get_window_title()+'.dat'
     if path==None:
         path='pgfPlots/'
+    if not os.path.exists(path):
+        os.makedirs(path)
     if (varx==None):
         m=len(ax.lines);
         varx=['x'+str(j) for j in range(m)]
@@ -147,15 +159,15 @@ def savePlotFile(path=None,ax=None,varx=None,vary=None,name=None,nan=True,sameX=
     fh.write(s)
     fh.close()
     
-def saveFigOnly(path=None,fig=None,ax=None,name=None,dpi=600):
+def saveFigOnly(path=None,fig=None,ax=None,name=None,dpi=600,ext='.png'):
     if (fig==None):
         fig=plt.gcf()
     if (ax==None):
         ax=plt.gca()
     if  name==None:
-        name=ax.figure.canvas.get_window_title()+'.png'
+        name=ax.figure.canvas.get_window_title()+ext
     else:
-        name+='.png'
+        name+=ext
     if path==None:
         path='pgfPlots/'
         

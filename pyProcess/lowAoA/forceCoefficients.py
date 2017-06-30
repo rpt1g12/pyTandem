@@ -13,14 +13,14 @@ plt.close('all')
 figs=[];axs=[];hdls=[];lbls=[];lgds=[];nfig=-1;fs=18
 #%%
 prandtl=True #Apply Prandtl-Glauert correction?
-AoA=6 #Angle of attack
-A=0 #WLE amplitude
-nwave=1 #Number of WLE wavelengths
+AoA=10 #Angle of attack
+A=15 #WLE amplitude
+nwave=8 #Number of WLE wavelengths
 if A>0:
     wavy=True
 else:
     wavy=False
-ts,te='min','max' #Time interval considered
+ts,te=-270,-330 #Time interval considered
 
 #%%Simulation time history
 folder='clData/lowAoA/'
@@ -44,8 +44,8 @@ clh,cdh=float(clh),float(cdh)
 print(r'Expected Values: (cl,cd)=({:1.3f},{:1.3f})'.format(clh,cdh))
 #%%
 
-if ts=='min': ts=min(t0) 
-if te=='max': te=max(t0) 
+if ts<0: ts=min(t0) 
+if te<0: te=max(t0) 
     
 ns=np.where((t0>=ts))[0][0]
 ne=np.where((t0<=te))[0][-1]
@@ -73,5 +73,5 @@ for i in range(nfigs):
     hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
 #%%
 axs[nfig].set_xlim(ts,te)
-
-print('\nCl_mean={:2.4f} Cd_mean={:2.4f} Cl_var={:1.4e} Cd_var={:1.4e}'.format(clmean,cdmean,clvar,cdvar))
+print('\n{}\t{}\t{}\t{}\t{}'.format('AoA','clmean','cdmean','clvar','cdvar','ts','te'))
+print('\n{:02d}\t{:2.4f}\t{:2.4f}\t{:1.4e}\t{:1.4e}\t{:3.0f}\t{:3.0f}'.format(AoA,clmean,cdmean,clvar,cdvar,ts,te))

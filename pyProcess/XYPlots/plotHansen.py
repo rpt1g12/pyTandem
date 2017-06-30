@@ -12,7 +12,7 @@ pi=np.pi
 #from lib.matplotlib2tikz import save as tikz_save
 plt.close('all')
 #%%
-AoA=6
+AoA=10
 #Expected values
 dataset='/home/'+user+'/anaconda3/pyTandem/clData/HansenClCd.dat';
 aoa,cl,cd,cl0,cd0=np.loadtxt(dataset,skiprows=1,unpack=True)
