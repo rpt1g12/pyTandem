@@ -26,15 +26,15 @@ wavelets=False;plot=True
 #hName='8SLE';probR=range(0,17,1)
 #theta=0.000639896428216028;Ue=0.4058528675001842
 #tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig24_8SLE/'
-hName='8SLE_150';probR=range(0,17,1)
-theta=0.000639896428216028;Ue=0.4058528675001842
-tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig24_8SLE/'
+#hName='8SLE_150';probR=range(0,17,1)
+#theta=0.000639896428216028;Ue=0.4058528675001842
+#tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig24_8SLE/'
 #hName='8WLE_Central';probR=range(0,17,1)
 #theta=0.0006705586212473073;Ue=0.4565491406912271
 #tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig25_8WLE/'
-#hName='8WLE_SSL';probR=range(0,17,1)
-#theta=0.0006922426498962798;Ue=0.3807581073978518
-#tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig25_8WLE/'
+hName='8WLE_SSL';probR=range(0,17,1)
+theta=0.0006922426498962798;Ue=0.3807581073978518
+tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig25_8WLE/'
 #%%Probes time history
 
 var='p'

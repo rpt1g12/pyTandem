@@ -25,10 +25,10 @@ vnames=['r','u','v','w','p']; # Variable names
 #%% Options
 save=True
 comp=True; #Compressible??
-A=15 #WLE Amplitude, if SLE A=0
+A=0 #WLE Amplitude, if SLE A=0
 AoA=10 #Angle of Attack
 block=4 #Block to look at
-kk=36 #Spanwise slice to look at
+kk=24 #Spanwise slice to look at
 nwave=1 #Number of LE wavelengths
 #%% Rake set-up
 ibounds=[10,271] #Manually selected bounds for rakes to be placed inside LSB
@@ -38,9 +38,11 @@ step=1 #Iteration step
 auto=True #Automatic LSB index detection
 #%% Paths set-up
 if A>0:
+    wavy=True
     sfolder='{}WLE'.format(nwave)
     subpath='average/ss006/'
 else:
+    wavy=False
     sfolder='{}SLE'.format(nwave)
     subpath='average/ss004/'
 simfolder='{:1d}A{:02d}W11AoA{:02d}'.format(nwave,A,AoA)
@@ -79,16 +81,27 @@ nx,ny,xo,yo=(up.mets[3].getValues()[:,0,kk],up.mets[4].getValues()[:,0,kk],
 wz_wall=Wz[:,0,kk]
 #%% Get indices inside the LSB
 rev_idx=np.where(wz_wall>0)[0]
-if auto:
+if auto: 
+    if not wavy:
+        rev_idx_diff=rev_idx[1:]-rev_idx[0:-1]
+        bigdiff=np.where(rev_idx_diff>10)[0]
+        if len(bigdiff)>0:
+            rev_idx[-1]=rev_idx[bigdiff[0]-1]
     lsb_idx=np.asarray(range(rev_idx[0]-10,rev_idx[-1]+11))
 else:
     lsb_idx=np.asarray(range(ibounds[0],ibounds[1])) # Ignore automatic LSB index detection
 
 print('from i={:03d} to {:03d}'.format(lsb_idx[0],lsb_idx[-1]))
 #%% Plot contour of omega_z
-f,a,im=up.contourf(varname='Cp',vmin=-3.5,vmax=1,k=kk,nlvl=21,cmap=plt.cm.hot_r,bar=False)
+if AoA==0:
+    vmin=-1;vmax=1
+elif AoA==6:
+    vmin=-2;vmax=1
+elif AoA==10:
+    vmin=-3.5;vmax=1
+f,a,im=up.contourf(varname='Cp',vmin=vmin,vmax=vmax,k=kk,nlvl=21,cmap=plt.cm.hot_r,bar=False)
 figs.append(f);axs.append(a);nfig+=1 # Append them to the figures and axes arrays
-up.contour(varname='Cp',vmin=-3.5,vmax=1,k=kk,nlvl=21,ax=axs[nfig])
+up.contour(varname='Cp',vmin=vmin,vmax=vmax,k=kk,nlvl=21,ax=axs[nfig])
 
 a.set_aspect('equal')
 axs[nfig].set_xlim(-0.5,0.5)
@@ -113,9 +126,9 @@ for i in lsb_idx[::step]:
     rake=(p3d.rake(xo[i],yo[i],nx[i],ny[i],nn,l)) #Checkout a rake object at (xo,yo) with direction (nx,ny) and length l
     x,y=rake.x,rake.y  #Extract xy coordinates of rake
     tx,ty=rake.tx,rake.ty #Extract tangent direction
-    wz=up.interpolate2dk('Wz',x,y,kk,mode='values')[:,0,0] #Obtain interpolated values of omega_z at rake's points
+    wz=up.interpolate2dk('Wz',x,y,kk,mode='data')[:,0,0] #Obtain interpolated values of omega_z at rake's points
     u=-myIntegral(wz,rl);u[np.isnan(u)]=max(u) #Define a pseudo velocity based on omega_z
-    r=up.interpolate2dk('r',x,y,kk,mode='values')[:,0,0] #Obtain density at rake's points
+    r=up.interpolate2dk('r',x,y,kk,mode='data')[:,0,0] #Obtain density at rake's points
     dudy=fcbFD(u,dl) #Compute pseudo velocity derivative in the wall-normal direction
     j99=np.where(u<0.99*u[-1])[0][-1]+1;jmax=-1 #Find out index at which delta99 happens
     jdelta.append(j99)
@@ -155,8 +168,8 @@ H=dstr/theta
 
 #%%Interpolate at delta
 
-Udelta=up.interpolate2dk('U',xbl,ybl,kk,mode='values')[:,0,0]
-CpDelta=up.interpolate2dk('Cp',xbl,ybl,kk,mode='values')[:,0,0]
+Udelta=up.interpolate2dk('U',xbl,ybl,kk,mode='data')[:,0,0]
+CpDelta=up.interpolate2dk('Cp',xbl,ybl,kk,mode='data')[:,0,0]
 
 #%%  Plot boundary layer edge
 figs[0].canvas.set_window_title('CpLines{}{:02d}'.format(sfolder,AoA))

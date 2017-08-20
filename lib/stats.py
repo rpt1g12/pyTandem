@@ -1,5 +1,7 @@
 import numpy as np
+from lib.myPlots import *
 from scipy import interpolate
+from scipy import fftpack
 from scipy.signal import butter, filtfilt
 import matplotlib.pyplot as plt
 
@@ -88,7 +90,11 @@ def rsample(x,t,nsample=0,verbose=False,rmAvg=False,force=False,tnew=None):
         return xnew,tnew,nsample,fsam
     else:
         xnew=interpolate.splev(tnew,xspln,der=0)
-        return xnew
+        nsample=len(tnew)
+        fsam=1/(tnew[1]-tnew[0])
+        fmax=fsam/2; fmin=fsam/nsample
+        if (verbose): print('fmax:',fmax,' fmin:',fmin)
+        return xnew,tnew,nsample,fsam
 
 def defWindows(zin,nwin=2,ovlp=0.0,plot=0,zname='signal',verbose=True):
     """docstring for defWindows"""
@@ -293,3 +299,83 @@ def rmvLS(x,y,o):
     f=np.polyval(p,x)
     yn=y-f
     return yn
+
+def fourierFilter(y,mode,fsam,cutOff,width,verbose=False):
+    """Cut-off fourier filter"""
+    n=len(y)
+    Y=fftpack.fft(y)
+    ff=np.linspace(-fsam/2,fsam/2,n)
+    Y_shift=fftpack.fftshift(Y)
+
+    flag=True
+    changed=False
+    while(flag):
+        hWidth=int(np.ceil(width/2))
+        fRlim=hWidth
+
+        if width%2==0:
+            fLlim=hWidth
+        else:
+            fLlim=hWidth-1
+
+        window=np.hanning(width)
+        windowR = np.hanning(width)[0:fRlim]
+        windowL = np.hanning(width)[fLlim:]
+        fWindow=np.ones(n)
+        if mode=='high':
+            fWindow[np.abs(ff)<cutOff]=0
+            nL=np.where(fWindow==0)[0][0]    
+            nR=np.where(fWindow==0)[0][-1]+1
+            fWindow[nL:nL+hWidth]=windowL
+            fWindow[nR-hWidth:nR]=windowR
+            if (nL+hWidth-1>nR-hWidth):
+                flag=True
+                width-=1
+                changed=True
+            else:
+                flag=False
+        elif mode=='low':
+            fWindow[np.abs(ff)>cutOff]=0
+            nL=np.where(fWindow==1)[0][0]+1    
+            nR=np.where(fWindow==1)[0][-1]
+            fWindow[nR:nR+hWidth]=windowL
+            fWindow[nL-hWidth:nL]=windowR
+            if (nR+hWidth-1>nL-hWidth):
+                flag=True
+                width-=1
+                changed=True
+            else:
+                flag=False
+
+    Y_filt=Y_shift*fWindow
+    Y_filt_shift=fftpack.ifftshift(Y_filt)
+    y_filt=fftpack.ifft(Y_filt_shift)
+
+    if verbose:
+        if changed:
+            print('\n###### width changed to {} ######\n'.format(width))
+        rFctr=np.real(Y_shift).max()
+        iFctr=np.imag(Y_shift).max()
+        f,a=getFig('Frequency Filter');
+        a.plot(ff,np.real(Y_shift)/rFctr,color='blue',lw=2,label='Re{y}');
+        a.plot(ff,np.real(Y_filt)/rFctr,color='cyan',lw=2,linestyle='--',label='Re{y_filt}');
+        a.plot(ff,np.imag(Y_shift)/iFctr,color='red',lw=2,label='Im{y}');
+        a.plot(ff,np.imag(Y_filt)/iFctr,color='orange',lw=2,linestyle='--',label='Im{y_filt}');
+        a.plot(ff,fWindow,color='green',lw=2,linestyle='-.',label='window');
+        fit(a)
+        hdl,lbl,lgd=getLabels(ax=a,ncol=3,fontsize=15)
+
+
+    return np.real(y_filt)
+
+
+
+##%% Produce log bar levels
+#expM=-1;expm=-5
+#levs=[10**(expM)]
+#for n in range(-expM,-expm+1):
+#    fctr=10**(-n)
+#    for i in range(2,10):
+#        levs.append(i*fctr)
+#    fctr=10**(-n-1)
+#    levs.append(fctr)

@@ -25,7 +25,7 @@ vnames=['r','u','v','w','p']; # Variable names
 #%% Options
 save=True
 A=15 #WLE Amplitude, if SLE A=0
-AoA=0 #Angle of Attack
+AoA=10 #Angle of Attack
 block=4 #Block to look at
 krange=range(1,49) #Spanwise slice to look at
 nwave=1 #Number of LE wavelengths
@@ -44,7 +44,7 @@ if A>0:
     elif AoA==6:
        x0,x1=-0.4350, -0.2388
     elif AoA==10:
-       x0,x1=-0.4612, -0.33
+       x0,x1=-0.4465, -0.3311
 else:
     sfolder='{}SLE'.format(nwave)
     subpath='average/ss004/'
@@ -54,7 +54,7 @@ else:
        x0,x1=-0.3594, -0.0039
     elif AoA==10:
        x0,x1=-0.4180, -0.1328       
-xLSB=(x0+x1)/2       
+xLSB=(x0+x1)/2
 #%% Paths set-up
 simfolder='{:1d}A{:02d}W11AoA{:02d}'.format(nwave,A,AoA)
 path="/media/{}/dellHDD/post/{}/{}".format(user,simfolder,subpath)
@@ -172,9 +172,9 @@ deltaFit=p2(zfit)
 #%% Plot delta and delta_star
 f,a=getFig('{}{:02d}'.format(sfolder,AoA))
 figs.append(f);axs.append(a);nfig+=1 # Append them to the figures and axes arrays
-axs[nfig].plot(zALL,deltaALL,lw=2,label='delta')
-#axs[nfig].scatter(zLSB,deltaLSB,lw=2,label='LSB',c='blue',s=150)
-#axs[nfig].scatter(zOUT,deltaOUT,lw=2,label='OUT',c='red',s=150)
+#axs[nfig].plot(zALL,deltaALL,lw=2,label='delta')
+axs[nfig].plot(zLSB,deltaLSB,lw=2,label='LSB',color='blue')
+#axs[nfig].plot(zOUT,deltaOUT,lw=2,label='OUT',color='red')
 axs[nfig].plot(zfit,deltaFit,lw=2,linestyle='--',color='black',label='Fit')
 #%%
 for i in range(nfig+1):

@@ -49,6 +49,7 @@ else:
 f,a=getFig('t_cl_'+fname);figs.append(f),axs.append(a);nfig+=1
 axs[nfig].plot(t,cl,lw=2,color='blue',label=r'$C_L$')
 axs[nfig].plot(t,cd,lw=2,color='red',label=r'$C_D$')
+axs[nfig].plot(t,cl/cd,lw=2,color='green',label=r'$C_L/C_D$')
 axs[nfig].axvline(x=t[0],color='black',linewidth=2,linestyle='--') 
 axs[nfig].set_xlabel(r'$t^*$',fontsize=fs)
 axs[nfig].set_ylabel(r'$C_L\, &\, C_D$',fontsize=fs)
@@ -56,9 +57,19 @@ axs[nfig].set_ylabel(r'$C_L\, &\, C_D$',fontsize=fs)
 f,a=getFig('t_aoa_'+fname);figs.append(f),axs.append(a);nfig+=1
 axs[nfig].plot(t,aoa,lw=2,color='blue',label=r'$\alpha$')
 #%%
+if len(np.where(aoa>19.99999)[0])>1:
+    n0=np.where(aoa>19.99999)[0][0]
+    n1=np.where(aoa>19.99999)[0][-1]
+else:
+    n0=-1
+    n1=0
 f,a=getFig('aoa_cl_'+fname);figs.append(f),axs.append(a);nfig+=1
-axs[nfig].plot(aoa,cl,lw=2,color='blue',label=r'$C_L$')
-axs[nfig].plot(aoa,cd,lw=2,color='red',label=r'$C_D$')
+axs[nfig].plot(aoa[:n0],cl[:n0],lw=2,color='blue',label='C_Lup')
+axs[nfig].plot(aoa[:n0],cd[:n0],lw=2,color='red',label='C_Dup')
+axs[nfig].plot(aoa[:n0],cl[:n0]/cd[:n0],lw=2,color='green',label='C_L/C_Dup')
+axs[nfig].plot(aoa[n1:],cl[n1:],lw=2,color='blue',linestyle='--',label='C_Ldown')
+axs[nfig].plot(aoa[n1:],cd[n1:],lw=2,color='red',linestyle='--',label='C_Ddown')
+axs[nfig].plot(aoa[n1:],cl[n1:]/cd[n1:],lw=2,color='green',linestyle='--',label='C_L/C_Ddown')
 #%%
 nfigs=len(figs)
 for i in range(nfigs):

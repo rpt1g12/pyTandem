@@ -506,7 +506,10 @@ class blk(object):
         points=np.array(np.transpose([x,y]))
         values=self.var[vname].val[:,:,ki];values=np.reshape(values,size)
         ipoints=np.array(np.transpose([np.reshape(xi,xi.size),np.reshape(yi,yi.size)]))
-        isize=[xi.shape[0],xi.shape[1],1]
+        if len(xi.shape)>1:
+            isize=[xi.shape[0],xi.shape[1],1]
+        else:
+            isize=[xi.shape[0],1,1]
         print('Interpolating...')
         ival=griddata(points,values,ipoints,method=method)
         if  mode=='block':
@@ -516,8 +519,14 @@ class blk(object):
             zi=xi.copy();zi[:,:]=z[0]
             iblock.setData(vname='z',val=zi)
             iblock.setData(vname,val=np.reshape(ival,isize))
+        elif mode=='data':
+            if len(xi.shape)>1:
+                iblock=np.reshape(ival,isize)
+            else:
+                iblock=ival
         else:
-            iblock=np.reshape(ival,isize)
+            print("Invalid mode! select mode='block' or mode='data'")
+            return
         
         return iblock
 
@@ -1282,38 +1291,81 @@ class flow(object):
             flavg=flow(path,gfile,sfile)
             flavg.rdHdr()
             flavg.rdGrid()
-            flavg.rdSol(vnames,files[0])
+            #flavg.rdSol(vnames,files[0])
             flavg.sfile='solTA.qa'
             nt=len(files)
 
             for bk in range(self.nbk):
                 for cvar in vnames:
+                    flavg.blk[bk].setData(vname=cvar)
+                for cvar in vnames:
                     flavg.blk[bk].setData(vname=cvar+cvar)
                 for cvar in ['uv','uw','vw']:
                     flavg.blk[bk].setData(vname=cvar)
             
-            for f in files[1:]:
+            for f in files:
                 self.rdSol(vnames,f)
                 for bk in range(self.nbk):
                     for cvar in vnames:
-                        flavg.blk[bk].var[cvar].val[:,:,:]+=self.blk[bk].var[cvar].val[:,:,:]
-                        flavg.blk[bk].var[cvar+cvar].val[:,:,:]+=self.blk[bk].var[cvar].val[:,:,:]*self.blk[bk].var[cvar].val[:,:,:]
+                        flavg.blk[bk].var[cvar].val[:,:,:]+=self.blk[bk].var[cvar].getValues()
+                        flavg.blk[bk].var[cvar+cvar].val[:,:,:]+=self.blk[bk].var[cvar].getValues()*self.blk[bk].var[cvar].getValues()
                     for cvar in ['v','w']:
-                        flavg.blk[bk].var['u'+cvar].val[:,:,:]+=self.blk[bk].var['u'].val[:,:,:]*self.blk[bk].var[cvar].val[:,:,:]
-                    flavg.blk[bk].var['vw'].val[:,:,:]+=self.blk[bk].var['v'].val[:,:,:]*self.blk[bk].var['w'].val[:,:,:]
+                        flavg.blk[bk].var['u'+cvar].val[:,:,:]+=self.blk[bk].var['u'].getValues()*self.blk[bk].var[cvar].getValues()
+                    flavg.blk[bk].var['vw'].val[:,:,:]+=self.blk[bk].var['v'].getValues()*self.blk[bk].var['w'].getValues()
 
             for bk in range(flavg.nbk):
                 for cvar in vnames+['rr','uu','vv','ww','pp','uv','uw','vw']:
-                    flavg.blk[bk].var[cvar].val[:,:,:]/=nt
+                    flavg.blk[bk].var[cvar].val[:,:,:]=flavg.blk[bk].var[cvar].getValues()/nt
 
             for bk in range(flavg.nbk):
                     for cvar in vnames:
-                        flavg.blk[bk].var[cvar+cvar].val[:,:,:]=flavg.blk[bk].var[cvar+cvar].val[:,:,:]-flavg.blk[bk].var[cvar].val[:,:,:]*flavg.blk[bk].var[cvar].val[:,:,:]
+                        flavg.blk[bk].var[cvar+cvar].val[:,:,:]=flavg.blk[bk].var[cvar+cvar].getValues()-flavg.blk[bk].var[cvar].getValues()*flavg.blk[bk].var[cvar].getValues()
                     for cvar in ['v','w']:
-                        flavg.blk[bk].var['u'+cvar].val[:,:,:]+=flavg.blk[bk].var['u'+cvar].val[:,:,:]-flavg.blk[bk].var['u'].val[:,:,:]*flavg.blk[bk].var[cvar].val[:,:,:]
-                    flavg.blk[bk].var['vw'].val[:,:,:]+=flavg.blk[bk].var['vw'].val[:,:,:]-flavg.blk[bk].var['v'].val[:,:,:]*flavg.blk[bk].var['w'].val[:,:,:]
+                        flavg.blk[bk].var['u'+cvar].val[:,:,:]+=flavg.blk[bk].var['u'+cvar].getValues()-flavg.blk[bk].var['u'].getValues()*flavg.blk[bk].var[cvar].getValues()
+                    flavg.blk[bk].var['vw'].val[:,:,:]+=flavg.blk[bk].var['vw'].getValues()-flavg.blk[bk].var['v'].getValues()*flavg.blk[bk].var['w'].getValues()
 
             return flavg
+
+        def getSubsets(self,fromBlocks=[0],bkXYZ=[1,1,1],xRanges=[None],yRanges=[None],zRanges=[None],ssName=None,sspath=None,gfile=None,ssfile=None,ssfl=None):
+            """Extract subsets from solution"""
+
+            blocks=fromBlocks
+
+            if ssfl==None:
+                if ssName==None:
+                    ssName='extractedSS'
+                if sspath==None:
+                    sspath=self.path+ssName+'/'
+                if gfile==None:
+                    gfile=self.gfile
+                if ssfile==None:
+                    ssfile=self.sfile
+                ss=flow(sspath,gfile,ssfile)
+            else:
+                ss=ssfl
+
+            #%%SubSet set-up
+            ssBlocks=[]
+            nxi=[];neta=[];nzeta=[]
+            for kb in range(bkXYZ[2]):    
+                for jb in range(bkXYZ[1]):
+                    for ib in range(bkXYZ[0]):
+                        nb=kb*bkXYZ[1]*bkXYZ[0]+jb*bkXYZ[0]+ib
+                        ssBlocks.append(self.blk[blocks[nb]].getSubset(xlim=xRanges[ib],ylim=yRanges[jb],zlim=zRanges[kb],link=True))
+                        if kb==0:            
+                            neta.append(ssBlocks[-1].size[1])
+                        if jb==0:            
+                            nxi.append(ssBlocks[-1].size[0])
+                nzeta.append(ssBlocks[-1].size[2])
+
+            if ssfl==None:
+                ss.setHdr(bkXYZ,nxi,neta,nzeta)
+                for nb in range(len(blocks)):
+                    ss.blk[nb]=ssBlocks[nb]
+            
+                return ss
+            else:
+                return ssBlocks
 
         def clone(self):
             """Returns a clone of the flow object"""
