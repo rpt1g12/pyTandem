@@ -1,8 +1,16 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 import matplotlib as mpl
 import os
+
+## Custom colormaps ##
+
+kbw = LinearSegmentedColormap.from_list('kbw', [(0,0,0), (0,0,0.501961), (0,0.501961,1), (1,1,1)])
+kbw_r = LinearSegmentedColormap.from_list('kbw_r', [(1,1,1), (0,0.501961,1), (0,0,0.501961), (0,0,0)])
+
+## Funtions ##
 
 def getFig(title=None,layout=111):
     fig=plt.figure()
@@ -175,6 +183,32 @@ def saveFigOnly(path=None,fig=None,ax=None,name=None,dpi=600,ext='.png'):
     ax.axes.get_xaxis().set_visible(False)
     extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
     fig.savefig(path+name,bbox_inches='tight', pad_inches=0,dpi=dpi)
+
+#def saveColorBarOnly(path=None,im=None,fig=None,ax=None,name=None,hv=0,dpi=600,ext='.png'):
+#    """docstring for saveColorBarOnly"""
+#    if (im==None):
+#        im=plt.gci()
+#    if (fig==None):
+#        fig=plt.gcf()
+#    if (ax==None):
+#        ax=plt.gca()
+#    if  name==None:
+#        name=ax.figure.canvas.get_window_title()+ext
+#    else:
+#        name+=ext
+#    if path==None:
+#        path='pgfPlots/'
+#
+#    if hv==0:
+#        orientation='horizontal'
+#    elif hv==1:
+#        orientation='vertical'
+#        
+#    ax.set_visible(False)
+#    cbar=fig.colorbar(im,orientation=orientation)
+#    cbar.ax.yaxis.set_visible(False)
+#    fig.savefig(path+name,bbox_inches='tight', pad_inches=0,dpi=dpi)
+#    pass
     
 
 class Streamlines(object):
@@ -353,3 +387,4 @@ class Streamlines(object):
         D = np.array([np.hypot(x-xj, y-yj)
                       for xj,yj in zip(xVals[:-1],yVals[:-1])])
         return (D < 0.9 * self.dr).any()
+

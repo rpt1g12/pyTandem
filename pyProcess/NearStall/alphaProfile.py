@@ -24,9 +24,15 @@ afix=np.ones(60)*20
 adown=20-10*sin(0.5*pi*(tdown-150)/T)*sin(0.5*pi*(tdown-150)/T)
 #%%
 f,a=getFig('aoaTime');figs.append(f),axs.append(a);nfig+=1
-a.plot(tup,aup,label='up')
-a.plot(tfix,afix,label='fix')
-a.plot(tdown,adown,label='down')
+daup=fcbFD(aup,tup[1]-tup[0])
+dadown=fcbFD(adown,tdown[1]-tdown[0])
+dafix=fcbFD(afix,tfix[1]-tfix[0])
+a.plot(tup,aup,color='blue',label='up')
+a.plot(tfix,afix,color='red',label='fix')
+a.plot(tdown,adown,color='green',label='down')
+a.plot(tup,daup,color='blue',linestyle='--',label='dup')
+a.plot(tfix,dafix,color='red',linestyle='--',label='dfix')
+a.plot(tdown,dadown,color='green',linestyle='--',label='ddown')
 #%%
 nfigs=len(figs)
 for i in range(nfigs):

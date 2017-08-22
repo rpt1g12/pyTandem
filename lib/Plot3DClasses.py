@@ -424,7 +424,7 @@ class blk(object):
             print('{} is not a valid variable!'.format(varName1))
 
 
-    def getStrain(self,uvars=['u','v','w'],xvars=['x','y','z'],invariants=False):
+    def getStrain(self,uvars=['u','v','w'],xvars=['x','y','z'],invariants=False,returnA=False):
         """docstring for getStrain"""
         self.getMetrics()    
         nxi,net,nze=self.size
@@ -448,6 +448,64 @@ class blk(object):
             self.setData(vname='P',val=P)
             self.setData(vname='R',val=-R)
             self.setData(vname='Q',val=Q)
+
+        if returnA:
+            return A
+
+    def getNormals(self,plane=1,flip=False,tangent=False,returnN=False):
+        """docstring for getNormals"""
+        self.getMetrics()
+        if  plane==1:
+            if flip:
+                 fctr=-1/np.sqrt((self.mets[3].getValues())**2+(self.mets[4].getValues())**2+(self.mets[5].getValues())**2)
+            else:
+                 fctr=1/np.sqrt((self.mets[3].getValues())**2+(self.mets[4].getValues())**2+(self.mets[5].getValues())**2)
+            nx=fctr*self.mets[3].getValues()[:,:,:]
+            self.setData(vname='nx',val=nx)
+            if tangent:
+             self.setData(vname='ty',val=-nx)
+
+            ny=fctr*self.mets[4].getValues()[:,:,:]
+            self.setData(vname='ny',val=ny)
+            if tangent:
+             self.setData(vname='ty',val=ny)
+
+            nz=fctr*self.mets[5].getValues()[:,:,:]
+            self.setData(vname='nz',val=nz)
+            if tangent:
+             self.setData(vname='tz')
+        
+        if returnN:
+            return nx,ny,nz
+
+    def getWSS(self,plane=1,Re=1,flip=False):
+        """docstring for getWSS"""
+        self.getViscosity(tflag=False,Re=Re)
+        nu=self.var['nu'].getValues()
+        nx,ny,nz=self.getNormals(plane=plane,flip=flip,returnN=True)
+        A=self.getStrain(returnA=True)
+
+        tau=np.zeros_like(A)
+        tw=np.zeros_like(A[0])
+
+        dilatation=(-2.0/3)*(A[0]+A[4]+[8])
+
+        for i in range(3):
+            for j in range(3):
+                ij=i*3+j
+                ji=j*3+i
+                if i==j:
+                    tau[ij]=dilatation
+                tau[ij]+=(A[ij]+A[ji])
+                tau[ij]*=nu
+
+        
+        xvar=['x','y','z']
+        for i in range(3):
+            j=i*3
+            tw=tau[j]*nx+tau[j+1]*ny+tau[j+2]*nz
+            self.setData(vname='tw'+xvar[i],val=tw)
+        pass
 
     def interpolate(self,vname,xi,yi,zi,method='nearest',rblock=False):
         """Interpolate variable at some points
@@ -860,7 +918,7 @@ class blk(object):
         fh.close()
         pass
             
-    def getViscosity(self,tflag=True):
+    def getViscosity(self,tflag=True,Re=1):
         """Computes viscosity based on Sutherlands law and stores in a new variable 'nu'
         It also stores Temperature if tflag==True
         """
@@ -869,7 +927,10 @@ class blk(object):
         T=1.4*p*rhoI #T=\gamma*p/\rho (non-dimensional)
         S=111/273 #S=S0/T0 (non-dimensional) 
         C1=(1+S) # Sutherlands constant C1=(T0/T0+S0)*(T0/T0)^{-1.5} (non-dimensional)
-        nu=C1*T**(1.5)/(T+S)
+        if Re==1:
+            nu=(C1*T**(1.5)/(T+S))
+        else:
+            nu=(C1*T**(1.5)/(T+S))/Re
 
         if  tflag:
             self.setData(vname='T',val=T)
@@ -1285,14 +1346,17 @@ class flow(object):
                 self.blk[bk].getStrain(uvars,xvars)
 
 
-        def getAvg(self,files,vnames):
+        def getAvg(self,files,vnames,out=True):
             """Returns time average of files"""
             path,gfile,sfile=self.path,self.gfile,self.sfile
-            flavg=flow(path,gfile,sfile)
-            flavg.rdHdr()
-            flavg.rdGrid()
-            #flavg.rdSol(vnames,files[0])
-            flavg.sfile='solTA.qa'
+            if out:
+                flavg=flow(path,gfile,sfile)
+                flavg.rdHdr()
+                flavg.rdGrid()
+                #flavg.rdSol(vnames,files[0])
+                flavg.sfile='solTA.qa'
+            else:
+                flavg=self
             nt=len(files)
 
             for bk in range(self.nbk):
@@ -1324,7 +1388,10 @@ class flow(object):
                         flavg.blk[bk].var['u'+cvar].val[:,:,:]+=flavg.blk[bk].var['u'+cvar].getValues()-flavg.blk[bk].var['u'].getValues()*flavg.blk[bk].var[cvar].getValues()
                     flavg.blk[bk].var['vw'].val[:,:,:]+=flavg.blk[bk].var['vw'].getValues()-flavg.blk[bk].var['v'].getValues()*flavg.blk[bk].var['w'].getValues()
 
-            return flavg
+            if out:
+                return flavg
+            else:
+                pass
 
         def getSubsets(self,fromBlocks=[0],bkXYZ=[1,1,1],xRanges=[None],yRanges=[None],zRanges=[None],ssName=None,sspath=None,gfile=None,ssfile=None,ssfl=None):
             """Extract subsets from solution"""

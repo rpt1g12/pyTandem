@@ -83,5 +83,6 @@ for ii in range(62,93):
     axs[nfig].set_xlim(-0.485,-0.25)
     axs[nfig].set_ylim(0,0.15)
     axs[nfig].set_aspect('equal')
-    saveFigOnly(path=spath,fig=figs[nfig],ax=axs[nfig],name='p{:2d}'.format(ii),ext='.pdf')
+    if save:
+        saveFigOnly(path=spath,fig=figs[nfig],ax=axs[nfig],name='p{:2d}'.format(ii),ext='.pdf')
     

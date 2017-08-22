@@ -20,10 +20,10 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%% Options
-sPattern='solTAvgQ+*'
+sPattern='*.qa'
 vnames=['Q','wx','wy','wz','D']; # Variable names
 #%% Options
-save=True
+save=False
 A=15 #WLE Amplitude, if SLE A=0
 AoA=10 #Angle of Attack
 block=4 #Block to look at
@@ -63,7 +63,7 @@ elif AoA==6:
     vmin=-15;vmax=15
 elif AoA==10:
     vmin=-15;vmax=15
-f,a,im=up.contourf(varname='wx',vmin=vmin,vmax=vmax,k=kk,nlvl=21,cmap=plt.cm.bwr,bar=False)
+f,a,im=fl.blk[block].contourf(varname='wx',vmin=vmin,vmax=vmax,k=kk,nlvl=21,cmap=plt.cm.bwr,bar=False)
 figs.append(f);axs.append(a);nfig+=1 # Append them to the figures and axes arrays
 #up.contour(varname='Cp',vmin=vmin,vmax=vmax,k=kk,nlvl=21,ax=axs[nfig])
 

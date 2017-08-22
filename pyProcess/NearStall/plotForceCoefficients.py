@@ -14,7 +14,7 @@ figs=[];axs=[];hdls=[];lbls=[];lgds=[];nfig=-1;fs=18
 save=True
 prandtl=True #Apply Prandtl-Glauert correction?
 AoA=10 #Angle of attack
-A=0 #WLE amplitude
+A=15 #WLE amplitude
 nwave=8 #Number of WLE wavelengths
 if A>0:
     wavy=True
