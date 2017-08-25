@@ -24,25 +24,9 @@ importlib.reload(p3d)
 save=True
 sPattern='solT*.q'
 vnames=['r','u','v','w','p']; # Variable names
-vname='U'
+vname='Cp'
 plane=2
 autoMinMax=False
-if vname=='U':
-    cmap=kbw
-    vmin,vmax=(0,0.3)
-    nlvl=5
-elif vname=='Cp':
-    cmap=plt.cm.hot
-    vmin,vmax=(-3.5,0)
-    nlvl=11
-elif vname=='Wz':
-    cmap=plt.cm.bwr
-    vmin,vmax=(-30,30)
-    nlvl=6
-else:
-    cmap=plt.cm.jet
-    autoMinMax=True
-    nlvl=21
 bar=True
 #%% Simulation Options
 A=15 #WLE Amplitude, if SLE A=0
@@ -59,15 +43,15 @@ elif plane==2:
     xrange=(-0.5+A/1000.0,0.5)
 #%% Paths set-up
 if A>0:
-    tSteps=range(0,128*11+1,128)
+    tSteps=range(0,64*3*11+1,64*3)
     #tSteps=[0]
     wavy=True
-    sfolder='{}WLE'.format(nwave)
-    subpath='heaving/ss005/'
+    sfolder='{}WLET8'.format(nwave)
+    subpath='heaving/ss006/'
     if vname=='U':
         cmap=kbw
-        vmin,vmax=(0,0.3)
-        nlvl=5
+        vmin,vmax=(0.95,1)
+        nlvl=6
     elif vname=='Cp':
         cmap=plt.cm.hot
         vmin,vmax=(-4.0,0)
@@ -88,8 +72,8 @@ else:
     subpath='heaving/ss001/'
     if vname=='U':
         cmap=kbw
-        vmin,vmax=(0,0.3)
-        nlvl=5
+        vmin,vmax=(0.95,1)
+        nlvl=6
     elif vname=='Cp':
         cmap=plt.cm.hot
         vmin,vmax=(-3.5,0)
@@ -126,6 +110,7 @@ mach=flInfo[0]
 #%%
 xwall=fl.blk[block].var['x'].getValues()[:,0,kk]
 ywall=fl.blk[block].var['y'].getValues()[:,0,kk]
+q0=0.5*mach**2+1/(1.4*0.4)
 
 for ii in tSteps:
     fl.rdSol(vnames=vnames,sfile=files[ii])
@@ -138,7 +123,8 @@ for ii in tSteps:
         U=(fl.blk[block].var['u'].getValues())**2
         U+=(fl.blk[block].var['v'].getValues())**2
         U+=(fl.blk[block].var['w'].getValues())**2
-        U=np.sqrt(U)
+        static=fl.blk[block].var['p'].getValues()/(0.4*fl.blk[block].var['r'].getValues())
+        U=(0.5*U+static)/(q0)
         fl.blk[block].setData(vname=vname,val=U)
     if vname=='Wz':
         Wz=fl.blk[block].derive('v','x',True)-fl.blk[block].derive('u','y',True)

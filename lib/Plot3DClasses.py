@@ -1172,7 +1172,7 @@ class flow(object):
 
             pass
 
-        def wrFun(self,vnames=None,ffile=None):
+        def wrFun(self,vnames=None,ffile=None,path=None):
             """Writes Plot3D function files"""
             k8=np.float32; lk8=np.dtype(k8).itemsize
             if not os.path.exists(self.path):
@@ -1197,10 +1197,11 @@ class flow(object):
             fh.close()
             pass
 
-        def wrSol(self,vnames=None,sfile=None,flInfo=np.zeros(4)):
-
-            if not os.path.exists(self.path):
-                os.makedirs(self.path)
+        def wrSol(self,vnames=None,sfile=None,path=None,flInfo=np.zeros(4)):
+            if path==None:
+                path=self.path
+            if not os.path.exists(path):
+                os.makedirs(path)
             if sfile==None:
                 sfile=self.sfile
                 
@@ -1219,7 +1220,7 @@ class flow(object):
                     return
             
             
-            fh=open(self.path+sfile,'wb')
+            fh=open(path+sfile,'wb')
             nbk=self.nbk
             lblk=self.lblk
             ghdr=[nbk]
@@ -1346,9 +1347,14 @@ class flow(object):
                 self.blk[bk].getStrain(uvars,xvars)
 
 
-        def getAvg(self,files,vnames,out=True):
+        def getAvg(self,files,vnames,path=None,gfile=None,sfile=None,out=True):
             """Returns time average of files"""
-            path,gfile,sfile=self.path,self.gfile,self.sfile
+            if path==None:
+                path=self.path
+            if gfile==None:
+                gfile=self.gfile
+            if sfile==None:
+                sfile=self.sfile
             if out:
                 flavg=flow(path,gfile,sfile)
                 flavg.rdHdr()
@@ -1366,20 +1372,33 @@ class flow(object):
                     flavg.blk[bk].setData(vname=cvar+cvar)
                 for cvar in ['uv','uw','vw']:
                     flavg.blk[bk].setData(vname=cvar)
+
+            t=np.zeros(len(files))
+            for i in range(len(files)):
+                f=files[i]
+                t[i]=self.rdFlowInfo(f)[3]
+            fctr=0.5/(t[-1]-t[0])
+            dt=np.zeros_like(t)
+            dt[0]=2*fctr*(t[1]-t[0])
+            dt[-1]=2*fctr*(t[-1]-t[-2])
+            for i in range(1,len(t)-1):
+                dt[i]=fctr*(t[i+1]-t[i-1])
+
             
+            ii=0
             for f in files:
                 self.rdSol(vnames,f)
                 for bk in range(self.nbk):
                     for cvar in vnames:
-                        flavg.blk[bk].var[cvar].val[:,:,:]+=self.blk[bk].var[cvar].getValues()
-                        flavg.blk[bk].var[cvar+cvar].val[:,:,:]+=self.blk[bk].var[cvar].getValues()*self.blk[bk].var[cvar].getValues()
+                        flavg.blk[bk].var[cvar].val[:,:,:]+=self.blk[bk].var[cvar].getValues()*dt[ii]
+                        flavg.blk[bk].var[cvar+cvar].val[:,:,:]+=self.blk[bk].var[cvar].getValues()*self.blk[bk].var[cvar].getValues()*dt[ii]
                     for cvar in ['v','w']:
-                        flavg.blk[bk].var['u'+cvar].val[:,:,:]+=self.blk[bk].var['u'].getValues()*self.blk[bk].var[cvar].getValues()
-                    flavg.blk[bk].var['vw'].val[:,:,:]+=self.blk[bk].var['v'].getValues()*self.blk[bk].var['w'].getValues()
+                        flavg.blk[bk].var['u'+cvar].val[:,:,:]+=self.blk[bk].var['u'].getValues()*self.blk[bk].var[cvar].getValues()*dt[ii]
+                    flavg.blk[bk].var['vw'].val[:,:,:]+=self.blk[bk].var['v'].getValues()*self.blk[bk].var['w'].getValues()*dt[ii]
 
-            for bk in range(flavg.nbk):
-                for cvar in vnames+['rr','uu','vv','ww','pp','uv','uw','vw']:
-                    flavg.blk[bk].var[cvar].val[:,:,:]=flavg.blk[bk].var[cvar].getValues()/nt
+            #for bk in range(flavg.nbk):
+            #    for cvar in vnames+['rr','uu','vv','ww','pp','uv','uw','vw']:
+            #        flavg.blk[bk].var[cvar].val[:,:,:]=flavg.blk[bk].var[cvar].getValues()/nt
 
             for bk in range(flavg.nbk):
                     for cvar in vnames:

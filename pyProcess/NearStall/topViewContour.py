@@ -43,19 +43,20 @@ elif plane==2:
     xrange=(-0.5-A/1000.0,0.5)
 #%% Paths set-up
 if A>0:
-    tSteps=np.asarray(range(0,128*12+1,128))
-    #tSteps=[512]
+    #tSteps=np.asarray(range(0,64*3*11+1,64*3))  
+    tSteps=range(11)
     wavy=True
-    sfolder='{}WLE'.format(nwave)
-    subpath='heaving/ss001/'
+    sfolder='{}WLESTA'.format(nwave)
+    subpath='heaving/ss001/STA/'
     block=1 #Block to look at
     if vname=='twx':
         cmap=plt.cm.bwr
-        vmin,vmax=(-5e-4,5e-4)
-        nlvl=6
+        vmin,vmax=(-1e-4,1e-4)
+        nlvl=4
     elif vname=='twz':
         cmap=plt.cm.coolwarm
-        vmin,vmax=(-1e-3,1e-3)
+        #vmin,vmax=(-1e-3,1e-3)
+        vmin,vmax=(-5e-4,5e-4)
         xrange=(-0.5-A/1000.0,-0.25)
         nlvl=6
     elif vname=='Cp':
@@ -120,7 +121,7 @@ for ii in tSteps:
         cp=fl.blk[block].var['p'].getValues()
         cp=(cp-1/1.4)/(0.5*mach**2)
         fl.blk[block].setData(vname=vname,val=cp)
-    if vname not in vnames+['Cp',]:
+    if vname not in vnames+['Cp']:
         fl.blk[block].getWSS(Re=flInfo[2])
     var=fl.blk[block].var[vname].getValues()
     if autoMinMax:

@@ -50,6 +50,7 @@ else:
     subpath='heaving/ss001/'
 simfolder='{:1d}A{:02d}W11AoA{:02d}'.format(nwave,A,AoA)
 path="/media/{}/dellHDD/post/{}/{}".format(user,simfolder,subpath)
+apath="/media/{}/dellHDD/post/{}/{}".format(user,simfolder,subpath)
 spath='/home/rpt1g12/Documents/thesis/data/nearStall/LSBHistory{}/'.format(sfolder)
 if not os.path.exists(spath) and save:
     os.makedirs(spath)
