@@ -28,11 +28,17 @@ vnames=['r','u','v','w','p']; # Variable names
 A=15 #WLE Amplitude, if SLE A=0
 AoA=10 #Angle of Attack
 nwave=8 #Number of LE wavelengths
+ssl=False
 #%% Paths set-up
 if A>0:
     wavy=True
     sfolder='{}WLE'.format(nwave)
-    subpath='heaving/ss001/'
+    if ssl:
+        subpath='heaving/ss005/'
+        sfolder+='SSL'
+    else:
+        subpath='heaving/ss006/'
+        sfolder+='Central'
 else:
     wavy=False
     sfolder='{}SLE'.format(nwave)
@@ -47,7 +53,7 @@ print('Reading data from:\n {}'.format(path))
 #%% Flow object set up
 gfile='grid.xyz' # Grid file name
 files=p3d.getFileNames(path=path,pattern=sPattern)
-sfile=files[tSteps[0]]#'solTavgCf+tw+Cp.q'# Solution file name
+sfile=files[0]#'solTavgCf+tw+Cp.q'# Solution file name
 
 fl=p3d.flow(path,gfile,sfile) # Check-out flow object
 fl.rdHdr() # Read header from grid file and set-up flow object properties

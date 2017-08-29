@@ -368,6 +368,68 @@ def fourierFilter(y,mode,fsam,cutOff,width,verbose=False):
 
     return np.real(y_filt)
 
+def ROM(D,r=-1,mode=1,kfit=0):
+    """Performs POD and DMD decomposition of rank r"""
+    nt=len(D[0,:])-1
+    A1=D[:,:-1]
+    A2=D[:,1:]
+    # POD decomposition
+    print('Performing SVD decomposition...')
+    U,s,Vt=np.linalg.svd(A1,False)
+    sn=s/(s[0])
+    if mode==1:
+        if r==-1:
+            r=len(s)
+        #Build Atilde matrix (A2=A*A1)
+        # Atilde=Ut*A2*V*S^(-1)
+        # Atilde=Ut*Mwork
+        Ur=U[:,:r]
+        S=np.diag(s)[:r,:r]
+        V=Vt.conj().T[:,:r]
+        print('Matrix multiplication (M=A*V*S**-1)...')
+        Mwork=np.dot(np.dot(A2,V),np.linalg.inv(S))
+        print('Build Atilde (Atilde=Ut*M)...')
+        Atilde = np.dot(Ur.conj().T, Mwork)
+
+        print('Performing Eigen decomposition...')
+        # Eigen decomposition of "Atilde"
+        eV,eVec=np.linalg.eig(Atilde)
+
+        print('Build DMD modes...')
+        # Build DMD mode (space)
+        # Phi=A2*V*S^(-1)*eVec
+        Phi= np.dot(Mwork, eVec)
+        print('Compute DMD weights...')
+        # Compute mode amplitude "b"
+        # A1[:,n]=Phi*b*eV^(n)
+        # b=Phi^(-1)*A1[:,n]*eV^(-n)
+        if kfit==-1:
+            k=nt-1
+        else:
+            k=kfit
+        b=np.dot(np.dot(np.linalg.pinv(Phi),A1[:,k]),np.diag(eV**(-k)))
+        # Compute "Psi", the time variation of Phi
+        Psi=np.zeros((r,nt),dtype='complex')
+        for i in range(nt):
+            Psi[:,i]=np.multiply(np.power(eV,i),b)
+
+        print('Compute DMD projection on POD...')
+        # DMD projection onto POD
+        PhiPOD=np.zeros(r)
+        for i in range(r):
+            temp=[]
+            for j in range(r):
+                temp.append(np.dot(Phi[:,i],Ur[:,j]*sn[j]))
+            PhiPOD[i]=np.linalg.norm(temp)
+
+        return Ur,s,V,eV,eVec,Phi,Psi,PhiPOD
+    elif mode==0:
+        return Ur,s,V
+
+
+
+
+
 
 
 ##%% Produce log bar levels

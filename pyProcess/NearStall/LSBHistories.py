@@ -27,54 +27,52 @@ vnames=['r','u','v','w','p']; # Variable names
 #%% Options
 save=True
 comp=True; #Compressible??
-A=0 #WLE Amplitude, if SLE A=0
+A=15 #WLE Amplitude, if SLE A=0
 AoA=10 #Angle of Attack
 block=0 #Block to look at
 kk=0 #Spanwise slice to look at
 nwave=8 #Number of LE wavelengths
+ssl=True
 #%% Rake set-up
-
-ibounds=[40,91] #Manually selected bounds for rakes to be placed inside LSB
+ibounds=[40,61] #Manually selected bounds for rakes to be placed inside LSB
 nn=1024; #Points in rake
 l=0.13; #Rake's length
-step=10 #Iteration step
+step=5 #Iteration step
 auto=True #Automatic LSB index detection
 #%% Paths set-up
 if A>0:
     wavy=True
     sfolder='{}WLE'.format(nwave)
-    subpath='heaving/ss006/'
+    if ssl:
+        subpath='heaving/ss005/'
+        sfolder+='SSL'
+    else:
+        subpath='heaving/ss006/'
+        sfolder+='Central'
 else:
     wavy=False
     sfolder='{}SLE'.format(nwave)
     subpath='heaving/ss001/'
 simfolder='{:1d}A{:02d}W11AoA{:02d}'.format(nwave,A,AoA)
-path="/media/{}/dellHDD/post/{}/{}".format(user,simfolder,subpath)
-apath="/media/{}/dellHDD/post/{}/{}".format(user,simfolder,subpath)
+path="/media/{}/dellHDD/post/{}/{}STA/".format(user,simfolder,subpath)
 spath='/home/rpt1g12/Documents/thesis/data/nearStall/LSBHistory{}/'.format(sfolder)
 if not os.path.exists(spath) and save:
     os.makedirs(spath)
 print('Reading data from:\n {}'.format(path))
-#%%
-gfile='grid.xyz' # Grid file name
-files=p3d.getFileNames(path=path,pattern=sPattern)
-sfile=files[0]#'solTavgCf+tw+Cp.q'# Solution file name
+#%% Prepare STA flow object
 
-fl=p3d.flow(path,gfile,sfile) # Check-out flow object
+gfile='grid.xyz' # Grid file name
+files=p3d.getFileNames(path=path,pattern=sPattern);nt=len(files)
+
+
+fl=p3d.flow(path,gfile,files[0]) # Check-out flow object
 fl.rdHdr() # Read header from grid file and set-up flow object properties
 fl.rdGrid() # Read Grid
 fl.rdSol(vnames=vnames) # Read solution file
 flInfo=fl.rdFlowInfo() # Read solution file info, i.e. Mach, AoA, Re and time
-mach=flInfo[0]
-cosa,sina=np.cos(np.deg2rad(flInfo[1])),np.sin(np.deg2rad(flInfo[1]))
-up=fl.blk[block]
-#del fl
-#%% Compute spanwise vorticity
-fl.blk[block].getMetrics()
-Wz=fl.blk[block].derive('v','x',True)-fl.blk[block].derive('u','y',True)
-fl.blk[block].setData('Wz',Wz)
 
 #%% Obtain surface normals
+fl.blk[block].getMetrics()
 nx,ny,xo,yo=(fl.blk[block].mets[3].getValues()[:,0,kk],fl.blk[block].mets[4].getValues()[:,0,kk],
             fl.blk[block].var['x'].getValues()[:,0,kk],fl.blk[block].var['y'].getValues()[:,0,kk])
 
@@ -83,23 +81,7 @@ nx,ny,xo,yo=(fl.blk[block].mets[3].getValues()[:,0,kk],fl.blk[block].mets[4].get
 lsb_idx=np.asarray(range(ibounds[0],ibounds[1])) # Ignore automatic LSB index detection
 
 print('from i={:03d} to {:03d}'.format(lsb_idx[0],lsb_idx[-1]))
-#%% Plot contour of omega_z
-vavg=0.5*(np.abs(np.min(Wz))+np.max(Wz))
-vmin=-vavg/30;vmax=vavg/30
-vmin,vmax=-30,30
-f,a,im=fl.blk[block].contourf(varname='Wz',vmin=vmin,vmax=vmax,k=kk,nlvl=21,cmap=plt.cm.bwr,bar=False)
-figs.append(f);axs.append(a);nfig+=1 # Append them to the figures and axes arrays
-#up.contour(varname='Wz',vmin=vmin,vmax=vmax,k=kk,nlvl=21,ax=axs[nfig])
-
-a.set_aspect('equal')
-axs[nfig].set_xlim(-0.5,-0.3)
-axs[nfig].set_ylim(0.0,0.2)
-if save:
-    saveFigOnly(path=spath,fig=figs[nfig],ax=axs[nfig],name='Cp{}{:02d}'.format(sfolder,AoA),ext='.pdf')
-
-cll(axs[nfig])
 #%% Set-up rakes
-dstr=[];theta=[];jdelta=[];xbl=[];ybl=[];delta=[];Ue=[];x0=[] #Emply lists to store: deltaStar, theta, ...
 dl=l/(nn-1)
 rl=np.array([i*dl for i in range(nn)])
 u=np.zeros_like(rl)
@@ -107,7 +89,7 @@ dudy=np.zeros(nn)
 nrakes=len(lsb_idx[::step])
 npoint=len(rl)
 u99=np.zeros((nrakes,npoint))
-#%% Loop inside LSB indices
+#%% Loop inside LSB indices and create rakes
 ii=0
 rakes=[]
 for i in lsb_idx[::step]:
@@ -115,14 +97,9 @@ for i in lsb_idx[::step]:
     rake=(p3d.rake(xo[i],yo[i],nx[i],ny[i],nn,l)) #Checkout a rake object at (xo,yo) with direction (nx,ny) and length l
     rakes.append(rake)
     ii+=1
-
-#%% ShortTime average
-if nt<0:
-    nt=len(files);
 nrakes=len(rakes)
-Tnst=len(range(0,nt,nst))
-
-xbl=np.zeros((Tnst,nrakes))
+#%% Prepare Arrays
+xbl=np.zeros((nt,nrakes))
 ybl=xbl.copy()
 x0=xbl.copy()
 Ue=xbl.copy()
@@ -130,14 +107,13 @@ theta=xbl.copy()
 dstr=xbl.copy()
 delta=xbl.copy()
 H=xbl.copy()
-n=0
-for nn in range(0,nt,nst):
-    fl.getAvg(files=files[nn:nn+nst],vnames=vnames,out=False)  
+#%%
+for n in range(nt):
+    fl.rdSol(vnames=vnames,sfile=files[n]) # Read solution file  
     Wz=fl.blk[block].derive('v','x',True)-fl.blk[block].derive('u','y',True)
     fl.blk[block].setData('Wz',Wz)      
     # Loop inside LSB indices
-    ii=0
-    for rake in rakes:
+    for ii,rake in enumerate(rakes):
         print('rake={:}'.format(ii))
         x,y=rake.x,rake.y  #Extract xy coordinates of rake
         tx,ty=rake.tx,rake.ty #Extract tangent direction
@@ -146,7 +122,6 @@ for nn in range(0,nt,nst):
         r=fl.blk[block].interpolate2dk('r',x,y,kk,mode='data')[:,0,0] #Obtain density at rake's points
         dudy=fcbFD(u,dl) #Compute pseudo velocity derivative in the wall-normal direction
         j99=np.where(u<0.99*u[-1])[0][-1]+1;jmax=-1 #Find out index at which delta99 happens
-        jdelta.append(j99)
         delta[n,ii]=rl[j99] #Save delta, i.e. boundary layer thickness
         um=u[j99] #Save boundary layer edge velocity Ue
         Ue[n,ii]=um
@@ -168,21 +143,31 @@ for nn in range(0,nt,nst):
             dstr[n,ii]=np.trapz(tmp,tmp2)
             tmp=u[:j99]*(1-u[:j99])
             theta[n,ii]=np.trapz(tmp,tmp2)
-        ii+=1
+
     H[n,:]=dstr[n,:]/theta[n,:]
     n+=1
 
 #%% Plot delta and delta_star
 f,a=getFig('deltas')
 figs.append(f);axs.append(a);nfig+=1 # Append them to the figures and axes arrays
-for n in range(Tnst):
+for n in range(nt):
     axs[nfig].plot(x0[n,:],delta[n,:],lw=2,label='d{:02d}'.format(n))
     #axs[nfig].plot(x0[n,:],dstr[n,:],lw=2,label='delta_star')
+#%% edge
+f,a=getFig('BL')
+figs.append(f);axs.append(a);nfig+=1 # Append them to the figures and axes arrays
+
+for n in range(nt):
+    axs[nfig].plot(xbl[n,:],ybl[n,:],lw=2,label='BL{:02d}'.format(n))
+axs[nfig].set_xlim(-0.5,-0.3)
+axs[nfig].set_aspect('equal')
 
 #%% Set-up labels    
-for i in range(1,nfig+1):
+for i in range(0,nfig+1):
     hdl,lbl,lgd=getLabels(ax=axs[i])
     hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
     fit(axs[i])
     if save:
         savePlotFile(path=spath,ax=axs[i],sameX=False)
+#%%
+axs[nfig].plot(xo,yo,lw=2,color='k',label='wall')

@@ -20,14 +20,17 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%%
+r=5
 scale=1
 save=True
-play=False;playRange=range(400,600)
+trange=range(640,841)
+xrange=range(3,80)
+play=True;playRange=range(100)
 t0=290
 ts=230
 dt=1.0/64
-npeak=5
-maxE=8
+npeak=2
+maxE=5
 dataset='/home/rpt1g12/Desktop/paraviewExports/P{:1d}/coordinatesExport.dat'.format(npeak)
 spath='/home/rpt1g12/Desktop/paraviewExports/P{:1d}/'.format(npeak)
 xyz=np.loadtxt(dataset,skiprows=1,unpack=True)
@@ -38,47 +41,37 @@ if scale:
 nt=int(xyz.shape[1]/100)
 xyz=np.reshape(xyz,(3,nt,100))
 z0=xyz[2,0,0]
-t=np.array([t0-ts+i*(dt) for i in range(nt-1)])
 print('\n z0={}\n'.format(z0))
 xyz[2,:,:]=xyz[2,:,:]-z0
-
-#%%Remove average
-#for j in [2]:
-#    for i in range(100):
-#       xyz[j,:,i]=xyz[j,:,i]-np.mean(xyz[j,:,i])
 #%%
 idx=[2]
-A=np.zeros((nt-1,len(idx)*97))
-A2=np.zeros((nt-1,len(idx)*97))
-for i in range(len(idx)):
-        j=idx[i]
-        A[0,i*100:(i+1)*100]=xyz[j,0,3:]
-for n in range(1,nt-1):
+nt=len(trange)
+lx=len(xyz[0,0,xrange])
+t=np.array([t0-ts+i*(dt) for i in range(nt-1)])
+A=np.zeros((len(idx)*lx,nt))
+for nn,n in enumerate(trange):
+    temp=[]
     for i in range(len(idx)):
         j=idx[i]
-        A2[n-1,i*100:(i+1)*100]=A[n,i*100:(i+1)*100]=xyz[j,n,3:]
-for i in range(len(idx)):
-        j=idx[i]
-        A[nt-2,i*100:(i+1)*100]=xyz[j,nt-1,3:]
-A1=np.transpose(A)
-A2=np.transpose(A2)
-#%% POD decomposition A=U.S.V*
-U,s,Vt=np.linalg.svd(A1,0,1)
-#%% DMD decomposition
-S_1=np.diag(1/s)
-V=np.transpose(Vt)
-M1=np.dot(A2,V)
-del A2,A
-M2=np.dot(M1,S_1)
-del M1,S_1
-A=np.dot(U,M2)
-#Eigen-decomposition of A
-eV,eVec=np.linalg.eig(A)
-DMD=np.dot(M2,eVec.real)
+        temp+=list(xyz[j,n,xrange])    
+    A[:,nn]=temp
+
+
+#%% Remove average
+Amean=np.zeros((len(idx)*lx))
+for i in range(lx):
+    Amean[i,]=np.mean(A[i,:])
+    A[i,:]-=Amean[i]
+    #A[i,:]/=np.var(A[i,:])
+Amean[:]=0
+#%%
+U,s,V,eV,eVec,Phi,Psi,PhiPOD=ROM(A,r=-1)
+nmodes=maxE
 #%%Identify the unstable modes
+ntmode=U.shape[1]
 unst_mode_index = []
-eVNorm=np.zeros_like(s)
-for i in range(len(s)):
+eVNorm=np.zeros(ntmode)
+for i in range(ntmode):
     temp = np.linalg.norm(eV[i])
     eVNorm[i]=temp
     if temp > 1:
@@ -87,7 +80,6 @@ for i in range(len(s)):
 print ("\nNumber of unstable modes: {:d}".format(len(unst_mode_index)))
 print ("Unstable modes indeces\n", unst_mode_index)
 #%% Calculate Frequency and Growth rate
-ntmode=len(s)
 freqs = np.zeros((ntmode))
 grate = np.zeros((ntmode))
 for i in range(ntmode):
@@ -100,22 +92,19 @@ inst_max=grate.argmax()
 print('Most unstable mode is:'+str(grate.argmax()))
 print('Growth rate='+str(grate[inst_max]))
 print('Freq='+str(freqs[inst_max]))
+
+#%% Get least damped modes
+leastDamp=[]
+temp=list(grate)
+minG=grate.min()
+for i in range(nmodes):
+    ii=np.argmax(temp)
+    leastDamp.append(ii)
+    temp[ii]=minG
+print('\nLeast damped modes are:\n{}\nwith growth rate:\n{}\nand frequencies:{}\n'.format(leastDamp,grate[leastDamp],freqs[leastDamp]))
 #%%
-s0=s/sum(s)
-if maxE<1:
-    i=0
-    while (sum(s0[:i])<maxE):
-        i+=1
-    nmodes=i
-else:
-    nmodes=maxE
-    maxE=sum(s0[:nmodes])
-print('\nFirst {:2d} modes contain {:2.2f}% of the energy\n'.format(nmodes,maxE*100))
-f,a=getFig('S');figs.append(f),axs.append(a);nfig+=1
-axs[nfig].semilogy(s0,lw=2,label='s')
-#%%
-#nmodes=10
-f,a=getFig('time');figs.append(f),axs.append(a);nfig+=1
+
+f,a=getFig('PODtime');figs.append(f),axs.append(a);nfig+=1
 for i in range(nmodes):
     axs[nfig].plot(t,V[:,i]*scale*s[i],lw=2,label='m{:02d}'.format(i))
 #%%
@@ -124,12 +113,26 @@ f,a=getFig('PODmode');figs.append(f),axs.append(a);nfig+=1
 for i in range(nmodes):
     axs[nfig].plot(U[:,i]*scale*s[i],lw=2,label='m{:02d}'.format(i))
 #%%
-#nmodes=10
+if r<0:
+    r=len(s)
 f,a=getFig('DMDmode');figs.append(f),axs.append(a);nfig+=1
-for i in range(nmodes):
-    axs[nfig].plot(DMD[:,i],lw=2,label='m{:02d}'.format(i))
+
+plotRange=leastDamp
+for i in plotRange:
+    axs[nfig].plot(Phi.real[:,i],lw=2,label='m{:02d}R'.format(i))
 #%%
-nfigs=len(figs)
+#nmodes=10
+f,a=getFig('DMDtime');figs.append(f),axs.append(a);nfig+=1
+for i in plotRange:
+    axs[nfig].plot(t,Psi.real[i,:],lw=2,label='m{:02d}R'.format(i))
+#%% DMD spectrum
+f,a=getFig('DMDspectrum');figs.append(f),axs.append(a);nfig+=1
+a.scatter(freqs,grate,s=PhiPOD*100,c=eVNorm,cmap=plt.cm.jet)
+a.axhline(y=0,lw=2,linestyle='--')
+fmin=min(freqs);fmax=max(freqs);fabs=max(fmax,np.abs(fmin))
+a.set_xlim(-fabs,fabs)    
+#%%
+nfigs=len(figs)-1
 for i in range(nfigs):
     fit(axs[i])
     hdl,lbl,lgd=getLabels(ax=axs[i],ncol=2,fontsize=15)
@@ -139,20 +142,23 @@ for i in range(nfigs):
         savePlotFile(path=spath,ax=axs[i])
 #%%
 rModes=range(nmodes)
-rA=np.zeros((97,nt-1))
-for n in range(nt-1):
-    for m in rModes:
-        rA[:,n]+=U[:,m]*s[m]*Vt[m,n]        
+Sr=np.diag(s)[:nmodes,:nmodes]
+Ur=U[:,:nmodes]
+Vr=V.conj().T[:nmodes,:]
+rPOD=np.dot(Ur,np.dot(Sr,Vr))  
+#rDMD=np.dot(Phi[:,leastDamp],Psi[leastDamp,:])    
+rDMD=np.dot(Phi,Psi).real   
 #%%
 if play:
     f,a=getFig('streamline');figs.append(f),axs.append(a);nfig+=1
     xmax=np.max(xyz[0,playRange,:])
-    a.set_xlim(-0.5,xmax)
-    zmax=np.max(np.abs(rA[:,playRange]))
-    a.set_ylim(-zmax,zmax)
+    #a.set_xlim(-0.5,xmax)
+    zmax=np.max(np.abs(rPOD[:,playRange]))
+    #a.set_ylim(-zmax,zmax)
     for n in playRange:
-        a.plot(xyz[0,n,3:],rA[:,n],lw=2,color='blue',label='rec')
-        a.plot(xyz[0,n,3:],xyz[2,n,3:],lw=2,color='red',label='original')
+        a.plot(A[:,n]+Amean[:],lw=2,color='red',label='original')
+        a.plot(rDMD[:,n]+Amean[:],lw=2,color='green',linestyle=':',label='DMD')
+        a.plot(rPOD[:,n]+Amean[:],lw=2,color='blue',linestyle='--',label='POD')
         axShow(a)
         plt.pause(0.1)
         cll(a)
