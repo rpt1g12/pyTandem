@@ -33,7 +33,7 @@ kk=0
 nwave=8
 vnames=['r','u','v','w','p']; # Variable names
 sPattern='solT*.*.q'
-ssl=True
+ssl=False
 #%% Paths set-up
 if A>0:
     nw=32;ovlp=0.5
@@ -106,7 +106,7 @@ for N in range(nSTA):
             var=ivar[i]
             data[n,:,i]=fl.blk[block].var[var].getValues()[xiprob[N,:],etprob[N,:],kk]
 #%% Plot and save histories
-probRange=[1,2,3]
+probRange=[0,1,2]
 
 for i in range(nvar):
     var=ivar[i]
@@ -123,7 +123,8 @@ for i in range(nvar):
 #%% PSD
 plt.close('all')
 scale=False; step=False;
-nw=64;ovlp=0.125;sclg='density'
+#nw=64;ovlp=0.125;sclg='density'
+nw=64;ovlp=0.3;sclg='density'
 sgn,tn,nsam,fsam=rsample(data[:,0,0],t)
 nseg,novlp,ntt,fmax,fmin=defWin(tn,sgn,nw,ovlp,verbose=False)
 fdata=np.zeros((int(nseg/2+1),nprob,nvar))
@@ -140,7 +141,7 @@ st=ff/mach
 
 for i in range(nvar):
     var=ivar[i]
-    f,a=getFig(hName+'_Freq_{}'.format(var));nfig+=1
+    f,a=getFig(sfolder+'_Freq_{}'.format(var));nfig+=1
     figs.append(f);axs.append(a)
     for j in probRange:
         psgn=fdata[:,j,i]

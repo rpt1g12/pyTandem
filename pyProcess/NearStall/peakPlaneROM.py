@@ -20,7 +20,7 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%% Options
-read=False
+read=True
 save=False
 sPattern='solT*.q'
 vnames=['r','u','v','w','p']; # Variable names
@@ -99,25 +99,18 @@ D0=D.copy()
 Dmean=np.zeros(xiD*etD)
 Dvar=Dmean.copy()
 Dnorm=D.copy()
-nmodes=10
 for i in range(xiD*etD):
     Dmean[i]=np.mean(D[i,:])
     Dvar[i]=np.var(D[i,:])
     D[i,:]-=Dmean[i]
     Dnorm[i,:]=D[i,:]/Dvar[i]
 #%%
-tstep=8
-tRange=range(0,1025,tstep)
-U,s,V,eV,eVec,Phi,Psi,PhiPOD=ROM(D[:,tRange],r=-1)
+nmodes=20
 plt.close('all')
-#%% Normalise energy
-sn=s/sum(s)
-# Plot POD energy
-f,a=getFig('Sigma')
-figs.append(f);axs.append(a);nfig+=1 # Append them to the figures and axes arrays
-axs[nfig].plot(sn,lw=2)
-
-#%%Identify the unstable modes
+tstep=1
+tRange=range(250,nt,tstep)
+U,s,V,eV,eVec,Phi,Psi,PhiPOD=ROM(D[:,tRange],r=-1)
+#%Identify the unstable modes
 ntmode=U.shape[1]
 unst_mode_index = []
 eVNorm=np.zeros(ntmode)
@@ -127,9 +120,11 @@ for i in range(ntmode):
     if temp > 1:
         unst_mode_index.append(i)
 
-print ("\nNumber of unstable modes: {:d}".format(len(unst_mode_index)))
-print ("Unstable modes indeces\n", unst_mode_index)
-#%% Calculate Frequency and Growth rate
+
+print ("\nUnstable modes indeces\n", unst_mode_index)
+print ("\nNumber of unstable modes: {:d} out of {:d} total".format(len(unst_mode_index),ntmode))
+
+#% Calculate Frequency and Growth rate
 tn=t[tRange][:-1]-230
 dt=tstep/64.0
 freqs = np.zeros((ntmode))
@@ -145,7 +140,7 @@ print('Most unstable mode is:'+str(grate.argmax()))
 print('Growth rate='+str(grate[inst_max]))
 print('Freq='+str(freqs[inst_max]))
 
-#%% Get least damped modes
+#% Get least damped modes
 leastDamp=[]
 temp=list(grate)
 minG=grate.min()
@@ -156,42 +151,55 @@ for i in range(nmodes):
 print('\nLeast damped modes are:\n{}'.format(leastDamp)+
       '\nwith growth rate:\n{}\n'.format(grate[leastDamp])+
       'and frequencies:{}\n'.format(freqs[leastDamp]))
-      
+
+#%% Normalise energy
+sn=s/sum(s)
+# Plot POD energy
+f,a=getFig('Sigma')
+figs.append(f);axs.append(a);nfig+=1 # Append them to the figures and axes arrays
+axs[nfig].plot(sn,lw=2)      
 #%% Plot DMD coefficients for least-damped modes
-plotRange=leastDamp
+if len(leastDamp)<len(unst_mode_index) or len(unst_mode_index)==0:
+    plotRange=leastDamp
+else:
+    plotRange=unst_mode_index
 f,a=getFig('DMDtime');figs.append(f),axs.append(a);nfig+=1
 for i in plotRange:
     axs[nfig].plot(tn,Psi.real[i,:],lw=2,label='m{:02d}R'.format(i))
+hdl,lbl,lgd=getLabels(ax=a,ncol=3,fontsize=15)
+hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
 fit(a)
 #%%
-plt.close('all')
-nmode=0
-for nmode in range(10):
-#    #Plot POD
-#    temp=np.reshape(U[:,nmode],(xiD,etD,1),order='F')
-#    flROM.blk[block].setData(vname='POD{:d}'.format(nmode),val=temp)
-#    vmax=np.max(np.abs(temp))
+#plt.close('all')
+for nn,nmode in enumerate(plotRange):
+##    #Plot POD
+#    temp=np.reshape(U[:,nn],(xiD,etD,1),order='F')
+#    flROM.blk[block].setData(vname='POD{:d}'.format(nn),val=temp/np.max(temp))
+#    vmax=1
 #    vmin=-vmax
-#    f,a,im=flROM.blk[block].contourf(varname='POD{:d}'.format(nmode),vmin=vmin,vmax=vmax,nlvl=21,cmap=plt.cm.bwr,bar=True);nfig+=1
+#    f,a,im=flROM.blk[block].contourf(varname='POD{:d}'.format(nn),vmin=vmin,vmax=vmax,nlvl=21,cmap=plt.cm.jet,bar=True);nfig+=1
 #    figs.append(f);axs.append(a)
-    #Plot DMD
-    temp=np.reshape(Phi[:,leastDamp[nmode]],(xiD,etD,1),order='F')
-    flROM.blk[block].setData(vname='DMD{:d}'.format(nmode),val=temp/np.max(temp))
  
+   #Plot DMD
+    temp=np.reshape(Phi[:,nmode],(xiD,etD,1),order='F')
+    flROM.blk[block].setData(vname='DMD{:d}'.format(nmode),val=temp/np.max(temp))
     f,a,im=flROM.blk[block].contourf(varname='DMD{:d}'.format(nmode),vmin=-1,vmax=1,nlvl=21,cmap=plt.cm.jet,bar=True);nfig+=1
     figs.append(f);axs.append(a)
     #flROM.blk[block].contour(varname='DMD{:d}'.format(nmode),vmin=-1,vmax=1,nlvl=11,ax=a)
-    ftag='f={:3.2f}\ng={:3.2f}'.format(freqs[leastDamp[nmode]],grate[leastDamp[nmode]])  
+    ftag='f={:3.2f}\ng={:3.2f}'.format(freqs[nmode],grate[nmode])  
     a.text(0.1,0.75,ftag,ha='center',va='bottom',transform=a.transAxes)    
 
 # DMD spectrum
 f,a=getFig('DMDspectrum');figs.append(f),axs.append(a);nfig+=1
-a.scatter(freqs,grate,c=PhiPOD*100,s=eVNorm*100,cmap=plt.cm.jet)
+a.scatter(freqs,grate,c=PhiPOD*100,s=eVNorm*100/eVNorm.max(),cmap=plt.cm.jet)
 a.axhline(y=0,lw=2,linestyle='--')
 fabs=np.max(np.abs(freqs))
 a.set_xlim(-fabs,fabs)  
   
 #%%
+print ("\nUnstable modes indeces\n", unst_mode_index)
+print ("\nNumber of unstable modes: {:d} out of {:d} total".format(len(unst_mode_index),ntmode))  
+
 print('Most unstable mode is:'+str(grate.argmax()))
 print('Growth rate='+str(grate[inst_max]))
 print('Freq='+str(freqs[inst_max]))

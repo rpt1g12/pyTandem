@@ -28,9 +28,10 @@ importlib.reload(p3d)
 readSol=False
 save=True
 bar=False
-cutoff=7
-filt=False
-detrend=True
+cutoff=5
+filt=True
+detrend=False
+rmAvg=True
 dtrndString='_original'
 #%% Options
 sPattern='solT*.q'
@@ -102,31 +103,34 @@ else:
     t=np.fromfile(tPath)
     nt=len(t)
     data=np.reshape(np.fromfile(dataPath),(nx,nz,nt))
-
-#%% Resample
-deltaT=t[-2]-t[0]
-fsam=64
+    
 t0=t[0]
 t=t-t0
+#%% Resample
+deltaT=t[-1]-t[0]
+fsam=64
 
-tnew=np.linspace(0,deltaT,deltaT*fsam+1)
+
+tnew=np.linspace(0,deltaT,deltaT*fsam)
 nsam=len(tnew)
 #%%
-n=np.where(t>deltaT)[0][0]
+n=np.where(t<deltaT)[0][-1]+1
 Data=np.zeros((nx,nz,nsam))
 Data_filt=Data.copy()
 for i in range(nx):
     for k in range(nz):
-        Data[i,k,:],tt,nsam,fsam=rsample(data[i,k,:n],t[:n],verbose=False)
+        Data[i,k,:],tt,nsam,fsam=rsample(data[i,k,:n],t[:n],verbose=False,rmAvg=rmAvg)
         if filt:        
-            Data_filt[i,k,:]=fourierFilter(Data[i,k,:],'high',fsam,cutoff*0.3,15,False)
+            #Data_filt[i,k,:]=fourierFilter(Data[i,k,:],'low',fsam,cutoff*0.3,15,False)
+            Data_filt[i,k,:]=smooth(Data[i,k,:],int(64/(cutoff*0.3)))
         if detrend:
             Data[i,k,:]=rmvLS(tt,Data[i,k,:],2)
             dtrndString='_detrend'
 #%%
+plt.close('all')
 tt0=tt+t0-230
-xplotRange=[0,1]
-zplotRange=range(nz)#[4,5]#,3,4,5]
+xplotRange=[0]
+zplotRange=range(6)#[4,5]#,3,4,5]
 plt.close('all')
 for i in xplotRange:
     f,a=getFig('{}History{:d}{}'.format(vname,i,dtrndString));figs.append(f),axs.append(a);nfig+=1
@@ -136,49 +140,56 @@ for i in xplotRange:
     hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
     if save:
         savePlotFile(path=spath,ax=a,sameX=True)
-#%%
+#
 if filt:
-    for i in range(nx):
+    for i in xplotRange:
         f,a=getFig('{}HistoryFilt{:d}{}'.format(vname,i,dtrndString));figs.append(f),axs.append(a);nfig+=1
-        for k in range(nz):
+        for k in zplotRange:
             a.plot(tt0,Data_filt[i,k,:],lw=2,label='T{:1d}'.format(k+1))
     hdl,lbl,lgd=getLabels(ax=a,ncol=2,fontsize=15)
     hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
     if save:
         savePlotFile(path=spath,ax=a,sameX=True)
 #%% Define windows
-vmin=1e-9;vmax=1e-6
-nw=16;ovlp=0.9;sclg='density'
-nw=64;ovlp=0.9;sclg='density'
+vmin=1e-12;vmax=1e-6
+nw=64;ovlp=0.3;sclg='density'
+#nw=3;ovlp=0.3;sclg='density'
+minf=1;maxf=100
 nseg,novlp,ntt,fmax,fmin=defWin(tt,Data[0,0,:],nw,ovlp,verbose=False)
 print('fmax={}\tfmin={}'.format(fmax/0.3,fmin/0.3))
+
 #%% PSD
 plt.close('all')
 for i in xplotRange:
     f,a=getFig('{}PSD{:d}'.format(vname,i));figs.append(f),axs.append(a);nfig+=1
     for k in zplotRange:
-        if filt:
-            sgnl=Data_filt[i,k,:]
-        else:
-            sgnl=Data[i,k,:]       
+
+        sgnl=Data[i,k,:]       
         # Perform FFT
         ff3,PP=psdw(sgnl,fs=fsam,nperseg=nseg,noverlap=novlp,scaling=sclg)
         # Plot frequencies      
         a.loglog(ff3/0.3,PP,label='T{:1d}'.format(k+1))
-    a.set_xlim(1,100)
+    a.set_xlim(minf,maxf)
+    a.set_ylim(vmin,vmax)
     hdl,lbl,lgd=getLabels(ax=a,ncol=3,fontsize=15)
     hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
     if save:
         savePlotFile(path=spath,ax=a,sameX=True)
 #%% Spectogram
+#% Define windows
+zplotRange=[1,2,3,4]        
+vmin=1e-9;vmax=1e-6
+nw=32;ovlp=0.9;sclg='density'
+#nw=64;ovlp=0.9;sclg='density'
+minf=7;maxf=100
+nseg,novlp,ntt,fmax,fmin=defWin(tt,Data[0,0,:],nw,ovlp,verbose=False)
+print('fmax={}\tfmin={}'.format(fmax/0.3,fmin/0.3))
+save=True
 plt.close('all')
 for i in xplotRange:
     for k in zplotRange:
         f,a=getFig('{}Spectogram{:d}_{:d}'.format(vname,i,k+1));figs.append(f),axs.append(a);nfig+=1
-        if filt:
-            sgnl=Data_filt[i,k,:]
-        else:
-            sgnl=Data[i,k,:]
+        sgnl=Data[i,k,:]
         # Perform STFT
         ff2,tt2,psd=spectrogram(sgnl,fs=fsam,nperseg=nseg,noverlap=novlp,scaling=sclg)#,window='boxcar')
         # Plot Spectogram
@@ -189,8 +200,10 @@ for i in xplotRange:
             cb.set_label('PSD',fontsize=fs)
         a.set_ylabel('f',fontsize=fs)
         a.set_xlabel('t',fontsize=fs)
-        a.set_ylim(7,100)
-        a.set_xlim((tt2[0]+t0-230),(tt2[-1]+t0-230))
+        a.set_ylim(minf,maxf)
+        xmin=np.ceil(tt2[0]+t0-230)
+        xmax=np.floor(tt2[-1]+t0-230)
+        a.set_xlim(xmin,xmax)
         a.set_yscale('log')
         if save:
             figName='{}Spectogram{:d}_{:d}'.format(vname,i,k+1)
