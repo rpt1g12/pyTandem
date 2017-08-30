@@ -20,7 +20,7 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%% Options
-avgL=64*3
+avgL=int(64*0.5)
 save=True
 sPattern='solT*.q'
 vnames=['r','u','v','w','p']; # Variable names
@@ -28,7 +28,7 @@ vnames=['r','u','v','w','p']; # Variable names
 A=15 #WLE Amplitude, if SLE A=0
 AoA=10 #Angle of Attack
 nwave=8 #Number of LE wavelengths
-ssl=False
+ssl=True
 #%% Paths set-up
 if A>0:
     wavy=True

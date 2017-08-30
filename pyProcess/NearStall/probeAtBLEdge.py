@@ -24,7 +24,7 @@ styles=['-','--',':','-.']
 importlib.reload(p3d)
 
 #%% Options
-save=False
+save=True
 bar=True
 A=15 #WLE Amplitude, if SLE A=0
 AoA=10 #Angle of Attack
@@ -33,7 +33,7 @@ kk=0
 nwave=8
 vnames=['r','u','v','w','p']; # Variable names
 sPattern='solT*.*.q'
-ssl=False
+ssl=True
 #%% Paths set-up
 if A>0:
     nw=32;ovlp=0.5
@@ -91,22 +91,34 @@ for n in range(nSTA):
         xiprob[n,i]=indices[0][0]
         etprob[n,i]=indices[1][0]
 
-#%%
+#%% Extract data
+dtSTA=0.5
 ivar=['p']
 nvar=len(ivar)
-nt=nSTA*3*64
+nt=int(nSTA*dtSTA*64)
 t=np.zeros(nt)
 data=np.zeros((nt,nprob,nvar))
 for N in range(nSTA):
-    N0=N*3*64;N1=(N+1)*3*64
+    N0=int(N*dtSTA*64);N1=int((N+1)*dtSTA*64)
     for n in range(N0,N1):
         t[n]=fl.rdFlowInfo(sfile=files[n])[3]
         fl.rdSol(sfile=files[n])
         for i in range(nvar):
             var=ivar[i]
             data[n,:,i]=fl.blk[block].var[var].getValues()[xiprob[N,:],etprob[N,:],kk]
+            
+#%%
+nBL=2
+nplot=int(nBL*64*dtSTA*0.5)
+fl.rdSol(sfile=files[nplot])
+f,a,im=fl.blk[block].contourf(varname=var,vmin=0.5,vmax=0.6,nlvl=21,cmap=plt.cm.hot,bar=True);nfig+=1
+figs.append(f);axs.append(a)
+a.plot(xprob[nBL,:],yprob[nBL,:],lw=2,color='k',linestyle='--',marker='x')
+a.set_xlim(-0.5,-0.3)
+a.set_ylim(0.0,0.2)
+axShow(a)
 #%% Plot and save histories
-probRange=[0,1,2]
+probRange=range(1,5)#[0,1,2]
 
 for i in range(nvar):
     var=ivar[i]
@@ -124,7 +136,7 @@ for i in range(nvar):
 plt.close('all')
 scale=False; step=False;
 #nw=64;ovlp=0.125;sclg='density'
-nw=64;ovlp=0.3;sclg='density'
+nw=256;ovlp=0.9;sclg='density'
 sgn,tn,nsam,fsam=rsample(data[:,0,0],t)
 nseg,novlp,ntt,fmax,fmin=defWin(tn,sgn,nw,ovlp,verbose=False)
 fdata=np.zeros((int(nseg/2+1),nprob,nvar))
@@ -164,12 +176,12 @@ for i in range(nvar):
 #%% Spectogram
 # Define windows
 
-nw=32;ovlp=0.125;sclg='density'
-nseg,novlp,ntt,fmax,fmin=defWin(tn,Data[:,0,0],nw,ovlp,verbose=True)
+nw=256;ovlp=0.9;sclg='density'
+nseg,novlp,ntt,fmax,fmin=defWin(tn,Data[:,0,0],nw,ovlp,verbose=False)
 print('fmax={}\tfmin={}'.format(fmax/0.3,fmin/0.3))
 t0=t[0]
 plt.close('all')
-vmin=1e-9;vmax=[1e-5,1e-5,5e-5,5e-5]
+vmin=[1e-8,1e-9,1e-9,1e-9];vmax=[1e-5,1e-4,1e-4,1e-4]
 for ii,i in enumerate(probRange):
     f,a=getFig('{}Spectogram{:d}'.format(var,i));figs.append(f),axs.append(a);nfig+=1
     sgnl=Data[:,i,0]
@@ -177,15 +189,15 @@ for ii,i in enumerate(probRange):
     ff2,tt2,psd=spectrogram(sgnl,fs=fsam,nperseg=nseg,noverlap=novlp,scaling=sclg)
     # Plot Spectogram
     TT,FF=np.meshgrid((tt2+t0-230),ff2/0.3)
-    im=a.pcolor(TT,FF,psd,norm=colors.LogNorm(vmin=vmin, vmax=vmax[ii]),cmap=kbw,vmin=vmin,vmax=vmax[ii])
+    im=a.pcolor(TT,FF,psd,norm=colors.LogNorm(vmin=vmin[ii], vmax=vmax[ii]),cmap=kbw,vmin=vmin[ii],vmax=vmax[ii])
     if bar and not save:
         cb=f.colorbar(im,orientation='vertical')
         cb.set_label('PSD',fontsize=fs)
     a.set_ylabel('f',fontsize=fs)
     a.set_xlabel('t',fontsize=fs)
-    a.set_ylim(7,100)
+    a.set_ylim(5,100)
     a.set_xlim((tt2[0]+t0-230),(tt2[-1]+t0-230))
     a.set_yscale('log')
     if save:
-        figName='{}Spectogram{:d}_{:d}'.format(vname,i,k+1)
+        figName='{}Spectogram{:d}'.format(var,i)
         saveFigOnly(path=sfpath,fig=f,ax=a,name=figName,ext='.pdf')

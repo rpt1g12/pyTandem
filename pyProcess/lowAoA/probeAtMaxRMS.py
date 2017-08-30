@@ -2,6 +2,7 @@
 import os
 import math
 import numpy as np
+from scipy.signal import spectrogram 
 from scipy.signal import welch as psdw
 import matplotlib.pyplot as plt
 from lib.stats import *
@@ -11,6 +12,7 @@ import lib.Plot3DClasses as p3d
 from scipy import stats
 from scipy.interpolate import griddata
 from scipy.signal import argrelextrema as locmaxmin
+from matplotlib import colors,ticker
 pi=np.pi
 import getpass
 user=getpass.getuser()
@@ -153,7 +155,7 @@ hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
 if save:
     hName='{}{:02d}'.format(sfolder,AoA)
     savePlotFile(ax=axs[nfig],path=spath,name=hName+'.dat')
-
+axShow(axs[nfig])
 #%%
 ivar=['p']
 nvar=len(ivar)
@@ -167,9 +169,6 @@ for n in range(nt):
     fl.rdSol(sfile=files[n])
     for i in range(nvar):
         var=ivar[i]
-#        if useTheta:
-#            data[n,:,i]=fl.blk[block].interpolate2dk(vname=var,xi=xprob,yi=yprob,ki=0,mode='data')
-#        else:
         data[n,:,i]=fl.blk[block].var[var].getValues()[xiprob,etprob,kk]
 #%% Plot and save histories
 hName='{}{:02d}'.format(sfolder,AoA)
@@ -186,11 +185,6 @@ for i in range(nvar):
     if save:
         savePlotFile(ax=axs[nfig],sameX=True,path=spath)
 
-    
-#%%
-for i in range(nfig+1):
-    hdl,lbl,lgd=getLabels(ax=axs[i])
-    hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
 #%%
 
 scale=False; step=False; sclg='density'
@@ -232,8 +226,10 @@ for i in range(nvar):
 
 #%%
 t0=t[0]
-#plt.close('all')
-
+plt.close('all')
+nw=64;ovlp=0.9;sclg='density'
+nseg,novlp,ntt,fmax,fmin=defWin(tn,Data[:,0,0],nw,ovlp,verbose=True)
+print('fmax={}\tfmin={}'.format(fmax/0.3,fmin/0.3))
 for ii,i in enumerate(probRange):
     f,a=getFig('{}Spectogram{:d}'.format(var,i));figs.append(f),axs.append(a);nfig+=1
     sgnl=Data[:,i,0]
@@ -251,5 +247,5 @@ for ii,i in enumerate(probRange):
     a.set_xlim((tt2[0]),(tt2[-1]))
     a.set_yscale('log')
     if save:
-        figName='{}Spectogram{:d}_{:d}'.format(vname,i,k+1)
+        figName='{}Spectogram{:d}'.format(var,i)
         saveFigOnly(path=sfpath,fig=f,ax=a,name=figName,ext='.pdf')

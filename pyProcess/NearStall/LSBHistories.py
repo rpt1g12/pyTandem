@@ -34,9 +34,9 @@ kk=0 #Spanwise slice to look at
 nwave=8 #Number of LE wavelengths
 ssl=True
 #%% Rake set-up
-ibounds=[40,61] #Manually selected bounds for rakes to be placed inside LSB
+ibounds=[40,81] #Manually selected bounds for rakes to be placed inside LSB
 nn=1024; #Points in rake
-l=0.13; #Rake's length
+l=0.12; #Rake's length
 step=5 #Iteration step
 auto=True #Automatic LSB index detection
 #%% Paths set-up
@@ -44,17 +44,17 @@ if A>0:
     wavy=True
     sfolder='{}WLE'.format(nwave)
     if ssl:
-        subpath='heaving/ss005/'
+        subpath='heaving/ss005/STA/'
         sfolder+='SSL'
     else:
-        subpath='heaving/ss006/'
+        subpath='heaving/ss006/STA/'
         sfolder+='Central'
 else:
     wavy=False
     sfolder='{}SLE'.format(nwave)
     subpath='heaving/ss001/'
 simfolder='{:1d}A{:02d}W11AoA{:02d}'.format(nwave,A,AoA)
-path="/media/{}/dellHDD/post/{}/{}STA/".format(user,simfolder,subpath)
+path="/media/{}/dellHDD/post/{}/{}".format(user,simfolder,subpath)
 spath='/home/rpt1g12/Documents/thesis/data/nearStall/LSBHistory{}/'.format(sfolder)
 if not os.path.exists(spath) and save:
     os.makedirs(spath)
@@ -148,11 +148,20 @@ for n in range(nt):
     n+=1
 
 #%% Plot delta and delta_star
-f,a=getFig('deltas')
+f,a=getFig('BLquantities')
 figs.append(f);axs.append(a);nfig+=1 # Append them to the figures and axes arrays
 for n in range(nt):
     axs[nfig].plot(x0[n,:],delta[n,:],lw=2,label='d{:02d}'.format(n))
-    #axs[nfig].plot(x0[n,:],dstr[n,:],lw=2,label='delta_star')
+    axs[nfig].plot(x0[n,:],dstr[n,:],lw=2,label='dstr{:02d}'.format(n))
+    axs[nfig].plot(x0[n,:],theta[n,:],lw=2,label='theta{:02d}'.format(n))
+    axs[nfig].plot(x0[n,:],H[n,:],lw=2,label='H{:02d}'.format(n))
+
+i=nfig
+hdl,lbl,lgd=getLabels(ax=axs[i])
+hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
+fit(axs[i])
+if save:
+    savePlotFile(path=spath,ax=axs[i],sameX=False)
 #%% edge
 f,a=getFig('BL')
 figs.append(f);axs.append(a);nfig+=1 # Append them to the figures and axes arrays
@@ -162,12 +171,12 @@ for n in range(nt):
 axs[nfig].set_xlim(-0.5,-0.3)
 axs[nfig].set_aspect('equal')
 
-#%% Set-up labels    
-for i in range(0,nfig+1):
-    hdl,lbl,lgd=getLabels(ax=axs[i])
-    hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
-    fit(axs[i])
-    if save:
-        savePlotFile(path=spath,ax=axs[i],sameX=False)
-#%%
+i=nfig
+hdl,lbl,lgd=getLabels(ax=axs[i])
+hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
+fit(axs[i])
+if save:
+    savePlotFile(path=spath,ax=axs[i],sameX=False)
+
+#%
 axs[nfig].plot(xo,yo,lw=2,color='k',label='wall')
