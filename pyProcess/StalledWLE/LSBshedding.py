@@ -18,10 +18,10 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%%
-save=True
-#folder='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig25_3WLE/'
-folder='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig25/'
-#folder='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig24/'
+save=False
+#folder='/media/{:}/082F-63FE/phd/thesis/data/StalledWLE/fig25_3WLE/'
+folder='/media/{:}/082F-63FE/phd/thesis/data/StalledWLE/fig25/'.format(user)
+#folder='/media/{:}/082F-63FE/phd/thesis/data/StalledWLE/fig24/'
 file='4WLE_T4'
 path=folder+file+'.dat'
 columns=list(range(1,14,2))
@@ -32,11 +32,12 @@ nprobe,n=psd.shape
 #rescale frequency
 M=0.3;sin20=np.sin(np.deg2rad(20))
 #4WLE_T2
-Ue=0.4685246100212967
-th=0.000695462637932316
+#Ue=0.4685246100212967
+#th=0.000695462637932316
 #4WLE_T4
-Ue=0.4020089494807683
-th=0.0007055318336547253
+#Ue=0.4020089494807683
+#th=0.0007055318336547253
+Ue=0.3;th=1
 ##3WLE_T1
 #Ue=0.4852434254676617
 #th=0.0007028910971796682

@@ -20,71 +20,71 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%% Options
-tSteps=range(0,32*12,32)
-#tSteps=[0]
+
 save=False
 sPattern='solT*.q'
 vnames=['r','u','v','w','p']; # Variable names
-vname='twz'
-plane=1
+vname='Cp'
+plane=2
 autoMinMax=False
 bar=True
 #%% Simulation Options
 A=15 #WLE Amplitude, if SLE A=0
 AoA=10 #Angle of Attack
+block=0 #Block to look at
 kk=0 #Spanwise slice to look at
 nwave=8 #Number of LE wavelengths
 Lz_2=nwave*0.11/2
 if plane==1:
     yrange=(-Lz_2,Lz_2)
-    xrange=(-0.5-A/1000.0,0.5)
+    xrange=(-0.5+A/1000.0,0.5)
 elif plane==2:
-    yrange=(0,0.2)
-    xrange=(-0.5-A/1000.0,0.5)
+    yrange=(0,0.5)
+    xrange=(-0.5+A/1000.0,0.5)
 #%% Paths set-up
 if A>0:
-    #tSteps=np.asarray(range(0,64*3*11+1,64*3))  
-    tSteps=range(11)
+    n0=1664
+    ntot=11
+    dn=int(64*0.5)
+    n1=n0+dn*ntot+1
+    tSteps=np.asarray(range(n0,n1,dn))
     wavy=True
-    sfolder='{}WLESTA'.format(nwave)
-    subpath='heaving/ss001/STA/'
-    block=1 #Block to look at
-    if vname=='twx':
-        cmap=plt.cm.bwr
-        vmin,vmax=(-1e-4,1e-4)
-        nlvl=4
-    elif vname=='twz':
-        cmap=plt.cm.coolwarm
-        #vmin,vmax=(-1e-3,1e-3)
-        vmin,vmax=(-5e-4,5e-4)
-        xrange=(-0.5-A/1000.0,-0.25)
+    sfolder='{}WLET8'.format(nwave)
+    subpath='heaving/down/ss005/T430T500/'
+    if vname=='U':
+        cmap=kbw
+        vmin,vmax=(0.95,1)
         nlvl=6
     elif vname=='Cp':
         cmap=plt.cm.hot
-        vmin,vmax=(-4.0,0.0)
-        nlvl=10
+        vmin,vmax=(-2.0,0)
+        nlvl=11
+    elif vname=='Wz':
+        cmap=plt.cm.bwr
+        vmin,vmax=(-30,30)
+        nlvl=6
     else:
         cmap=plt.cm.jet
         autoMinMax=True
         nlvl=21
 else:
-    tSteps=range(0,32*12,32)
+    tSteps=range(0,64*12,64)
+    #tSteps=[0]
     wavy=False
     sfolder='{}SLE'.format(nwave)
-    subpath='heaving/ss003/'
-    block=4 #Block to look at
-    if vname=='twx':
-        cmap=plt.cm.bwr
-        vmin,vmax=(-5e-4,5e-4)
-        nlvl=6
-    elif vname=='twz':
-        cmap=plt.cm.bwr
-        vmin,vmax=(-1e-4,1e-3)
+    subpath='heaving/ss001/'
+    if vname=='U':
+        cmap=kbw
+        vmin,vmax=(0.95,1)
         nlvl=6
     elif vname=='Cp':
         cmap=plt.cm.hot
         vmin,vmax=(-3.5,0)
         nlvl=11
+    elif vname=='Wz':
+        cmap=plt.cm.bwr
+        vmin,vmax=(-30,30)
+        nlvl=6
     else:
         cmap=plt.cm.jet
         autoMinMax=True
@@ -94,8 +94,8 @@ if plane==1:
 elif plane==2:
     view='Side'
 simfolder='{:1d}A{:02d}W11AoA{:02d}'.format(nwave,A,AoA)
-path="/media/{}/dellHDD/post/{}/{}".format(user,simfolder,subpath)
-spath='/home/rpt1g12/Documents/thesis/figures/nearStall/{}{}{}/'.format(sfolder,vname,view)
+path="/media/{}/sonyHDD/post/{}/{}".format(user,simfolder,subpath)
+spath='/home/{}/Documents/thesis/figures/nearStall/{}{}{}Down/'.format(user,sfolder,vname,view)
 if not os.path.exists(spath) and save:
     os.makedirs(spath)
 print('Reading data from:\n {}'.format(path))
@@ -111,8 +111,9 @@ fl.rdSol(vnames=vnames) # Read solution file
 flInfo=fl.rdFlowInfo() # Read solution file info, i.e. Mach, AoA, Re and time
 mach=flInfo[0]
 #%%
-xwall=fl.blk[block].var['x'].getValues()[0,kk,:]
-ywall=fl.blk[block].var['z'].getValues()[0,kk,:]
+xwall=fl.blk[block].var['x'].getValues()[:,0,kk]
+ywall=fl.blk[block].var['y'].getValues()[:,0,kk]
+q0=0.5*mach**2+1/(1.4*0.4)
 
 for ii in tSteps:
     fl.rdSol(vnames=vnames,sfile=files[ii])
@@ -121,12 +122,22 @@ for ii in tSteps:
         cp=fl.blk[block].var['p'].getValues()
         cp=(cp-1/1.4)/(0.5*mach**2)
         fl.blk[block].setData(vname=vname,val=cp)
-    if vname not in vnames+['Cp']:
+    if vname=='U':
+        U=(fl.blk[block].var['u'].getValues())**2
+        U+=(fl.blk[block].var['v'].getValues())**2
+        U+=(fl.blk[block].var['w'].getValues())**2
+        static=fl.blk[block].var['p'].getValues()/(0.4*fl.blk[block].var['r'].getValues())
+        U=(0.5*U+static)/(q0)
+        fl.blk[block].setData(vname=vname,val=U)
+    if vname=='Wz':
+        Wz=fl.blk[block].derive('v','x',True)-fl.blk[block].derive('u','y',True)
+        fl.blk[block].setData('Wz',Wz)
+    if vname not in vnames+['Cp','U','Wz']:
         fl.blk[block].getWSS(Re=flInfo[2])
     var=fl.blk[block].var[vname].getValues()
     if autoMinMax:
-        vmin=var.min()#-0.5*(np.abs(var.min())+var.max())
-        vmax=var.max()
+        vmin=-0.5*(np.abs(var.min())+var.max())
+        vmax=-vmin
     if save:
         bar=False
     f,a,im=fl.blk[block].contourf(varname=vname,vmin=vmin,vmax=vmax,plane=plane,k=kk,nlvl=nlvl,cmap=cmap,bar=bar);nfig+=1
@@ -134,12 +145,13 @@ for ii in tSteps:
     fl.blk[block].contour(varname=vname,vmin=vmin,vmax=vmax,plane=plane,k=kk,nlvl=nlvl,ax=axs[nfig])
     axs[nfig].plot(xwall,ywall,lw=2,color='k')
     if not save:
-        anotation=r'$t={:3.4f}$'.format(flInfo[3])
-        axs[nfig].text(0.0,-0.1,anotation,ha='center',va='bottom',transform=axs[nfig].transAxes)
+        anotation=r'$t={:3.4f}$'.format(flInfo[3]-230)
+        axs[nfig].text(0.0,-0.2,anotation,ha='center',va='bottom',transform=axs[nfig].transAxes)
     axs[nfig].set_xlim(xrange)
     axs[nfig].set_ylim(yrange)
     axs[nfig].set_aspect('equal')
     if save:
-        saveFigOnly(path=spath,fig=figs[nfig],ax=axs[nfig],name='{}{:04d}'.format(vname,ii),ext='.pdf')       
+        saveFigOnly(path=spath,fig=figs[nfig],ax=axs[nfig],name='{}{:04d}'.format(vname,ii),ext='.pdf')
+        
 #%%
 print('max={},min={}'.format(var.max(),var.min()))

@@ -25,7 +25,7 @@ tSteps=range(0,32*12,32)
 save=False
 sPattern='solT*.q'
 vnames=['r','u','v','w','p']; # Variable names
-vname='twz'
+vname='Cp'
 plane=1
 autoMinMax=False
 bar=True
@@ -43,16 +43,20 @@ elif plane==2:
     xrange=(-0.5-A/1000.0,0.5)
 #%% Paths set-up
 if A>0:
-    #tSteps=np.asarray(range(0,64*3*11+1,64*3))  
-    tSteps=range(11)
+    n0=1664
+    ntot=11
+    dn=int(64*0.5)
+    n1=n0+dn*ntot+1
+    tSteps=np.asarray(range(n0,n1,dn))
+    #tSteps=range(11)
     wavy=True
-    sfolder='{}WLESTA'.format(nwave)
-    subpath='heaving/ss001/STA/'
+    sfolder='{}WLE'.format(nwave)
+    subpath='heaving/down/ss001/T430T500/'
     block=1 #Block to look at
     if vname=='twx':
         cmap=plt.cm.bwr
-        vmin,vmax=(-1e-4,1e-4)
-        nlvl=4
+        vmin,vmax=(-3e-4,3e-4)
+        nlvl=11
     elif vname=='twz':
         cmap=plt.cm.coolwarm
         #vmin,vmax=(-1e-3,1e-3)
@@ -61,8 +65,8 @@ if A>0:
         nlvl=6
     elif vname=='Cp':
         cmap=plt.cm.hot
-        vmin,vmax=(-4.0,0.0)
-        nlvl=10
+        vmin,vmax=(-2.0,0.0)
+        nlvl=15
     else:
         cmap=plt.cm.jet
         autoMinMax=True
@@ -94,8 +98,8 @@ if plane==1:
 elif plane==2:
     view='Side'
 simfolder='{:1d}A{:02d}W11AoA{:02d}'.format(nwave,A,AoA)
-path="/media/{}/dellHDD/post/{}/{}".format(user,simfolder,subpath)
-spath='/home/rpt1g12/Documents/thesis/figures/nearStall/{}{}{}/'.format(sfolder,vname,view)
+path="/media/{}/sonyHDD/post/{}/{}".format(user,simfolder,subpath)
+spath='/home/{}/Documents/thesis/figures/nearStall/{}{}{}Down/'.format(user,sfolder,vname,view)
 if not os.path.exists(spath) and save:
     os.makedirs(spath)
 print('Reading data from:\n {}'.format(path))
@@ -134,7 +138,7 @@ for ii in tSteps:
     fl.blk[block].contour(varname=vname,vmin=vmin,vmax=vmax,plane=plane,k=kk,nlvl=nlvl,ax=axs[nfig])
     axs[nfig].plot(xwall,ywall,lw=2,color='k')
     if not save:
-        anotation=r'$t={:3.4f}$'.format(flInfo[3])
+        anotation=r'$t={:3.4f}$'.format(flInfo[3]-230)
         axs[nfig].text(0.0,-0.1,anotation,ha='center',va='bottom',transform=axs[nfig].transAxes)
     axs[nfig].set_xlim(xrange)
     axs[nfig].set_ylim(yrange)

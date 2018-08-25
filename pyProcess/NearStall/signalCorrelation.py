@@ -4,6 +4,7 @@ import math
 import numpy as np
 from scipy.signal import spectrogram 
 from scipy.signal import welch as psdw
+from scipy.signal import correlate
 import matplotlib.pyplot as plt
 from lib.stats import *
 from lib.myPlots import *
@@ -26,12 +27,12 @@ importlib.reload(p3d)
 
 #%%
 readSol=False
-save=True
+save=False
 bar=True
-cutoff=5
+cutoff=2
 filt=True
 detrend=False
-rmAvg=False
+rmAvg=True
 dtrndString='_original'
 media='sonyHDD'
 #%% Options
@@ -127,86 +128,46 @@ for i in range(nx):
         if detrend:
             Data[i,k,:]=rmvLS(tt,Data[i,k,:],2)
             dtrndString='_detrend'
-#%%
-plt.close('all')
-tt0=tt+t0-230
-xplotRange=[0]
-zplotRange=range(6)#[4,5]#,3,4,5]
-plt.close('all')
-for i in xplotRange:
-    f,a=getFig('{}History{:d}{}'.format(vname,i,dtrndString));figs.append(f),axs.append(a);nfig+=1
-    for k in zplotRange:
-        a.plot(tt0,Data[i,k,:],lw=2,label='T{:1d}'.format(k+1))
-    hdl,lbl,lgd=getLabels(ax=a,ncol=2,fontsize=15)
-    hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
-    if save:
-        savePlotFile(path=spath,ax=a,sameX=True)
-#
-if filt:
-    for i in xplotRange:
-        f,a=getFig('{}HistoryFilt{:d}{}'.format(vname,i,dtrndString));figs.append(f),axs.append(a);nfig+=1
-        for k in zplotRange:
-            a.plot(tt0,Data_filt[i,k,:],lw=2,label='T{:1d}'.format(k+1))
-    hdl,lbl,lgd=getLabels(ax=a,ncol=2,fontsize=15)
-    hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
-    if save:
-        savePlotFile(path=spath,ax=a,sameX=True)
-#%% Define windows
-vmin=1e-12;vmax=1e-6
-nw=64;ovlp=0.3;sclg='density'
-#nw=3;ovlp=0.3;sclg='density'
-minf=1;maxf=100
-nseg,novlp,ntt,fmax,fmin=defWin(tt,Data[0,0,:],nw,ovlp,verbose=False)
-print('fmax={}\tfmin={}'.format(fmax/0.3,fmin/0.3))
 
-#%% PSD
+#%% Signal Correlation
+i=0
+ks=[1,2,3,4]
+mode='full'
 plt.close('all')
-for i in xplotRange:
-    f,a=getFig('{}PSD{:d}'.format(vname,i));figs.append(f),axs.append(a);nfig+=1
-    for k in zplotRange:
+lag=[]
+DD=Data
+wLength=10*64
+nShift=4*64
+f,a=getFig('Histories23');figs.append(f),axs.append(a);nfig+=1
+a.plot(tt0,DD[0,ks[0],:],lw=2,color='blue')
+a.plot(tt0,DD[0,ks[1],:],lw=2,color='red')
+f,a=getFig('Histories45');figs.append(f),axs.append(a);nfig+=1
+a.plot(tt0,DD[0,ks[2],:],lw=2,color='blue')
+a.plot(tt0,DD[0,ks[3],:],lw=2,color='red')
+nsignal=len(DD[i,0,:])
+scale=False
 
-        sgnl=Data[i,k,:]       
-        # Perform FFT
-        ff3,PP=psdw(sgnl,fs=fsam,nperseg=nseg,noverlap=novlp,scaling=sclg)
-        # Plot frequencies      
-        a.loglog(ff3/0.3,PP,label='T{:1d}'.format(k+1))
-    a.set_xlim(minf,maxf)
-    a.set_ylim(vmin,vmax)
-    hdl,lbl,lgd=getLabels(ax=a,ncol=3,fontsize=15)
-    hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)
-    if save:
-        savePlotFile(path=spath,ax=a,sameX=True)
-#%% Spectogram
-#% Define windows
-zplotRange=[1,2,3,4]        
-vmin=1e-9;vmax=1e-6
-nw=32;ovlp=0.9;sclg='density'
-#nw=64;ovlp=0.9;sclg='density'
-minf=7;maxf=100
-nseg,novlp,ntt,fmax,fmin=defWin(tt,Data[0,0,:],nw,ovlp,verbose=False)
-print('fmax={}\tfmin={}'.format(fmax/0.3,fmin/0.3))
-save=True
-plt.close('all')
-for i in xplotRange:
-    for k in zplotRange:
-        f,a=getFig('{}Spectogram{:d}_{:d}'.format(vname,i,k+1));figs.append(f),axs.append(a);nfig+=1
-        sgnl=Data[i,k,:]
-        # Perform STFT
-        ff2,tt2,psd=spectrogram(sgnl,fs=fsam,nperseg=nseg,noverlap=novlp,scaling=sclg)#,window='boxcar')
-        # Plot Spectogram
-        TT,FF=np.meshgrid((tt2+t0-230),ff2/0.3)
-        im=a.pcolor(TT,FF,psd,norm=colors.LogNorm(vmin=vmin, vmax=vmax),cmap=kbw,vmin=vmin,vmax=vmax)
-        if bar and not save:
-            cb=f.colorbar(im,orientation='vertical')
-            cb.set_label('PSD',fontsize=fs)
-        a.set_ylabel('f',fontsize=fs)
-        a.set_xlabel('t',fontsize=fs)
-        a.set_ylim(minf,maxf)
-        xmin=np.ceil(tt2[0]+t0-230)
-        xmax=np.floor(tt2[-1]+t0-230)
-        a.set_xlim(xmin,xmax)
-        a.set_yscale('log')
-        if save:
-            figName='{}Spectogram{:d}_{:d}'.format(vname,i,k+1)
-            saveFigOnly(path=sfpath,fig=f,ax=a,name=figName,ext='.pdf')
-
+for n in range(0,nsignal-wLength*(1-int(nShift/wLength)),nShift):
+    nn=n+wLength
+    s2=DD[i,ks[0],n:nn]-DD[i,ks[0],n:nn].mean()
+    s3=DD[i,ks[1],n:nn]-DD[i,ks[1],n:nn].mean()
+    s4=DD[i,ks[2],n:nn]-DD[i,ks[2],n:nn].mean()
+    s5=DD[i,ks[3],n:nn]-DD[i,ks[3],n:nn].mean()
+    
+    corrLen=len(s2)
+    
+    corr23=correlate(s2,s3,mode)[corrLen-1:]
+    corr45=correlate(s4,s5,mode)[corrLen-1:]
+    if scale:
+        corr23/=max(abs(corr23))
+        corr45/=max(abs(corr45))
+    dt=1/64
+    dTau=np.asarray(range(len(corr45)),dtype='float')*dt
+    
+    iCorrMax=np.argmax(corr45)
+    lag.append(dTau[iCorrMax])
+    print('\nTime phase shift is: {:f}'.format(lag[-1]))
+    
+    f,a=getFig('Correlation{:d}'.format(len(lag)));figs.append(f),axs.append(a);nfig+=1
+    axs[nfig].plot(dTau,corr23,lw=2,color='blue')
+    axs[nfig].plot(dTau,corr45,lw=2,color='red')

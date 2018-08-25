@@ -22,33 +22,35 @@ importlib.reload(p3d)
 #%% Options
 tSteps=range(0,32*12,32)
 #tSteps=[0]
-save=False
+save=True
 sPattern='solT*.q'
 vnames=['r','u','v','w','p']; # Variable names
-vname='twz'
+vname='Cp'
 plane=1
 autoMinMax=False
 bar=True
+ssName='upSurface'
+media='082F-63FE'
 #%% Simulation Options
 A=15 #WLE Amplitude, if SLE A=0
-AoA=10 #Angle of Attack
+AoA=17 #Angle of Attack
 kk=0 #Spanwise slice to look at
 nwave=8 #Number of LE wavelengths
 Lz_2=nwave*0.11/2
 if plane==1:
     yrange=(-Lz_2,Lz_2)
-    xrange=(-0.5-A/1000.0,0.5)
+    xrange=(-0.5-A/1000.0,-0.35)
 elif plane==2:
     yrange=(0,0.2)
-    xrange=(-0.5-A/1000.0,0.5)
+    xrange=(-0.5-A/1000.0,-0.35)
 #%% Paths set-up
 if A>0:
-    #tSteps=np.asarray(range(0,64*3*11+1,64*3))  
-    tSteps=range(11)
+    tSteps=np.asarray(range(0,int(32*10+1),int(32*0.25)))  
+    #tSteps=range(11)
     wavy=True
-    sfolder='{}WLESTA'.format(nwave)
-    subpath='heaving/ss001/STA/'
-    block=1 #Block to look at
+    sfolder='{}WLEForced'.format(nwave)
+    subpath='ss001/'
+    block=4 #Block to look at
     if vname=='twx':
         cmap=plt.cm.bwr
         vmin,vmax=(-1e-4,1e-4)
@@ -57,12 +59,13 @@ if A>0:
         cmap=plt.cm.coolwarm
         #vmin,vmax=(-1e-3,1e-3)
         vmin,vmax=(-5e-4,5e-4)
-        xrange=(-0.5-A/1000.0,-0.25)
+        xrange=(-0.5-A/1000.0,-0.4)
         nlvl=6
     elif vname=='Cp':
         cmap=plt.cm.hot
-        vmin,vmax=(-4.0,0.0)
-        nlvl=10
+        vmin,vmax=(-3.5,-1.5)
+        autoMinMax=False
+        nlvl=11
     else:
         cmap=plt.cm.jet
         autoMinMax=True
@@ -83,7 +86,7 @@ else:
         nlvl=6
     elif vname=='Cp':
         cmap=plt.cm.hot
-        vmin,vmax=(-3.5,0)
+        vmin,vmax=(-3,0)
         nlvl=11
     else:
         cmap=plt.cm.jet
@@ -94,8 +97,8 @@ if plane==1:
 elif plane==2:
     view='Side'
 simfolder='{:1d}A{:02d}W11AoA{:02d}'.format(nwave,A,AoA)
-path="/media/{}/dellHDD/post/{}/{}".format(user,simfolder,subpath)
-spath='/home/rpt1g12/Documents/thesis/figures/nearStall/{}{}{}/'.format(sfolder,vname,view)
+path="/media/{}/{}/post/{}/ss001/".format(user,media,simfolder)
+spath='/media/{}/{}/phd/thesis/figures/nearStall/{}{}{}/'.format(user,media,sfolder,vname,view)
 if not os.path.exists(spath) and save:
     os.makedirs(spath)
 print('Reading data from:\n {}'.format(path))
@@ -131,15 +134,15 @@ for ii in tSteps:
         bar=False
     f,a,im=fl.blk[block].contourf(varname=vname,vmin=vmin,vmax=vmax,plane=plane,k=kk,nlvl=nlvl,cmap=cmap,bar=bar);nfig+=1
     figs.append(f);axs.append(a)
-    fl.blk[block].contour(varname=vname,vmin=vmin,vmax=vmax,plane=plane,k=kk,nlvl=nlvl,ax=axs[nfig])
-    axs[nfig].plot(xwall,ywall,lw=2,color='k')
+    fl.blk[block].contour(varname=vname,vmin=vmin,vmax=vmax,plane=plane,k=kk,nlvl=nlvl,ax=axs[-1])
+    axs[-1].plot(xwall,ywall,lw=2,color='k')
     if not save:
         anotation=r'$t={:3.4f}$'.format(flInfo[3])
-        axs[nfig].text(0.0,-0.1,anotation,ha='center',va='bottom',transform=axs[nfig].transAxes)
-    axs[nfig].set_xlim(xrange)
-    axs[nfig].set_ylim(yrange)
-    axs[nfig].set_aspect('equal')
+        axs[-1].text(0.0,-0.1,anotation,ha='center',va='bottom',transform=axs[-1].transAxes)
+    axs[-1].set_xlim(xrange)
+    axs[-1].set_ylim(yrange)
+    axs[-1].set_aspect('equal')
     if save:
-        saveFigOnly(path=spath,fig=figs[nfig],ax=axs[nfig],name='{}{:04d}'.format(vname,ii),ext='.pdf')       
+        saveFigOnly(path=spath,fig=figs[-1],ax=axs[-1],name='{}{:04d}'.format(vname,ii),ext='.pdf')       
 #%%
 print('max={},min={}'.format(var.max(),var.min()))

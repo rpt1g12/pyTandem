@@ -11,7 +11,7 @@ pi=np.pi
 plt.close('all')
 figs=[];axs=[];hdls=[];lbls=[];lgds=[];nfig=-1;fs=18
 #%%
-save=True
+save=False
 prandtl=True #Apply Prandtl-Glauert correction?
 AoA=10 #Angle of attack
 A=15 #WLE amplitude

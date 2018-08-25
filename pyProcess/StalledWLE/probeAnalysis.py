@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.signal import welch as psdw
 from scipy.signal import hilbert
-import pywt #Wavelets
+#import pywt #Wavelets
 import matplotlib.pyplot as plt;plt.close('all')
 from lib.stats import *
 from lib.myPlots import *
@@ -20,21 +20,23 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%% Options
-wavelets=False;plot=True
+wavelets=False;plot=False;save=True
 #%%Simulation Name and set-up
 #theta=1;Ue=1
 #hName='8SLE';probR=range(0,17,1)
 #theta=0.000639896428216028;Ue=0.4058528675001842
-#tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig24_8SLE/'
+#tpath='/media/{:}/082F-63FE/phd/thesis/data/StalledWLE/fig24_8SLE/'.format(user)
 #hName='8SLE_150';probR=range(0,17,1)
 #theta=0.000639896428216028;Ue=0.4058528675001842
-#tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig24_8SLE/'
+#tpath='/media/{:}/082F-63FE/phd/thesis/data/StalledWLE/fig24_8SLE/'.format(user)
 #hName='8WLE_Central';probR=range(0,17,1)
 #theta=0.0006705586212473073;Ue=0.4565491406912271
-#tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig25_8WLE/'
+#tpath='/media/{:}/082F-63FE/phd/thesis/data/StalledWLE/fig25_8WLE/'.format(user)
 hName='8WLE_SSL';probR=range(0,17,1)
 theta=0.0006922426498962798;Ue=0.3807581073978518
-tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig25_8WLE/'
+tpath='/media/{:}/082F-63FE/phd/thesis/data/StalledWLE/fig25_8WLE/'.format(user)
+#%%
+theta=1*np.sin(np.deg2rad(20));Ue=0.3
 #%%Probes time history
 
 var='p'
@@ -72,8 +74,9 @@ for i in range(len(probR)):
 
 hdl,lbl,lgd=getLabels(ax=axs[nfig],ncol=2,fontsize=fs,loc='lower left')
 #%%
-
-savePlotFile(ax=axs[nfig],path=tpath,name='BLscaled_{}.dat'.format(hName))
+if save:
+    #savePlotFile(ax=axs[nfig],path=tpath,name='BLscaled_{}.dat'.format(hName))
+    savePlotFile(ax=axs[nfig],path=tpath,name='{}.dat'.format(hName))
 #%%
 if wavelets:
     #plt.close('all')

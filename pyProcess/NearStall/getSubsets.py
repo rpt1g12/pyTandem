@@ -23,20 +23,21 @@ importlib.reload(p3d)
 
 #%%
 save=False
-
-#%% Sub-set settings
 ssName='upSurface'
+media='082F-63FE'
+#%% Sub-set settings
+
 bkXYZ=[1,1,1]
 blocks=[4]
 xRanges=[range(110)]
-yRanges=[[1]]
+yRanges=[range(4)]
 zRanges=[None]
 vnames=['r','u','v','w','p']; # Variable names
 sPattern='solT*.*.q'
 var='p'    
 #%% Paths set-up
-path='/media/rpt1g12/My Passport/results/quickPitchUp/ss001/T45T165/'
-sspath="/media/{}/dellHDD/post/4A15W11AoA10/heaving/{}/".format(user,ssName)
+path='/media/{}/{}/post/8A15W11AoA17/ss001/'.format(user,media)
+sspath="/media/{}/{}/post//8A15W11AoA17/ss001/{}/".format(user,media,ssName)
 #sspath=path+ssName+'/'
 if not os.path.exists(sspath) and save:
     os.makedirs(sspath)
@@ -57,7 +58,7 @@ ss=fl.getSubsets(fromBlocks=blocks,bkXYZ=bkXYZ,xRanges=xRanges,yRanges=yRanges,z
 ss.wrGrid()
 
 #%% Loop trough time 1731
-for sfile in files[1731:]:
+for sfile in files[:]:
     fl.rdSol(vnames=vnames,sfile=sfile)
     flInfo=fl.rdFlowInfo()
     fName='{}T{:03.4f}.f'.format(var,flInfo[3])

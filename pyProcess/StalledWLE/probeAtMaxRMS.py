@@ -22,15 +22,15 @@ importlib.reload(p3d)
 #hName='8SLE';kk=0;block=0
 #path="/media/rpt1g12/dell\'s_hdd/post/8A00W11AoA20/subsets/ss004/"
 #tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig24_8SLE/'
-hName='8SLE_150';kk=0;block=0
-path="/media/rpt1g12/dell\'s_hdd/post/8A00W11AoA20/subsets/ss006/"
-tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig24_8SLE/'
+#hName='8SLE_150';kk=0;block=0
+#path="/media/rpt1g12/dell\'s_hdd/post/8A00W11AoA20/subsets/ss006/"
+#tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig24_8SLE/'
 #hName='8WLE_Central';kk=0;block=0
 #path="/media/rpt1g12/dell\'s_hdd/post/8A15W11AoA20/subsets/ss003/ss001/"
 #tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig25_8WLE/'
-#hName='8WLE_SSL';kk=0;block=0
-#path="/media/rpt1g12/dell\'s_hdd/post/8A15W11AoA20/subsets/ss007/ss001/"
-#tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig25_8WLE/'
+hName='8WLE_SSL';kk=0;block=0
+path="/media/rpt1g12/dell\'s_hdd/post/8A15W11AoA20/subsets/ss007/ss001/"
+tpath='/home/rpt1g12/Documents/thesis/data/StalledWLE/fig25_8WLE/'
 #%% Options
 save=False
 #%%

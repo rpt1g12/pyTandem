@@ -28,20 +28,26 @@ f3 = multiply(5*multiply(1/cosh(Xm/2), tanh(Xm/2)), 2*exp((0.1+2.8j)*Tm))
 
 #%% combine signals and make data matrix
 D = (f1 + f2 + f3).T
-r=4
-U,s,V,eV,eVec,Phi,Psi,PhiPOD=ROM(D,r=r)
+r=10
+#U,s,V,eV,eVec,Phi,Psi,PhiPOD=ROM(D,r=r)
+U,s,V=POD(D[:,:-1],r=-1)
+# Normalise energy
+sn=s/sum(s)
+i=1;tot=0
+while tot<0.9:
+    tot=sum(sn[:i])
+    i+=1
+rank=i
+eV,eVec,Phi,Psi,PhiPOD=DMD(D,U,s,V,mode=1,r=rank,rPro=3)
 
 #%% compute DMD reconstruction
 rDMD = dot(Phi, Psi)
 np.allclose(D[:,:-1], rDMD) # True
 
 #%%
-
-if r<0:
-    r=len(s)
 f,a=getFig('DMDmode');figs.append(f),axs.append(a);nfig+=1
 
-plotRange=range(r)
+plotRange=range(rank)
 for i in plotRange:
     axs[nfig].plot(Phi.real[:,i],lw=2,label='m{:02d}'.format(i))
 #%%
@@ -51,7 +57,7 @@ for i in plotRange:
     axs[nfig].plot(Psi.real[i,:],lw=2,label='m{:02d}'.format(i))
 
 #%%
-n=len(t)-2
+n=len(t)-500
 f,a=getFig('streamline');figs.append(f),axs.append(a);nfig+=1
 a.plot(D[:,n],lw=2,color='red',label='original')
 a.plot(rDMD[:,n],lw=2,color='blue',linestyle='--',label='DMD')

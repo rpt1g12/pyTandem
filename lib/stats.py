@@ -5,6 +5,13 @@ from scipy import fftpack
 from scipy.signal import butter, filtfilt
 import matplotlib.pyplot as plt
 
+def sortby(a,b):
+    """Sort list 'a' by 'b'"""
+    alist=list(a)
+    blist=list(b)
+    z=[x for _,x in sorted(zip(b,a))]
+    return z
+
 def normalise(u,v):
     m=np.sqrt(u**2+v**2)
     u=u/m
@@ -13,13 +20,35 @@ def normalise(u,v):
 
 def acorr(x):
     n=len(x)
-    r=np.array([0.0 for i in range(0,n)])
+    r=np.zeros(n)
     for h in range(0,n):
         for i in range(0,n-h):
             r[h]+=(x[i+h]*x[i])
-        r[h]/=((n)+1)
+        r[h]/=((n))
     r[:]/=r[0]
     return r
+
+def crossCorr(x,y,scale=True,mode='full',side=1):
+    n=len(x)
+    r=np.zeros(n)
+    if side!=1:
+        r2=np.zeros(2*n-1)
+    for h in range(0,n):
+        for i in range(0,n-h):
+            if (i+h)>n-1 and mode!='full':
+                s=i+h-n
+            else:
+                s=i+h
+            r[h]+=(x[s]*y[i])
+        r[h]/=((n))
+    if scale:
+        r[:]/=r[0]
+    if side==1:
+        return r
+    else:
+        r2[:n]=np.flipud(r)
+        r2[n:]=r[1:]
+        return r2
 
 def smooth(y, box_pts):
     box = np.ones(box_pts)/box_pts
@@ -27,17 +56,16 @@ def smooth(y, box_pts):
     return y_smooth
 
 def acorrp(x):
-	n=len(x)
-	r=np.array([0.0 for i in range(0,n)])
-	for h in range(0,n):
-		for i in range(0,n):
-			if (i+h)>n-1:
-				s=i+h-n
-			else:
-				s=i+h
-			r[h]+=(x[s]*x[i])/(float(n)+1.0)
-	r[:]/=r[0]
-	return r
+    n=len(x)
+    r=np.zeros(n)
+    y = np.asarray(list(x) + list(x)[1:])
+    y = y - y.mean()
+    for h in range(0,n):
+        for i in range(0,n):
+            s=i+h
+            r[h]+=(y[s]*y[i])/n
+    r[:]/=r[0]
+    return r
 
 def avg(x,t):
 	n=len(x)-1
@@ -90,6 +118,7 @@ def rsample(x,t,nsample=0,verbose=False,rmAvg=False,force=False,tnew=None):
         return xnew,tnew,nsample,fsam
     else:
         xnew=interpolate.splev(tnew,xspln,der=0)
+        tnew = np.asarray(list(tnew))
         nsample=len(tnew)
         fsam=1/(tnew[1]-tnew[0])
         fmax=fsam/2; fmin=fsam/nsample
@@ -368,16 +397,133 @@ def fourierFilter(y,mode,fsam,cutOff,width,verbose=False):
 
     return np.real(y_filt)
 
-def ROM(D,r=-1,mode=1,kfit=0):
-    """Performs POD and DMD decomposition of rank r"""
-    nt=len(D[0,:])-1
-    A1=D[:,:-1]
-    A2=D[:,1:]
+def oPOD(D,r=-1):
+    """Original POD of rank r"""
+    nx,nt=D.shape
+    # Construct covariance matrix R=DDt
+    R=np.dot(D,np.transpose(D))
+    ev,U=np.linalg.eig(R); del R
+    # Sort eigen values in descending order
+    olist=sortby(range(nx),-ev)
+    temp=ev.copy()
+    tempV=U.copy()
+    for i,ii in enumerate(olist):
+        ev[i]=temp[ii]
+        U[:,i]=tempV[:,ii]
+    s=np.sqrt(ev);del ev
+    V=np.dot(np.transpose(D),np.dot(U,np.diag(s)))
+    for i in range(nx):
+        V[:,i]=V[:,i]/np.linalg.norm(V[:,i])
+
+    return U,s,V
+
+def POD(D,r=-1):
+    """Performs POD on D of rank r"""
+    nt=len(D[0,:])
+    #A1=D[:,:-1]
+    #A2=D[:,1:]
     # POD decomposition
     print('Performing SVD decomposition...')
-    U,s,Vt=np.linalg.svd(A1,False)
-    sn=s/(s[0])
+    U,s,Vt=np.linalg.svd(D[:,:],False)
+    if r==-1:
+        r=len(s)
+    Ur=U[:,:r]
+    sr=s[:r]
+    Vr=Vt.conj().T[:,:r]
+    del Vt
+    return Ur,sr,Vr
+
+def oDMD(D):
+    """Original DMD on D"""
+    A=np.dot(D[:,1:],np.linalg.pinv(D[:,:-1]))
+    ev,Phi=np.linalg.eig(A)
+    return ev,Phi
+
+def DMD(D,U,s,V,r=-1,mode=1,kfit=0,rPro=range(10)):
+    """Performs DMD on D using U, s and V"""
+    nt=len(D[0,:])-1
+    if type(rPro) not in [range,list]:
+        #rPro=np.arange(rPro)
+        rPro=range(rPro)
+    if r==-1:
+        r=len(s)
+    #Build Atilde matrix (A2=A*A1)
+    # Atilde=Ut*A2*V*S^(-1)
+    # Atilde=Ut*Mwork
+    Ur=U[:,:r]
+    S=np.diag(s)[:r,:r]
+    V=V[:,:r]
+    print('Matrix multiplication (M=A*V*S**-1)...')
+    Sinv=np.linalg.inv(S)
+    del S
+    Mwork=np.dot(np.dot(D[:,1:],V),Sinv)
+    print('Build Atilde (Atilde=Ut*M)...')
+    Atilde = np.dot(Ur.conj().T, Mwork)
+
+    print('Performing Eigen decomposition...')
+    # Eigen decomposition of "Atilde"
+    eV,eVec=np.linalg.eig(Atilde)
+    del Atilde
+
+    print('Build DMD modes...')
+    # Build DMD mode (space)
+    # Phi=A2*V*S^(-1)*eVec
+    #Phi= np.dot(Mwork, eVec)
+    # Phi=eV^(-1)*A2*V*S^(-1)*eVec
+    Phi= np.dot(np.dot(Mwork, eVec),np.diag(1/eV))
+    del Mwork
+    print('Compute DMD weights...')
+    # Compute mode amplitude "b"
+    # A1[:,n]=Phi*b*eV^(n)
+    # b=Phi^(-1)*A1[:,n]*eV^(-n)
+    #if kfit==-1:
+    #    k=nt-1
+    #else:
+    #    k=kfit
+    #b=np.dot(np.dot(np.linalg.pinv(Phi),D[:,k]),np.diag(eV**(-k)))
+
+    #b=eV^(-1)*(Phit*Phi)^(-1)*Phit*A2[:,0]
+    B=np.dot(Phi.conj().T,Phi)
+    Binv=np.linalg.inv(B);del B
+    L=np.diag(eV)
+    Linv=np.linalg.inv(L);del L
+    b=np.dot(Linv,np.dot(np.dot(Binv,Phi.conj().T),D[:,1]))
+    del Binv,Linv
+
+    # Compute "Psi", the time variation of Phi
+    Psi=np.zeros((r,nt),dtype='complex')
+    for i in range(nt):
+        Psi[:,i]=np.multiply(np.power(eV,i),b)
+    del b
+
     if mode==1:
+        print('Compute DMD projection on POD...')
+        s0=s/s[rPro[0]]
+        # DMD projection onto POD
+        PhiPOD=np.zeros(r)
+        for i in range(r):
+            temp=[]
+            for j in rPro:
+                temp.append(np.dot(Phi[:,i]/np.linalg.norm(Phi[:,i]),Ur[:,j])*s0[j])
+            PhiPOD[i]=np.linalg.norm(temp)
+    else:
+        PhiPOD=np.zeros(r)
+        for i in range(r):
+            PhiPOD[i]=np.linalg.norm(Phi[:,i])
+        PhiPOD=PhiPOD/np.max(PhiPOD)
+
+    return eV,eVec,Phi,Psi,PhiPOD
+
+def ROM(D,r=-1,mode=1,kfit=0,npro=10):
+    """Performs POD and DMD decomposition of rank r"""
+    nt=len(D[0,:])-1
+    #A1=D[:,:-1]
+    #A2=D[:,1:]
+    # POD decomposition
+    print('Performing SVD decomposition...')
+    U,s,Vt=np.linalg.svd(D[:,:-1],False)
+    sn=s/(s[0])
+    if mode>=1:
         if r==-1:
             r=len(s)
         #Build Atilde matrix (A2=A*A1)
@@ -386,41 +532,63 @@ def ROM(D,r=-1,mode=1,kfit=0):
         Ur=U[:,:r]
         S=np.diag(s)[:r,:r]
         V=Vt.conj().T[:,:r]
+        del Vt
         print('Matrix multiplication (M=A*V*S**-1)...')
-        Mwork=np.dot(np.dot(A2,V),np.linalg.inv(S))
+        Sinv=np.linalg.inv(S)
+        Mwork=np.dot(np.dot(D[:,1:],V),Sinv)
         print('Build Atilde (Atilde=Ut*M)...')
         Atilde = np.dot(Ur.conj().T, Mwork)
+        del Sinv
 
         print('Performing Eigen decomposition...')
         # Eigen decomposition of "Atilde"
         eV,eVec=np.linalg.eig(Atilde)
+        del Atilde
 
         print('Build DMD modes...')
         # Build DMD mode (space)
         # Phi=A2*V*S^(-1)*eVec
         Phi= np.dot(Mwork, eVec)
+        del Mwork
         print('Compute DMD weights...')
         # Compute mode amplitude "b"
         # A1[:,n]=Phi*b*eV^(n)
         # b=Phi^(-1)*A1[:,n]*eV^(-n)
-        if kfit==-1:
-            k=nt-1
-        else:
-            k=kfit
-        b=np.dot(np.dot(np.linalg.pinv(Phi),A1[:,k]),np.diag(eV**(-k)))
+        #if kfit==-1:
+        #    k=nt-1
+        #else:
+        #    k=kfit
+        #b=np.dot(np.dot(np.linalg.pinv(Phi),D[:,k]),np.diag(eV**(-k)))
+
+        #b=eV^(-1)*(Phit*Phi)^(-1)*Phit*A2[:,0]
+        B=np.dot(Phi.conj().T,Phi)
+        Binv=np.linalg.inv(B);del B
+        L=np.diag(eV)
+        Linv=np.linalg.inv(L);del L
+        b=np.dot(Linv,np.dot(np.dot(Binv,Phi.conj().T),D[:,1]))
+        del Binv,Linv
+
         # Compute "Psi", the time variation of Phi
         Psi=np.zeros((r,nt),dtype='complex')
         for i in range(nt):
             Psi[:,i]=np.multiply(np.power(eV,i),b)
+        del b
 
-        print('Compute DMD projection on POD...')
-        # DMD projection onto POD
-        PhiPOD=np.zeros(r)
-        for i in range(r):
-            temp=[]
-            for j in range(r):
-                temp.append(np.dot(Phi[:,i],Ur[:,j]*sn[j]))
-            PhiPOD[i]=np.linalg.norm(temp)
+        if mode==1:
+            print('Compute DMD projection on POD...')
+            # DMD projection onto POD
+            PhiPOD=np.zeros(r)
+            for i in range(r):
+                temp=[]
+                for j in range(npro):
+                    temp.append(np.dot(Phi[:,i]/np.linalg.norm(Phi[:,i]),Ur[:,j]))
+                PhiPOD[i]=np.linalg.norm(temp)
+                #PhiPOD[i]=np.max(temp)
+        else:
+            PhiPOD=np.zeros(r)
+            for i in range(r):
+                PhiPOD[i]=np.linalg.norm(Phi[:,i])
+            PhiPOD=PhiPOD/np.max(PhiPOD)
 
         return Ur,s,V,eV,eVec,Phi,Psi,PhiPOD
     elif mode==0:

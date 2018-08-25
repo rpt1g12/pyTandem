@@ -20,26 +20,32 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%%
-r=5
 scale=1
 save=True
-trange=range(640,841)
-xrange=range(3,80)
-play=True;playRange=range(100)
-t0=290
+trange=range(000,1301)
+xrange=range(0,96)
+play=True;playRange=range(64)
+t0=235
 ts=230
-dt=1.0/64
-npeak=2
-maxE=5
-dataset='/home/rpt1g12/Desktop/paraviewExports/P{:1d}/coordinatesExport.dat'.format(npeak)
-spath='/home/rpt1g12/Desktop/paraviewExports/P{:1d}/'.format(npeak)
-xyz=np.loadtxt(dataset,skiprows=1,unpack=True)
+dt=1.0/32
+npeak=4
+maxE=3
+r=maxE
+dataset='/home/rperezt/Desktop/paraviewExports/P{:1d}.dat'.format(npeak)
+spath='/home/rperezt/Desktop/paraviewExports/P{:1d}/'.format(npeak)
+xyz=np.loadtxt(dataset,skiprows=2,unpack=True)
 if scale:
     save=False
-#%%
-
-nt=int(xyz.shape[1]/100)
-xyz=np.reshape(xyz,(3,nt,100))
+    
+xyz=np.loadtxt(dataset,skiprows=2,unpack=True)
+fin=open(dataset)
+fin.readline()
+line=fin.readline()
+nsteps,nt=line.rstrip('\n').rsplit('\t')[:2]
+nsteps=int(nsteps);nt=int(nt)
+fin.close()
+#%% reshape array
+xyz=np.reshape(xyz,(3,nt,nsteps))
 z0=xyz[2,0,0]
 print('\n z0={}\n'.format(z0))
 xyz[2,:,:]=xyz[2,:,:]-z0
@@ -63,12 +69,21 @@ for i in range(lx):
     Amean[i,]=np.mean(A[i,:])
     A[i,:]-=Amean[i]
     #A[i,:]/=np.var(A[i,:])
+
 Amean[:]=0
 #%%
-U,s,V,eV,eVec,Phi,Psi,PhiPOD=ROM(A,r=-1)
-nmodes=maxE
+U,s,V=POD(A[:,:-1],r=-1)
+# Normalise energy
+sn=s/sum(s)
+i=1;tot=0
+while tot<0.99:
+    tot=sum(sn[:i])
+    i+=1
+rank=i
+eV,eVec,Phi,Psi,PhiPOD=DMD(A,U,s,V,mode=1,r=rank,rPro=rank)
+nmodes=rank
 #%%Identify the unstable modes
-ntmode=U.shape[1]
+ntmode=Phi.shape[1]
 unst_mode_index = []
 eVNorm=np.zeros(ntmode)
 for i in range(ntmode):

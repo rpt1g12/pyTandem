@@ -20,12 +20,12 @@ import importlib
 #%%
 importlib.reload(p3d)
 #%% Options
-tSteps=range(0,32*12,32)
+tSteps=range(0,3840)
 #tSteps=[0]
-save=False
+save=True
 sPattern='solT*.q'
 vnames=['r','u','v','w','p']; # Variable names
-vname='twz'
+vname='Cp'
 plane=1
 autoMinMax=False
 bar=True
@@ -37,17 +37,15 @@ nwave=8 #Number of LE wavelengths
 Lz_2=nwave*0.11/2
 if plane==1:
     yrange=(-Lz_2,Lz_2)
-    xrange=(-0.5-A/1000.0,0.5)
+    xrange=(-0.65,-0.25)
 elif plane==2:
     yrange=(0,0.2)
     xrange=(-0.5-A/1000.0,0.5)
 #%% Paths set-up
 if A>0:
-    #tSteps=np.asarray(range(0,64*3*11+1,64*3))  
-    tSteps=range(11)
     wavy=True
-    sfolder='{}WLESTA'.format(nwave)
-    subpath='heaving/ss001/STA/'
+    sfolder='{}WLE'.format(nwave)
+    subpath='heaving/ss001/'
     block=1 #Block to look at
     if vname=='twx':
         cmap=plt.cm.bwr
@@ -57,7 +55,6 @@ if A>0:
         cmap=plt.cm.coolwarm
         #vmin,vmax=(-1e-3,1e-3)
         vmin,vmax=(-5e-4,5e-4)
-        xrange=(-0.5-A/1000.0,-0.25)
         nlvl=6
     elif vname=='Cp':
         cmap=plt.cm.hot
@@ -67,35 +64,14 @@ if A>0:
         cmap=plt.cm.jet
         autoMinMax=True
         nlvl=21
-else:
-    tSteps=range(0,32*12,32)
-    wavy=False
-    sfolder='{}SLE'.format(nwave)
-    subpath='heaving/ss003/'
-    block=4 #Block to look at
-    if vname=='twx':
-        cmap=plt.cm.bwr
-        vmin,vmax=(-5e-4,5e-4)
-        nlvl=6
-    elif vname=='twz':
-        cmap=plt.cm.bwr
-        vmin,vmax=(-1e-4,1e-3)
-        nlvl=6
-    elif vname=='Cp':
-        cmap=plt.cm.hot
-        vmin,vmax=(-3.5,0)
-        nlvl=11
-    else:
-        cmap=plt.cm.jet
-        autoMinMax=True
-        nlvl=21
+
 if plane==1:
     view='Top'
 elif plane==2:
     view='Side'
 simfolder='{:1d}A{:02d}W11AoA{:02d}'.format(nwave,A,AoA)
-path="/media/{}/dellHDD/post/{}/{}".format(user,simfolder,subpath)
-spath='/home/rpt1g12/Documents/thesis/figures/nearStall/{}{}{}/'.format(sfolder,vname,view)
+path="/media/{}/sonyHDD/post/{}/{}".format(user,simfolder,subpath)
+spath='/home/rperezt/kdenlive/projects/{}/pics/'.format(vname)
 if not os.path.exists(spath) and save:
     os.makedirs(spath)
 print('Reading data from:\n {}'.format(path))
@@ -133,13 +109,17 @@ for ii in tSteps:
     figs.append(f);axs.append(a)
     fl.blk[block].contour(varname=vname,vmin=vmin,vmax=vmax,plane=plane,k=kk,nlvl=nlvl,ax=axs[nfig])
     axs[nfig].plot(xwall,ywall,lw=2,color='k')
-    if not save:
-        anotation=r'$t={:3.4f}$'.format(flInfo[3])
-        axs[nfig].text(0.0,-0.1,anotation,ha='center',va='bottom',transform=axs[nfig].transAxes)
+    
+    anotation=r'$t={:03.3f}$'.format(flInfo[3])
+    anotation+='\t'
+    anotation+=r'$\alpha={:02.2f}$'.format(flInfo[1])
+    axs[nfig].text(0.15,0.5,anotation,ha='center',va='center',transform=axs[nfig].transAxes,
+                   rotation=90,fontsize=28)
+    
     axs[nfig].set_xlim(xrange)
     axs[nfig].set_ylim(yrange)
     axs[nfig].set_aspect('equal')
     if save:
-        saveFigOnly(path=spath,fig=figs[nfig],ax=axs[nfig],name='{}{:04d}'.format(vname,ii),ext='.pdf')       
+        saveFigOnly(path=spath,fig=figs[nfig],ax=axs[nfig],name='{}{:04d}'.format(vname,ii),ext='.png',dpi=250)       
 #%%
 print('max={},min={}'.format(var.max(),var.min()))

@@ -12,6 +12,7 @@ import lib.Plot3DClasses as p3d
 from scipy import stats
 from scipy.interpolate import griddata
 from scipy.signal import argrelextrema as locmaxmin
+from matplotlib import colors,ticker
 pi=np.pi
 import getpass
 user=getpass.getuser()
@@ -24,7 +25,7 @@ styles=['-','--',':','-.']
 importlib.reload(p3d)
 
 #%% Options
-save=True
+save=False
 bar=True
 A=15 #WLE Amplitude, if SLE A=0
 AoA=10 #Angle of Attack
@@ -51,10 +52,10 @@ else:
     sfolder='{}SLE'.format(nwave)
 
 simfolder='{:1d}A{:02d}W11AoA{:02d}'.format(nwave,A,AoA)
-path="/media/{}/dellHDD/post/{}/{}".format(user,simfolder,subpath)
-spath='/home/rpt1g12/Documents/thesis/data/nearStall/{}LSBProbes/'.format(sfolder)
-sfpath='/home/rpt1g12/Documents/thesis/figures/nearStall/{}LSBProbes/'.format(sfolder)
-blPath='/home/rpt1g12/Documents/thesis/data/nearStall/LSBHistory{}/BL.dat'.format(sfolder)
+path="/media/{}/sonyHDD/post/{}/{}".format(user,simfolder,subpath)
+spath='/home/rperezt/Documents/thesis/data/nearStall/{}LSBProbes/'.format(sfolder)
+sfpath='/home/rperezt/Documents/thesis/figures/nearStall/{}LSBProbes/'.format(sfolder)
+blPath='/home/rperezt/Documents/thesis/data/nearStall/LSBHistory{}/BL.dat'.format(sfolder)
 if not os.path.exists(spath) and save:
     os.makedirs(spath)
 if not os.path.exists(sfpath) and save:
@@ -118,14 +119,14 @@ a.set_xlim(-0.5,-0.3)
 a.set_ylim(0.0,0.2)
 axShow(a)
 #%% Plot and save histories
-probRange=range(1,5)#[0,1,2]
+probRange=range(2,7)#[0,1,2]
 
 for i in range(nvar):
     var=ivar[i]
     f,a=getFig(sfolder+'_Hist_{}'.format(var));nfig+=1
     figs.append(f);axs.append(a)
     for j in probRange:
-        axs[nfig].plot(t[:],data[:,j,i],lw=2,label='p{:03d}'.format(j))
+        axs[nfig].plot(t[:]-230,data[:,j,i],lw=2,label='p{:03d}'.format(j))
     fit(axs[nfig])
     hdl,lbl,lgd=getLabels(ax=axs[nfig])
     hdls.append(hdl);lbls.append(lbl);lgds.append(lgd)  
@@ -136,7 +137,7 @@ for i in range(nvar):
 plt.close('all')
 scale=False; step=False;
 #nw=64;ovlp=0.125;sclg='density'
-nw=256;ovlp=0.9;sclg='density'
+nw=256;ovlp=0.5;sclg='density'
 sgn,tn,nsam,fsam=rsample(data[:,0,0],t)
 nseg,novlp,ntt,fmax,fmin=defWin(tn,sgn,nw,ovlp,verbose=False)
 fdata=np.zeros((int(nseg/2+1),nprob,nvar))
@@ -175,13 +176,13 @@ for i in range(nvar):
 
 #%% Spectogram
 # Define windows
-
+save=False
 nw=256;ovlp=0.9;sclg='density'
 nseg,novlp,ntt,fmax,fmin=defWin(tn,Data[:,0,0],nw,ovlp,verbose=False)
 print('fmax={}\tfmin={}'.format(fmax/0.3,fmin/0.3))
 t0=t[0]
 plt.close('all')
-vmin=[1e-8,1e-9,1e-9,1e-9];vmax=[1e-5,1e-4,1e-4,1e-4]
+vmin=[1e-8,1e-9,1e-9,1e-9,1e-9];vmax=[1e-5,1e-4,1e-4,1e-4,1e-4]
 for ii,i in enumerate(probRange):
     f,a=getFig('{}Spectogram{:d}'.format(var,i));figs.append(f),axs.append(a);nfig+=1
     sgnl=Data[:,i,0]
@@ -196,7 +197,7 @@ for ii,i in enumerate(probRange):
     a.set_ylabel('f',fontsize=fs)
     a.set_xlabel('t',fontsize=fs)
     a.set_ylim(5,100)
-    a.set_xlim((tt2[0]+t0-230),(tt2[-1]+t0-230))
+    a.set_xlim(46,117)
     a.set_yscale('log')
     if save:
         figName='{}Spectogram{:d}'.format(var,i)

@@ -34,8 +34,8 @@ if A>0:
     wavy=True
     sfolder='{}WLE'.format(nwave)
     if ssl:
-        subpath='heaving/ss005/'
-        sfolder+='SSL'
+        subpath='heaving/down/ss001/T430T500/'
+        #sfolder+='SSL'
     else:
         subpath='heaving/ss006/'
         sfolder+='Central'
@@ -45,7 +45,7 @@ else:
     subpath='heaving/ss003/'
 
 simfolder='{:1d}A{:02d}W11AoA{:02d}'.format(nwave,A,AoA)
-path="/media/{}/dellHDD/post/{}/{}".format(user,simfolder,subpath)
+path="/media/{}/sonyHDD/post/{}/{}".format(user,simfolder,subpath)
 spath=path+'STA/'
 if not os.path.exists(spath) and save:
     os.makedirs(spath)
